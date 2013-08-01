@@ -33,8 +33,10 @@ return declare("dojo.store.Memory", base, {
 	model: {},
 
 	// parse: Function
-	//		One can provide a parsing function that will permit the parsing of the data
-
+	//		One can provide a parsing function that will permit the parsing of the data. By
+	//		default we assume the provide data is a simple JavaScript array that requires
+	//		no parsing
+	parse: null,
 	 
 	// data: Array
 	//		The array of all the objects in the memory store

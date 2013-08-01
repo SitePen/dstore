@@ -56,6 +56,22 @@ return declare("dojo.store.JsonRest", base, {
 	//		by passing additional headers to calls to the store.
 	headers: {},
 
+	// parse: Function
+	//		This function performs the parsing of the response text from the server. This
+	//		defaults to JSON, but other formats can be parsed by providing an alternate
+	//		parsing function. If you do want to use an alternate format, you will probably 
+	//		want to use an alternate stringify function for the serialization of data as well.
+	//		Also, if you want to support parsing a larger set of JavaScript objects
+	//		outside of strict JSON parsing, you can provide dojo/_base/json.fromJson as the parse function 
+	parse: JSON.parse,
+
+	// stringify: Function
+	//		This function performs the serialization of the data for requests to the server. This
+	//		defaults to JSON, but other formats can be serialized by providing an alternate
+	//		stringify function. If you do want to use an alternate format, you will probably 
+	//		want to use an alternate parse function for the parsing of data as well.
+	stringify: JSON.stringify,
+
 	// target: String
 	//		The target base URL to use for all requests to the server. This string will be
 	//		prepended to the id to generate the URL (relative or absolute) for requests
@@ -95,11 +111,11 @@ return declare("dojo.store.JsonRest", base, {
 		options = options || {};
 		var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
 		var model = this.model;
+		var parse = this.parse;
 		return request(this.target + id, {
-			handleAs: "json",
 			headers: headers
-		}).then(function(object){
-			return assignPrototype(object, model);
+		}).then(function(response){
+			return assignPrototype(parse(response), model);
 		});
 	},
 
@@ -129,16 +145,19 @@ return declare("dojo.store.JsonRest", base, {
 		options = options || {};
 		var id = ("id" in options) ? options.id : this.getIdentity(object);
 		var hasId = typeof id != "undefined";
+		var model = this.model;
+		var parse = this.parse;
 		return request(hasId ? this.target + id : this.target, {
 				method: hasId && !options.incremental ? "PUT" : "POST",
-				postData: JSON.stringify(object),
-				handleAs: "json",
+				postData: this.stringify(object),
 				headers: lang.mixin({
 					"Content-Type": "application/json",
 					Accept: this.accepts,
 					"If-Match": options.overwrite === true ? "*" : null,
 					"If-None-Match": options.overwrite === false ? "*" : null
 				}, this.headers, options.headers)
+			}).then(function(response){
+				return assignPrototype(parse(response), model);
 			});
 	},
 
@@ -166,9 +185,8 @@ return declare("dojo.store.JsonRest", base, {
 		options = options || {};
 		return request(this.target + id, {
 			method: "DELETE",
-			handleAs: "json",
 			headers: lang.mixin({}, this.headers, options.headers)
-		});
+		}).then(this.parse);
 	},
 
 	query: function(query, options){
@@ -208,21 +226,23 @@ return declare("dojo.store.JsonRest", base, {
 			}
 		}
 		var model = this.model;
-		var results = request(this.target + (query || ""), {
+		var response = request(this.target + (query || ""), {
 			method: "GET",
-			handleAs: "json",
 			headers: headers
 		});
-		results.then(function(results){
+		var parse = this.parse;
+		var results = QueryResults(response.then(function(response){
+			var results = parse(response);
 			for(var i = 0, l = results.length; i < l; i++){
 				results[i] = assignPrototype(results[i], model);
 			}
-		});
-		results.total = results.response.then(function(response){
+			return results;
+		}));
+		results.total = response.response.then(function(response){
 			var range = response.getHeader("Content-Range");
 			return range && (range = range.match(/\/(.*)/)) && +range[1];
 		});
-		return QueryResults(results);
+		return results;
 	}
 });
 
