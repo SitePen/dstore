@@ -1,4 +1,4 @@
-define(["../../_base/array", "../../_base/lang", "../../when"
+define(["dojo/_base/array", "dojo/_base/lang", "dojo/when"
 ], function(array, lang, when){
 
 // module:
@@ -38,10 +38,10 @@ var QueryResults = function(results){
 		if(!results[method]){
 			results[method] = function(){
 				var args = arguments;
-				return when(results, function(results){
+				return QueryResults(when(results, function(results){
 					Array.prototype.unshift.call(args, results);
-					return QueryResults(array[method].apply(array, args));
-				});
+					return array[method].apply(array, args);
+				}));
 			};
 		}
 	}
@@ -50,7 +50,7 @@ var QueryResults = function(results){
 	addIterativeMethod("map");
 	if(!results.total){
 		results.total = when(results, function(results){
-			return results.length;
+			return results && results.length;
 		});
 	}
 	return results; // Object

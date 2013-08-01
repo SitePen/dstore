@@ -1,5 +1,5 @@
-define(["../_base/kernel", "../_base/lang", "../when", "../_base/array" /*=====, "./api/Store" =====*/
-], function(kernel, lang, when, array /*=====, Store =====*/){
+define(["dojo/_base/lang", "dojo/when", "dojo/_base/array" /*=====, "./api/Store" =====*/
+], function(lang, when, array /*=====, Store =====*/){
 
 // module:
 //		dojo/store/Observable
@@ -58,7 +58,7 @@ var Observable = function(/*Store*/ store){
 			var queryExecutor = store.queryEngine && store.queryEngine(query, nonPagedOptions);
 			var queryRevision = revision;
 			var listeners = [], queryUpdater;
-			results.observe = function(listener, includeObjectUpdates){
+			results.observe = function(listener, excludeObjectUpdates){
 				if(listeners.push(listener) == 1){
 					// first listener was added, create the query checker and updater
 					queryUpdaters.push(queryUpdater = function(changed, existingId){
@@ -94,7 +94,7 @@ var Observable = function(/*Store*/ store){
 										resultsArray.length;
 									resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
 									insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
-									// we now need to push the chagne back into the original results array
+									// we now need to push the change back into the original results array
 									resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index
 									
 									if((options.start && insertedInto == 0) ||
@@ -118,7 +118,7 @@ var Observable = function(/*Store*/ store){
 								}
 							}
 							if((removedFrom > -1 || insertedInto > -1) &&
-									(includeObjectUpdates || !queryExecutor || (removedFrom != insertedInto))){
+									(!excludeObjectUpdates || !queryExecutor || (removedFrom != insertedInto))){
 								var copyListeners = listeners.slice();
 								for(i = 0;listener = copyListeners[i]; i++){
 									listener(changed || removedObject, removedFrom, insertedInto);
@@ -180,8 +180,6 @@ var Observable = function(/*Store*/ store){
 
 	return store;
 };
-
-lang.setObject("dojo.store.Observable", Observable);
 
 return Observable;
 });
