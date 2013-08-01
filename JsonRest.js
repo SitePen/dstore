@@ -1,5 +1,5 @@
-define(["../_base/xhr", "../_base/lang", "../json", "../_base/declare", "./util/QueryResults" /*=====, "./api/Store" =====*/
-], function(xhr, lang, JSON, declare, QueryResults /*=====, Store =====*/){
+define(["dojo/request", "dojo/_base/lang", "dojo/has", "dojo/json", "dojo/io-query", "dojo/_base/declare", "./util/QueryResults" /*=====, "./api/Store" =====*/
+], function(request, lang, has, JSON, ioQuery, declare, QueryResults /*=====, Store =====*/){
 
 // No base class, but for purposes of documentation, the base class is dojo/store/api/Store
 var base = null;
@@ -13,6 +13,23 @@ var __HeaderOptions = {
 	__PutDirectives = declare(Store.PutDirectives, __HeaderOptions),
 	__QueryOptions = declare(Store.QueryOptions, __HeaderOptions);
 =====*/
+
+// detect __proto__
+has.add('object-proto', !!{}.__proto__);
+var hasProto = has('object-proto');
+function assignPrototype(object, model){
+	var prototype = model.prototype;
+	if(prototype){
+		if(hasProto){
+			// the fast easy way
+			object.__proto__ = prototype;
+			return object;
+		}else{
+			// create a new object with the correct prototype
+			return lang.delegate(prototype, object);
+		}
+	}
+}
 
 return declare("dojo.store.JsonRest", base, {
 	// summary:
@@ -28,6 +45,11 @@ return declare("dojo.store.JsonRest", base, {
 		this.headers = {};
 		declare.safeMixin(this, options);
 	},
+
+	// model: Function
+	//		This should be a entity (like a class/constructor) with a "prototype" property that will be
+	//		used as the prototype for all objects returned from this store.
+	model: {},
 
 	// headers: Object
 	//		Additional headers to pass in all requests to the server. These can be overridden
@@ -72,10 +94,12 @@ return declare("dojo.store.JsonRest", base, {
 		//		The object in the store that matches the given id.
 		options = options || {};
 		var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
-		return xhr("GET", {
-			url: this.target + id,
+		var model = this.model;
+		return request(this.target + id, {
 			handleAs: "json",
 			headers: headers
+		}).then(function(object){
+			return assignPrototype(object, model);
 		});
 	},
 
@@ -105,8 +129,8 @@ return declare("dojo.store.JsonRest", base, {
 		options = options || {};
 		var id = ("id" in options) ? options.id : this.getIdentity(object);
 		var hasId = typeof id != "undefined";
-		return xhr(hasId && !options.incremental ? "PUT" : "POST", {
-				url: hasId ? this.target + id : this.target,
+		return request(hasId ? this.target + id : this.target, {
+				method: hasId && !options.incremental ? "PUT" : "POST",
 				postData: JSON.stringify(object),
 				handleAs: "json",
 				headers: lang.mixin({
@@ -140,8 +164,9 @@ return declare("dojo.store.JsonRest", base, {
 		// options: __HeaderOptions?
 		//		HTTP headers.
 		options = options || {};
-		return xhr("DELETE", {
-			url: this.target + id,
+		return request(this.target + id, {
+			method: "DELETE",
+			handleAs: "json",
 			headers: lang.mixin({}, this.headers, options.headers)
 		});
 	},
@@ -168,7 +193,7 @@ return declare("dojo.store.JsonRest", base, {
 		}
 		var hasQuestionMark = this.target.indexOf("?") > -1;
 		if(query && typeof query == "object"){
-			query = xhr.objectToQuery(query);
+			query = ioQuery.objectToQuery(query);
 			query = query ? (hasQuestionMark ? "&" : "?") + query: "";
 		}
 		if(options && options.sort){
@@ -182,13 +207,19 @@ return declare("dojo.store.JsonRest", base, {
 				query += ")";
 			}
 		}
-		var results = xhr("GET", {
-			url: this.target + (query || ""),
+		var model = this.model;
+		var results = request(this.target + (query || ""), {
+			method: "GET",
 			handleAs: "json",
 			headers: headers
 		});
-		results.total = results.then(function(){
-			var range = results.ioArgs.xhr.getResponseHeader("Content-Range");
+		results.then(function(results){
+			for(var i = 0, l = results.length; i < l; i++){
+				results[i] = assignPrototype(results[i], model);
+			}
+		});
+		results.total = results.response.then(function(response){
+			var range = response.getHeader("Content-Range");
 			return range && (range = range.match(/\/(.*)/)) && +range[1];
 		});
 		return QueryResults(results);

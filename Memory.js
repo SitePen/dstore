@@ -1,5 +1,5 @@
-define(["dojo/_base/declare", "./util/QueryResults", "./util/SimpleQueryEngine" /*=====, "./api/Store" =====*/],
-function(declare, QueryResults, SimpleQueryEngine /*=====, Store =====*/){
+define(["dojo/_base/declare", "dojo/has", "dojo/_base/lang", "./util/QueryResults", "./util/SimpleQueryEngine" /*=====, "./api/Store" =====*/],
+function(declare, has, lang, QueryResults, SimpleQueryEngine /*=====, Store =====*/){
 
 // module:
 //		dojo/store/Memory
@@ -7,6 +7,10 @@ function(declare, QueryResults, SimpleQueryEngine /*=====, Store =====*/){
 // No base class, but for purposes of documentation, the base class is dojo/store/api/Store
 var base = null;
 /*===== base = Store; =====*/
+
+// detect __proto__
+has.add('object-proto', !!{}.__proto__);
+var hasProto = has('object-proto');
 
 return declare("dojo.store.Memory", base, {
 	// summary:
@@ -26,7 +30,11 @@ return declare("dojo.store.Memory", base, {
 	// model: Function
 	//		This should be a entity (like a class/constructor) with a "prototype" property that will be
 	//		used as the prototype for all objects returned from this store.
-	model: null,
+	model: {},
+
+	// parse: Function
+	//		One can provide a parsing function that will permit the parsing of the data
+
 	 
 	// data: Array
 	//		The array of all the objects in the memory store
@@ -74,6 +82,16 @@ return declare("dojo.store.Memory", base, {
 			index = this.index,
 			idProperty = this.idProperty;
 		var id = object[idProperty] = (options && "id" in options) ? options.id : idProperty in object ? object[idProperty] : Math.random();
+		var prototype = this.model.prototype;
+		if(prototype){
+			if(hasProto){
+				// the fast easy way
+				object.__proto__ = prototype;
+			}else{
+				// create a new object with the correct prototype
+				object = lang.delegate(prototype, object);
+			}
+		}		
 		if(id in index){
 			// object exists
 			if(options && options.overwrite === false){
@@ -85,7 +103,7 @@ return declare("dojo.store.Memory", base, {
 			// add the new object
 			index[id] = data.push(object) - 1;
 		}
-		return id;
+		return object;
 	},
 	add: function(object, options){
 		// summary:
@@ -146,6 +164,7 @@ return declare("dojo.store.Memory", base, {
 		//	...or find all items where "even" is true:
 		//
 		//	|	var results = store.query({ even: true });
+
 		return QueryResults(this.queryEngine(query, options)(this.data));
 	},
 	setData: function(data){
@@ -153,6 +172,9 @@ return declare("dojo.store.Memory", base, {
 		//		Sets the given data as the source for this store, and indexes it
 		// data: Object[]
 		//		An array of objects to use as the source of data.
+		if(this.parse){
+			data = this.parse(data);
+		}
 		if(data.items){
 			// just for convenience with the data format IFRS expects
 			this.idProperty = data.identifier;
@@ -161,8 +183,19 @@ return declare("dojo.store.Memory", base, {
 			this.data = data;
 		}
 		this.index = {};
+		var prototype = this.model.prototype;
 		for(var i = 0, l = data.length; i < l; i++){
-			this.index[data[i][this.idProperty]] = i;
+			var object = data[i];
+			if(prototype){
+				if(hasProto){
+					// the fast easy way
+					object.__proto__ = prototype;
+				}else{
+					// create a new object with the correct prototype
+					data[i] = lang.delegate(prototype, object);
+				}
+			}
+			this.index[object[this.idProperty]] = i;
 		}
 	}
 });
