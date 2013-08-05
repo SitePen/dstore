@@ -1,4 +1,4 @@
-define(["dojo/request", "dojo/_base/lang", "dojo/has", "dojo/json", "dojo/io-query", "dojo/_base/declare", "./util/QueryResults" /*=====, "./api/Store" =====*/
+define(["dojo/request/registry", "dojo/_base/lang", "dojo/has", "dojo/json", "dojo/io-query", "dojo/_base/declare", "./util/QueryResults" /*=====, "./api/Store" =====*/
 ], function(request, lang, has, JSON, ioQuery, declare, QueryResults /*=====, Store =====*/){
 
 // No base class, but for purposes of documentation, the base class is dojo/store/api/Store
