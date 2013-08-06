@@ -22,12 +22,12 @@ define(['dojo/_base/lang', 'dojo/Stateful', 'dojo/_base/declare'], function(lang
 					// in a valid state
 					if(validatingStore.allowErrors){
 						// if we are in allowErrors mode, reset the errors property
-						this.set('errors', null);
+						this.inherited(arguments, [name + 'Error', null]);
 					}
 				}else{
 					if(validatingStore.allowErrors){
 						// make the error visible through the errors property 
-						this.set('errors', validation.errors);
+						this.inherited(arguments, [name + 'Error', validation.errors]);
 					}else{
 						// not acceptable, will throw
 						throwValidationError(validation);
