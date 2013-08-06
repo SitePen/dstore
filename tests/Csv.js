@@ -25,18 +25,18 @@ function(doh, request, all, declare, Csv, Memory) {
 			}),
 			request(xhrBase + "/quote.csv").then(function(data) {
 				csvs.quote = data;
-				stores.quoteNoHeader = new Csv({
+				stores.quoteNoHeader = new CsvMemory({
 					data: data,
 					fieldNames: ["id", "name", "quote"]
 				});
-				stores.quoteWithHeader = new Csv({
+				stores.quoteWithHeader = new CsvMemory({
 					data: data
 					// No fieldNames; first row will be treated as header row.
 				});
 			}),
 			request(xhrBase + "/contributors.csv").then(function(data) {
 				csvs.contributors = data;
-				stores.contributors = new Csv({
+				stores.contributors = new CsvMemory({
 					data: data
 				});
 			})
