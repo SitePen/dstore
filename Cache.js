@@ -1,14 +1,37 @@
-define(["../_base/lang","../when" /*=====, "../_base/declare", "./api/Store" =====*/],
-function(lang, when /*=====, declare, Store =====*/){
+define(["dojo/_base/lang","dojo/when", "./util/QueryResults" /*=====, "dojo/_base/declare", "./api/Store" =====*/],
+function(lang, when,  QueryResults/*=====, declare, Store =====*/){
 
 // module:
 //		dojo/store/Cache
 
+function isEmpty(object){
+	// will return true for empty objects, or empty strings
+	for(var i in object){
+		return false;
+	}
+	return true;
+}
 var Cache = function(masterStore, cachingStore, options){
 	options = options || {};
 	return lang.delegate(masterStore, {
 		query: function(query, directives){
+			var canQueryCache = this.canQueryCache(query, directives);
+			if(canQueryCache){
+				// we can use the cache for the query 
+				if(canQueryCache.then){
+					// wait for the cache to be ready, and then we have to rewrap the query 
+					return new QueryResults(canQueryCache.then(function(){
+						return cachingStore.query(query, directives);
+					}));
+				}
+				return cachingStore.query(query, directives);
+			}
+			// can't use cache, go to master store
 			var results = masterStore.query(query, directives);
+			if(!query || isEmpty(query)){
+				// a non-filtered query, we will assume that we are getting everything
+				this.allLoaded = results;
+			}
 			results.forEach(function(object){
 				if(!options.isLoaded || options.isLoaded(object)){
 					cachingStore.put(object);
@@ -16,6 +39,13 @@ var Cache = function(masterStore, cachingStore, options){
 			});
 			return results;
 		},
+		canQueryCache: function(query){
+			// this function can be overriden to provide more specific functionality for 
+			// determining if a query should go to the master store or the caching store
+			return this.allLoaded;
+		},
+		
+		allLoaded: false,
 		// look for a queryEngine in either store
 		queryEngine: masterStore.queryEngine || cachingStore.queryEngine,
 		get: function(id, directives){

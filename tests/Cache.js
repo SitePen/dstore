@@ -1,4 +1,4 @@
-define(["doh", "dojo/store/Memory", "dojo/store/Cache"], function(doh, Memory, Cache){
+define(["doh", "dstore/Memory", "dstore/Cache", "dojo/Deferred", "dstore/util/QueryResults"], function(doh, Memory, Cache, Deferred, QueryResults){
 
 	var masterStore = new Memory({
 		data: [
@@ -88,6 +88,39 @@ define(["doh", "dojo/store/Memory", "dojo/store/Cache"], function(doh, Memory, C
 					prop: "doesn't matter"
 				}).test, "value");
 				masterStore.add = originalAdd;
+			},
+			function testCachedQuery(t){
+				store.query(); // should result in everything being cached
+				masterStore.query = function(){ throw new Error("should not be called"); };
+				t.is(store.query({prime: true}).length, 4);
+			},
+			function testDelayedCachedQuery(t){
+				var masterStore = {
+					query: function(){
+						var def = new Deferred();
+						setTimeout(function(){
+							def.resolve([
+								{id: 1, name: "one", prime: false},
+								{id: 2, name: "two", even: true, prime: true},
+								{id: 3, name: "three", prime: true},
+								{id: 4, name: "four", even: true, prime: false},
+								{id: 5, name: "five", prime: true}
+							]);
+						}, 20);
+						return new QueryResults(def);
+					}
+				};
+				var cachingStore = new Memory();
+				var options = {};
+				var store = Cache(masterStore, cachingStore, options);
+				store.query(); // should result in everything being cached
+				masterStore.query = function(){ throw new Error("should not be called"); };
+				var testDef = new Deferred();
+				store.query({prime: true}).then(function(results){
+					t.is(results.length, 3);
+					testDef.resolve(true);
+				});
+				return testDef;
 			}
 		]
 	);
