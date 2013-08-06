@@ -14,7 +14,7 @@ define(["doh", "dojo/Deferred", "dojo/request/registry", "dstore/rql", "dstore/M
 		],
 		model: TestModel
 	}));
-	
+
 	doh.register("dstore.tests.RqlMemory",
 		[
 			function testGet(t){
@@ -43,7 +43,7 @@ define(["doh", "dojo/Deferred", "dojo/request/registry", "dstore/rql", "dstore/M
 	rqlRest = rql(new JsonRest({
 		target: "http://test.com/",
 	}));
-		
+
 	doh.register("dstore.tests.RqlJsonRest",
 		[
 			function testQuery(t){
