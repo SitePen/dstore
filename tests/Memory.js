@@ -23,37 +23,37 @@ define(["doh", "dstore/Memory"], function(doh, Memory){
 			function testModel(t){
 				t.is(store.get(1).describe(), "one is not a prime");
 				t.is(store.get(3).describe(), "three is a prime");
-				t.is(store.query({even: true})[1].describe(), "four is not a prime");
+				t.is(store.filter({even: true}).data[1].describe(), "four is not a prime");
 			},
-			function testQuery(t){
-				t.is(store.query({prime: true}).length, 3);
-				t.is(store.query({even: true})[1].name, "four");
+			function testfilter(t){
+				t.is(store.filter({prime: true}).data.length, 3);
+				t.is(store.filter({even: true}).data[1].name, "four");
 			},
-			function testQueryWithString(t){
-				t.is(store.query({name: "two"}).length, 1);
-				t.is(store.query({name: "two"})[0].name, "two");
+			function testfilterWithString(t){
+				t.is(store.filter({name: "two"}).data.length, 1);
+				t.is(store.filter({name: "two"}).data[0].name, "two");
 			},
-			function testQueryWithRegExp(t){
-				t.is(store.query({name: /^t/}).length, 2);
-				t.is(store.query({name: /^t/})[1].name, "three");
-				t.is(store.query({name: /^o/}).length, 1);
-				t.is(store.query({name: /o/}).length, 3);
+			function testfilterWithRegExp(t){
+				t.is(store.filter({name: /^t/}).data.length, 2);
+				t.is(store.filter({name: /^t/}).data[1].name, "three");
+				t.is(store.filter({name: /^o/}).data.length, 1);
+				t.is(store.filter({name: /o/}).data.length, 3);
 			},
-			function testQueryWithTestFunction(t){
-				t.is(store.query({id: {test: function(id){ return id < 4;}}}).length, 3);
-				t.is(store.query({even: {test: function(even, object){ return even && object.id > 2;}}}).length, 1);
+			function testfilterWithTestFunction(t){
+				t.is(store.filter({id: {test: function(id){ return id < 4;}}}).data.length, 3);
+				t.is(store.filter({even: {test: function(even, object){ return even && object.id > 2;}}}).data.length, 1);
 			},
-			function testQueryWithSort(t){
-				t.is(store.query({prime: true}, {sort:[{attribute:"name"}]}).length, 3);
-				t.is(store.query({even: true}, {sort:[{attribute:"name"}]})[1].name, "two");
-				t.is(store.query({even: true}, {sort:function(a, b){
+			function testfilterWithSort(t){
+				t.is(store.filter({prime: true}).sort("name").data.length, 3);
+				t.is(store.filter({even: true}).sort("name").data[1].name, "two");
+				t.is(store.filter({even: true}).sort(function(a, b){
 						return a.name < b.name ? -1 : 1;
-					}})[1].name, "two");
-				t.is(store.query(null, {sort:[{attribute:"mappedTo"}]})[4].name, "four");
+					}).data[1].name, "two");
+				t.is(store.filter(null).sort("mappedTo").data[4].name, "four");
 			},
-			function testQueryWithPaging(t){
-				t.is(store.query({prime: true}, {start: 1, count: 1}).length, 1);
-				t.is(store.query({even: true}, {start: 1, count: 1})[0].name, "four");
+			function testfilterWithPaging(t){
+				t.is(store.filter({prime: true}).range(1, 2).data.length, 1);
+				t.is(store.filter({even: true}).range(1, 2).data[0].name, "four");
 			},
 			function testPutUpdate(t){
 				var four = store.get(4);
@@ -97,9 +97,9 @@ define(["doh", "dstore/Memory"], function(doh, Memory){
 				// make sure nothing changed
 				t.is(store.get(1).id, 1);
 			},
-			function testQueryAfterChanges(t){
-				t.is(store.query({prime: true}).length, 3);
-				t.is(store.query({perfect: true}).length, 1);
+			function testfilterAfterChanges(t){
+				t.is(store.filter({prime: true}).data.length, 3);
+				t.is(store.filter({perfect: true}).data.length, 1);
 			},
 			function testIFRSStyleData(t){
 				var anotherStore = new Memory({
@@ -113,7 +113,7 @@ define(["doh", "dstore/Memory"], function(doh, Memory){
 					}
 				});
 				t.is(anotherStore.get("one").name,"one");
-				t.is(anotherStore.query({name:"one"})[0].name,"one");
+				t.is(anotherStore.filter({name:"one"}).data[0].name,"one");
 			},
 			function testAddNewIdAssignment(t){
 				var object = {

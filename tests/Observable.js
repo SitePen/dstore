@@ -1,16 +1,16 @@
 define([
 	"doh",
 	"dojo/_base/array", "dojo/_base/declare", "dojo/_base/lang",
-	"dojo/store/Memory", "dojo/store/Observable"
+	"dstore/Memory", "dstore/Observable"
 ], function(doh, array, declare, lang, Memory, Observable){
 
-	var MyStore = declare([Memory], {
+	var MyStore = declare([Memory, Observable], {
 		get: function(){
 			// need to make sure that this.inherited still works with Observable
 			return this.inherited(arguments);
 		}
 	});
-	var memoryStore, store = new Observable(memoryStore = new MyStore({ /*dojo.store.Memory*/
+	var store = new MyStore({ /*dojo.store.Memory*/
 		data: [
 			{id: 0, name: "zero", even: true, prime: false},
 			{id: 1, name: "one", prime: false},
@@ -19,83 +19,84 @@ define([
 			{id: 4, name: "four", even: true, prime: false},
 			{id: 5, name: "five", prime: true}
 		]
-	}));
+	});
     var data = [], i;
     for(i = 1; i <= 100; i++){
         data.push({id: i, name: "item " + i, order: i});
     }
-	var bigStore = Observable(new Memory({data:data}));
-	doh.register("dojo.tests.store.Observable",
+	var bigStore = new MyStore({data:data});
+	doh.register("dstore.tests.Observable",
 		[
 			function testGet(t){
 				t.is(store.get(1).name, "one");
 				t.is(store.get(4).name, "four");
 				t.t(store.get(5).prime);
 			},
-			function testQuery(t){
-				var results = store.query({prime: true});
-				t.is(results.length, 3);
+			function testFilter(t){
+				var results = store.filter({prime: true});
+				t.is(results.data.length, 3);
 				var changes = [], secondChanges = [];
-				var observer = results.observe(function(object, previousIndex, newIndex){
-					changes.push({previousIndex:previousIndex, newIndex:newIndex, object:object});
+				var observer = results.observe(function(removeFrom, count, add){
+					var change = {removeFrom:removeFrom, count:count};
+					if(add){
+						change.add = add;
+					}
+					changes.push(change);
 				});
-				var secondObserver = results.observe(function(object, previousIndex, newIndex){
-					secondChanges.push({previousIndex:previousIndex, newIndex:newIndex, object:object});
+				var secondObserver = results.observe(function(removeFrom, count, add){
+					var change = {removeFrom:removeFrom, count:count};
+					if(add){
+						change.add = add;
+					}
+					secondChanges.push(change);
 				});
 				var expectedChanges = [],
 					expectedSecondChanges = [];
-				var two = results[0];
+				var two = results.data[0];
 				two.prime = false;
 				store.put(two); // should remove it from the array
-				t.is(results.length, 2);
+				t.is(results.data.length, 2);
 				expectedChanges.push({
-						previousIndex: 0,
-						newIndex: -1,
-						object:{
-							id: 2,
-							name: "two",
-							even: true,
-							prime: false
-						}
-					});
+						removeFrom: 0,
+						count: 1,
+				});
 				expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
-				secondObserver.cancel();
+				secondObserver.remove();
 				var one = store.get(1);
 				one.prime = true;
 				store.put(one); // should add it
 				expectedChanges.push({
-						previousIndex: -1,
-						"newIndex":2,
-						object:{
+						removeFrom: 2,
+						count:0,
+						add:{
 							id: 1,
 							name: "one",
 							prime: true
 						}
 					});
-				t.is(results.length, 3);
+				t.is(results.data.length, 3);
 				store.add({// shouldn't be added
 					id:6, name:"six"
 				});
-				t.is(results.length, 3);
+				t.is(results.data.length, 3);
 				store.add({// should be added
 					id:7, name:"seven", prime:true
 				});
-				t.is(results.length, 4);
+				t.is(results.data.length, 4);
 				
 				expectedChanges.push({
-						previousIndex: -1,
-						"newIndex":3,
-						"object":{
+						removeFrom: 3,
+						"count":0,
+						"add":{
 							id:7, name:"seven", prime:true
 						}
 					});
 				store.remove(3);
 				expectedChanges.push({
-						"previousIndex":0,
-						newIndex: -1,
-						object: {id: 3, name: "three", prime: true}
+						"removeFrom":0,
+						count: 1
 					});
-				t.is(results.length, 3);
+				t.is(results.data.length, 3);
 				
 				observer.remove(); // shouldn't get any more calls
 				store.add({// should not be added
@@ -104,50 +105,50 @@ define([
 				t.is(secondChanges, expectedSecondChanges);
 				t.is(changes, expectedChanges);
 			},
-			function testQueryWithZeroId(t){
-                var results = store.query({});
-                t.is(results.length, 8);
-                var observer = results.observe(function(object, previousIndex, newIndex){
+			function testFilterWithZeroId(t){
+                var results = store.filter({});
+                t.is(results.data.length, 8);
+                var removedIndex;
+                var observer = results.observe(function(removeFrom, count, add){
                         // we only do puts so previous & new indices must always been the same
-                        // unfortunately if id = 0, the previousIndex
-                        console.log("called with: "+previousIndex+", "+newIndex);
-                        t.is(previousIndex, newIndex);
+                        // unfortunately if id = 0, the removeFrom
+                        console.log("called with: "+removeFrom+", "+count);
+                        if(add){
+                        	t.is(removedIndex, removeFrom);
+                        }else{
+                        	removedIndex = removeFrom;	
+                        }
                 }, true);
                 store.put({id: 5, name: "-FIVE-", prime: true});
                 store.put({id: 0, name: "-ZERO-", prime: false});
             },
             function testPaging(t){
 				var results, opts = {count: 25, sort: [{attribute: "order"}]};
-				results = window.results = [
-				    bigStore.query({}, lang.delegate(opts, {start: 0})),
-				    bigStore.query({}, lang.delegate(opts, {start: 25})),
-				    bigStore.query({}, lang.delegate(opts, {start: 50})),
-				    bigStore.query({}, lang.delegate(opts, {start: 75}))
-				];
+				bigFiltered = bigStore.filter({}).sort('order');
+				/*results = window.results = [
+				    bigFiltered.range(0,25).forEach(function(){}),
+				    bigFiltered.range(25,50).forEach(function(){}),
+				    bigFiltered.range(50,75).forEach(function(){}),
+				    bigFiltered.range(75,100).forEach(function(){})
+				];*/
+				var results = bigFiltered.data;
 				var observations = [];
-				array.forEach(results, function(r, i){
-				    r.observe(function(obj, from, to){
-				    	observations.push({from: from, to: to});
-				        console.log(i, " observed: ", obj, from, to);
-				    }, true);
+				bigFiltered.observe(function(obj, from, to){
+			    	observations.push({from: from, to: to});
+			        console.log(i, " observed: ", obj, from, to);
 				});
 				bigStore.add({id: 101, name: "one oh one", order: 2.5});
-				t.is(results[0].length, 26);
-				t.is(results[1].length, 25);
-				t.is(results[2].length, 25);
-				t.is(results[3].length, 25);
+				t.is(results.length, 101);
 				t.is(observations.length, 1);
 				bigStore.remove(101);
 				t.is(observations.length, 2);
-				t.is(results[0].length, 25);
+				t.is(results.length, 100);
 				bigStore.add({id: 102, name: "one oh two", order: 26.5});
-				t.is(results[0].length, 25);
-				t.is(results[1].length, 26);
-				t.is(results[2].length, 25);
+				t.is(results.length, 101);
 				t.is(observations.length, 3);
             },
             function testType(t){
-            	t.f(memoryStore == store);
+//            	t.f(memoryStore == store);
             	// TODO: use store.instanceOf()
 //			  	t.t(store instanceof Observable);
             }

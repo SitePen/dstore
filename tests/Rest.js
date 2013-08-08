@@ -1,4 +1,4 @@
-define(["doh/main", "require", "dojo/_base/lang", "dstore/JsonRest"], function(doh, require, lang, JsonRest){
+define(["doh/main", "require", "dojo/_base/lang", "dstore/Rest"], function(doh, require, lang, Rest){
 	function TestModel(){}
 	TestModel.prototype.describe = function(){
 		return "name is " + this.name;
@@ -13,13 +13,13 @@ define(["doh/main", "require", "dojo/_base/lang", "dstore/JsonRest"], function(d
 			"test-local-header-b": "yes",
 			"test-override": "overridden"
 		},
-		store = new JsonRest({
+		store = new Rest({
 			target: require.toUrl("dstore/tests/x.y").match(/(.+)x\.y$/)[1],
 			headers: lang.mixin({ "test-override": false }, globalHeaders),
 			model: TestModel
 		});
 
-	doh.register("dstore.tests.JsonRest",
+	doh.register("dstore.tests.Rest",
 		[
 			function testGet(t){
 				var d = new doh.Deferred();
@@ -31,21 +31,24 @@ define(["doh/main", "require", "dojo/_base/lang", "dstore/JsonRest"], function(d
 				});
 				return d;
 			},
-			function testQuery(t){
+			function testFilter(t){
 				var d = new doh.Deferred();
-				store.query("treeTestRoot").then(function(results){
-					var object = results[0];
-					t.is(object.name, "node1");
-					t.is(object.describe(), "name is node1");
-					t.is(object.someProperty, "somePropertyA");
-					d.callback(true);
+				var first = true;
+				store.filter("treeTestRoot").forEach(function(object){
+					if(first){
+						first = false;
+						t.is(object.name, "node1");
+						t.is(object.describe(), "name is node1");
+						t.is(object.someProperty, "somePropertyA");
+						d.callback(true);
+					}
 				});
 				return d;
 			},
-			function testQueryIterative(t){
+			function testFilterIterative(t){
 				var d = new doh.Deferred();
 				var i = 0;
-				store.query("treeTestRoot").forEach(function(object){
+				store.filter("treeTestRoot").forEach(function(object){
 					i++;
 					console.log(i);
 					t.is(object.name, "node" + i);
@@ -99,7 +102,7 @@ define(["doh/main", "require", "dojo/_base/lang", "dstore/JsonRest"], function(d
 				runTest("get", [ "index.php", requestHeaders ]);
 				runTest("get", [ "index.php", { headers: requestHeaders } ]);
 				runTest("remove", [ "index.php", { headers: requestHeaders } ]);
-				runTest("query", [ {}, { headers: requestHeaders, start: 20, count: 42 } ]);
+				runTest("filter", [ {}, { headers: requestHeaders, start: 20, count: 42 } ]);
 				runTest("put", [ {}, { headers: requestHeaders } ]);
 				runTest("add", [ {}, { headers: requestHeaders } ]);
 
