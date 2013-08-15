@@ -1,5 +1,5 @@
 define([
-	"../_base/lang", "../_base/declare", "../Deferred", "../_base/array",
+	"dojo/_base/lang", "dojo/_base/declare", "dojo/Deferred", "dojo/_base/array",
 	"./util/QueryResults", "./util/SimpleQueryEngine" /*=====, "./api/Store" =====*/
 ], function(lang, declare, Deferred, array, QueryResults, SimpleQueryEngine /*=====, Store =====*/){
 
