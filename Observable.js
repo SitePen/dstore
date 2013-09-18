@@ -3,7 +3,7 @@ define(["dojo/_base/declare", "dojo/when", "dojo/_base/array" /*=====, "./api/St
 
 // module:
 //		dojo/store/Observable
-var undef, queryUpdaters = [], revision = 0;
+var undef, revision = 0;
 
 	var inMethod;
 	function whenFinished(action){
@@ -44,20 +44,25 @@ return declare(null, {
 					/*if(++queryRevision != revision){
 						throw new Error("Query is out of date, you must observe() the query prior to any data modifications");
 					}*/
-					var removedObject, removedFrom = -1, insertedInto = -1;
+					var removedObject, removedFrom = -1, insertedInto = -1, insertionRangeIndex;
 					if(existingId !== undef){
 						// remove the old one
-						for(i = 0, l = resultsArray.length; i < l; i++){
-							var object = resultsArray[i];
-							if(store.getIdentity(object) == existingId){
-								removedObject = object;
-								removedFrom = i;
-								if(queryExecutor || !changed){// if it was changed and we don't have a queryExecutor, we shouldn't remove it because updated objects would be eliminated
+						filtered.ranges.some(function(range, index){
+							for(var i = range.start, l = i + range.count; i < l; ++i){
+								var object = resultsArray[i];
+								if(store.getIdentity(object) == existingId){
+									removedObject = object;
+									removedFrom = i;
 									resultsArray.splice(i, 1);
+
+									range.count--;
+									for(var j = index + 1; j < filtered.ranges.length; ++j){
+										filtered.ranges[j].start--;
+									}
+									return true;
 								}
-								break;
 							}
-						}
+						});
 					}
 					if(removedFrom > -1){
 						// TODO: Eventually we will want to aggregate all the splice events
@@ -78,17 +83,43 @@ return declare(null, {
 							var firstInsertedInto = removedFrom > -1 ? 
 								removedFrom : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
 								resultsArray.length;
-							resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
+
+							// TODO: Optimize this naive implementation
+							filtered.ranges.some(function(range, index){
+								var startIndex = range.start,
+									endIndex = startIndex + range.count,
+									sampleArray = resultsArray.slice(startIndex, endIndex);
+									
+								sampleArray.push(changed);
+								
+								var sortedIndex = queryExecutor(sampleArray).indexOf(changed);
+								if(sortedIndex > 0 && sortedIndex < (sampleArray.length - 1)){
+									insertedInto = startIndex + sortedIndex;
+									insertionRangeIndex = index;
+								}
+
+								return insertedInto !== -1;
+							});
+
+							/*resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
 							insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
 							// we now need to push the change back into the original results array
-							resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index
+							resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index*/
+
+							if(insertedInto > -1){
+								resultsArray.splice(insertedInto, 0, changed);
+								filtered.ranges[insertionRangeIndex].count++;
+								for(var j = insertionRangeIndex + 1; j < filtered.ranges.length; ++j){
+									filtered.ranges[insertionRangeIndex].start++;
+								}
+							}
 							
 /*							if((options.start && insertedInto == 0) ||
 								(!atEnd && insertedInto == resultsArray.length)){
 								// if it is at the end of the page, assume it goes into the prev or next page
 								insertedInto = -1;
 							}else{*/
-								resultsArray.splice(insertedInto, 0, changed); // and insert into the results array with the correct index
+								//resultsArray.splice(insertedInto, 0, changed); // and insert into the results array with the correct index
 							//}
 						}
 					}else if(changed){
@@ -97,11 +128,11 @@ return declare(null, {
 						if(existingId !== undef){
 							// an update, keep the index the same
 							insertedInto = removedFrom;
-						}else if(!options.start){
+						}else /*if(!options.start)*/{
 							// a new object
 							insertedInto = store.defaultIndex || 0;
-							resultsArray.splice(insertedInto, 0, changed);
 						}
+						resultsArray.splice(insertedInto, 0, changed);
 					}
 					if(insertedInto > -1){
 						var copyListeners = listeners.slice();
@@ -150,15 +181,55 @@ return declare(null, {
 	remove: whenFinished(function(id){
 		this.notify(undefined, id);
 	}),
+
+	registerRange: function(newStart, newEnd){
+		function createRange(){
+			return {
+				start: newStart,
+				count: newEnd - newStart
+			};
+		}
+		
+		var ranges = this.ranges = this.ranges || [];
+		var insertAtEnd = !ranges.some(function(range, i){
+			var existingStart = range.start,
+				existingEnd = existingStart + range.count;
+
+			if(newEnd < existingStart){
+				// the range completely procedes before the existing range
+				ranges.splice(i + 1, 0, createRange());
+				return true;
+			}else if(newStart < existingStart){
+				// the end of the new range overlaps with the existing range
+				delete ranges[existingStart];
+				range.start = newStart;
+				range.count = existingEnd - newStart;
+				return true;
+			}else if(newStart <= existingEnd){
+				// the start of the new range overlaps with the existing range	
+				range.count = newEnd - existingStart;
+				return true;
+			}else{
+				return false;
+			}
+		});
+
+		if(insertAtEnd){
+			ranges.push(createRange());
+		}
+	},
 	range: function(start, end){
 		var rangeResults = this.inherited(arguments);
-		if(!this.data){
+		//if(!this.data){
 			var partialData = this.partialData || (this.partialData = []);
+			var self = this;
 			when(rangeResults.data, function(rangedData){
 				// copy the new ranged data into the parent partial data set
-				partialData.splice(start, end - start, rangedData);
+				var spliceArgs = [ start, end - start ].concat(rangedData);
+				partialData.splice.apply(partialData, spliceArgs);
+				self.registerRange(start, end);
 			});
-		}
+		//}
 		return rangeResults;
 	}
 });
