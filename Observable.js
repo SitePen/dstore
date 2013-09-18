@@ -27,6 +27,41 @@ var undef, revision = 0;
 		};
 	}
 	function noOp(){}
+	function registerRange(ranges, newStart, newEnd){
+		function createRange(){
+			return {
+				start: newStart,
+				count: newEnd - newStart
+			};
+		}
+		
+		var insertAtEnd = !ranges.some(function(range, i){
+			var existingStart = range.start,
+				existingEnd = existingStart + range.count;
+
+			if(newEnd < existingStart){
+				// the range completely procedes before the existing range
+				ranges.splice(i + 1, 0, createRange());
+				return true;
+			}else if(newStart < existingStart){
+				// the end of the new range overlaps with the existing range
+				delete ranges[existingStart];
+				range.start = newStart;
+				range.count = existingEnd - newStart;
+				return true;
+			}else if(newStart <= existingEnd){
+				// the start of the new range overlaps with the existing range	
+				range.count = newEnd - existingStart;
+				return true;
+			}else{
+				return false;
+			}
+		});
+
+		if(insertAtEnd){
+			ranges.push(createRange());
+		}
+	}
 
 return declare(null, {
 	currentRange: [],
@@ -49,7 +84,6 @@ return declare(null, {
 		var originalRange = this.range;
 		var observed = lang.delegate(this, {
 			store: store,
-			ranges: [],
 			remove: function(){
 				while(handles.length > 0){
 					handles.pop().remove();
@@ -58,62 +92,64 @@ return declare(null, {
 				store.queryUpdaters.splice(array.indexOf(store.queryUpdaters, queryUpdater), 1);
 
 				this.remove = noOp;
-			},
-
-			registerRange: function(newStart, newEnd){
-				function createRange(){
-					return {
-						start: newStart,
-						count: newEnd - newStart
-					};
-				}
-				
-				var ranges = this.ranges = this.ranges || [];
-				var insertAtEnd = !ranges.some(function(range, i){
-					var existingStart = range.start,
-						existingEnd = existingStart + range.count;
-
-					if(newEnd < existingStart){
-						// the range completely procedes before the existing range
-						ranges.splice(i + 1, 0, createRange());
-						return true;
-					}else if(newStart < existingStart){
-						// the end of the new range overlaps with the existing range
-						delete ranges[existingStart];
-						range.start = newStart;
-						range.count = existingEnd - newStart;
-						return true;
-					}else if(newStart <= existingEnd){
-						// the start of the new range overlaps with the existing range	
-						range.count = newEnd - existingStart;
-						return true;
-					}else{
-						return false;
-					}
-				});
-
-				if(insertAtEnd){
-					ranges.push(createRange());
-				}
-			},
-			range: function(start, end){
-				var rangeResults = originalRange.apply(this, arguments);
-				//if(!this.data){
-					var partialData = this.partialData || (this.partialData = []);
-					var self = this;
-					when(rangeResults.data, function(rangedData){
-						// copy the new ranged data into the parent partial data set
-						var spliceArgs = [ start, end - start ].concat(rangedData);
-						partialData.splice.apply(partialData, spliceArgs);
-						self.registerRange(start, end);
-					});
-				//}
-				return rangeResults;
 			}
+
 		});
 
+
+		var findCurrentIndex = function(resultsArray, id){
+				var ranges = observed.ranges;
+				for(var rangeIndex = 0; rangeIndex < ranges.length; ++rangeIndex){
+					var range = ranges[rangeIndex];
+					for(var i = range.start, l = i + range.count; i < l; ++i){
+						var object = resultsArray[i];
+						if(store.getIdentity(object) == id){
+							return i;
+							return true;
+						}
+					}
+				}
+				return -1;
+			},
+			// TODO: Optimize this naive implementation
+			determineInsertionIndex = function(resultsArray, queryExecutor, object){
+				var ranges = observed.ranges;
+				for(var i = 0; i < ranges.length; ++i){
+					var range = ranges[i],
+						startIndex = range.start,
+						endIndex = startIndex + range.count,
+						sampleArray = resultsArray.slice(startIndex, endIndex);
+						
+					sampleArray.push(object);
+					
+					var sortedIndex = queryExecutor(sampleArray).indexOf(object);
+					if(sortedIndex > 0 && sortedIndex < (sampleArray.length - 1)){
+						return range.start + sortedIndex;
+					}
+				}
+				return -1;
+			};
+		//if(!this.data){
+			// TOOD: Maybe this can be available via closure instead
+			observed.ranges = [];
+
+			var originalRange = observed.range;
+			observed.range = function(start, end){
+				var rangeResults = originalRange.apply(this, arguments),
+					partialData = this.partialData || (this.partialData = []),
+					self = this;
+				// TODO: Wait for total too. This will allow us to make sure updates don't disappear at the end of the data
+				when(rangeResults.data, function(rangedData){
+					// copy the new ranged data into the parent partial data set
+					var spliceArgs = [ start, end - start ].concat(rangedData);
+					partialData.splice.apply(partialData, spliceArgs);
+					registerRange(self.ranges, start, end);
+				});
+				return rangeResults;
+			};
+		//}
+
 		var queryUpdater;
-		var store = this.store || this;
 		// first listener was added, create the query checker and updater
 		(store.queryUpdaters || (store.queryUpdaters = [])).push(queryUpdater = function(changed, existingId){
 			when(observed.data || observed.partialData, function(resultsArray){
@@ -126,30 +162,28 @@ return declare(null, {
 				var removedObject, removedFrom = -1, insertedInto = -1;
 				if(existingId !== undef){
 					// remove the old one
-					observed.ranges.some(function(range, index){
-						for(var i = range.start, l = i + range.count; i < l; ++i){
-							var object = resultsArray[i];
-							if(store.getIdentity(object) == existingId){
-								removedObject = object;
-								removedFrom = i;
-								resultsArray.splice(i, 1);
+					removedFrom = findCurrentIndex(resultsArray, existingId);
+					if(removedFrom > -1){
+						removedObject = resultsArray[removedFrom];
+						resultsArray.splice(removedFrom, 1);
 
+						// TODO: Simplify/encapsulate this and fix it to just start at the range containing the removed item
+						for(var i = 0; i < observed.ranges.length; ++i){
+							var range = observed.ranges[i];
+							if(removedFrom < range.start){
+								range.start--;
+							}else if(removedFrom < (range.start + range.count)){
 								range.count--;
-								for(var j = index + 1; j < observed.ranges.length; ++j){
-									observed.ranges[j].start--;
-								}
-								return true;
 							}
 						}
-					});
-				}
-				if(removedFrom > -1){
-					// TODO: Eventually we will want to aggregate all the splice events
-					// in an event turn, but we will wait until we have a reliable, performant queueing
-					// mechanism for this (besides setTimeout)
 
-					// splice removal arguments
-					listener(removedFrom, 1);
+						// TODO: Eventually we will want to aggregate all the splice events
+						// in an event turn, but we will wait until we have a reliable, performant queueing
+						// mechanism for this (besides setTimeout)
+
+						// splice removal arguments
+						listener(removedFrom, 1);
+					}
 				}
 				if(queryExecutor){
 					// add the new one
@@ -161,27 +195,21 @@ return declare(null, {
 							removedFrom : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
 							resultsArray.length;
 
-						// TODO: Optimize this naive implementation
-						observed.ranges.some(function(range, rangeIndex){
-							var startIndex = range.start,
-								endIndex = startIndex + range.count,
-								sampleArray = resultsArray.slice(startIndex, endIndex);
-								
-							sampleArray.push(changed);
-							
-							var sortedIndex = queryExecutor(sampleArray).indexOf(changed);
-							if(sortedIndex > 0 && sortedIndex < (sampleArray.length - 1)){
-								insertedInto = startIndex + sortedIndex;
-								resultsArray.splice(insertedInto, 0, changed);
+						insertedInto = determineInsertionIndex(resultsArray, queryExecutor, changed);
 
-								observed.ranges[rangeIndex].count++;
-								for(var j = rangeIndex + 1; j < observed.ranges.length; ++j){
-									observed.ranges[j].start++;
+						if(insertedInto > -1){
+							resultsArray.splice(insertedInto, 0, changed);
+
+							// TODO: Simplify/encapsulate this and fix it to just start at the range containing the removed item
+							for(var i = 0; i < observed.ranges.length; ++i){
+								var range = observed.ranges[i];
+								if(insertedInto < range.start){
+									range.start++;
+								}else if(insertedInto <= (range.start + range.count)){
+									range.count++;
 								}
 							}
-
-							return insertedInto !== -1;
-						});
+						}
 
 						/*resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
 						insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
