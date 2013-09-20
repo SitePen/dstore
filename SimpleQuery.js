@@ -104,7 +104,12 @@ return declare(Store, {
 	},
 	range: function(start, end){
 		// now we paginate
-		return lang.delegate(this, {data: this.data.slice(start || 0, end || Infinity), store: this.store || this});
+		return lang.delegate(this, {
+			data: this.data.slice(start || 0, end || Infinity),
+			// TODO: Is this the correct thing to do? Should it be updated when items are added and removed from the data?
+			total: this.data.length,
+			store: this.store || this
+		});
 	},
 	forEach: function(callback, thisObj){
 		arrayUtil.forEach(this.data, callback, thisObj);
