@@ -1,127 +1,156 @@
-define(["doh", "dstore/Memory", "dstore/Cache", "dojo/Deferred", "dstore/util/QueryResults"], function(doh, Memory, Cache, Deferred, QueryResults){
+define([
+	'intern!object',
+	'intern/chai!assert',
+	'dojo/Deferred',
+	'dstore/Memory',
+	'dstore/Cache',
+	'dstore/util/QueryResults'
+], function(registerSuite, assert, Deferred, Memory, Cache, QueryResults){
 
 	var masterStore = new Memory({
 		data: [
-			{id: 1, name: "one", prime: false},
-			{id: 2, name: "two", even: true, prime: true},
-			{id: 3, name: "three", prime: true},
-			{id: 4, name: "four", even: true, prime: false},
-			{id: 5, name: "five", prime: true}
+			{id: 1, name: 'one', prime: false},
+			{id: 2, name: 'two', even: true, prime: true},
+			{id: 3, name: 'three', prime: true},
+			{id: 4, name: 'four', even: true, prime: false},
+			{id: 5, name: 'five', prime: true}
 		]
 	});
 	var cachingStore = new Memory();
 	var options = {};
 	var store = Cache(masterStore, cachingStore, options);
-	doh.register("dojo.tests.store.Cache",
-		[
-			function testGet(t){
-				t.is(store.get(1).name, "one");
-				t.is(cachingStore.get(1).name, "one"); // second one should be cached
-				t.is(store.get(1).name, "one");
-				t.is(store.get(4).name, "four");
-				t.is(cachingStore.get(4).name, "four");
-				t.is(store.get(4).name, "four");
-			},
-			function testQuery(t){
-				options.isLoaded = function(){ return false;};
-				t.is(store.query({prime: true}).length, 3);
-				t.is(store.query({even: true})[1].name, "four");
-				t.is(cachingStore.get(3), undefined);
-				options.isLoaded = function(){ return true;};
-				t.is(store.query({prime: true}).length, 3);
-				t.is(cachingStore.get(3).name, "three");
-			},
-			function testQueryWithSort(t){
-				t.is(store.query({prime: true}, {sort:[{attribute:"name"}]}).length, 3);
-				t.is(store.query({even: true}, {sort:[{attribute:"name"}]})[1].name, "two");
-			},
-			function testPutUpdate(t){
-				var four = store.get(4);
-				four.square = true;
-				store.put(four);
-				four = store.get(4);
-				t.t(four.square);
-				four = cachingStore.get(4);
-				t.t(four.square);
-				four = masterStore.get(4);
-				t.t(four.square);
-			},
-			function testPutNew(t){
-				store.put({
+
+	registerSuite({
+		name: 'dstore Cache',
+
+		'get': function(){
+			assert.strictEqual(store.get(1).name, 'one');
+			assert.strictEqual(cachingStore.get(1).name, 'one'); // second one should be cached
+			assert.strictEqual(store.get(1).name, 'one');
+			assert.strictEqual(store.get(4).name, 'four');
+			assert.strictEqual(cachingStore.get(4).name, 'four');
+			assert.strictEqual(store.get(4).name, 'four');
+		},
+
+		'query': function(){
+			options.isLoaded = function(){
+				return false;
+			};
+			assert.strictEqual(store.query({prime: true}).length, 3);
+			assert.strictEqual(store.query({even: true})[1].name, 'four');
+			assert.strictEqual(cachingStore.get(3), undefined);
+			options.isLoaded = function(){
+				return true;
+			};
+			assert.strictEqual(store.query({prime: true}).length, 3);
+			assert.strictEqual(cachingStore.get(3).name, 'three');
+		},
+
+		'query with sort': function(){
+			assert.strictEqual(store.query({prime: true}, {sort: [
+				{attribute: 'name'}
+			]}).length, 3);
+			assert.strictEqual(store.query({even: true}, {sort: [
+				{attribute: 'name'}
+			]})[1].name, 'two');
+		},
+
+		'put update': function(){
+			var four = store.get(4);
+			four.square = true;
+			store.put(four);
+			four = store.get(4);
+			assert.isTrue(four.square);
+			four = cachingStore.get(4);
+			assert.isTrue(four.square);
+			four = masterStore.get(4);
+			assert.isTrue(four.square);
+		},
+
+		'put new': function(){
+			store.put({
+				id: 6,
+				perfect: true
+			});
+			assert.isTrue(store.get(6).perfect);
+			assert.isTrue(cachingStore.get(6).perfect);
+			assert.isTrue(masterStore.get(6).perfect);
+		},
+
+		'add duplicate': function(){
+			var threw;
+			try{
+				store.add({
 					id: 6,
 					perfect: true
 				});
-				t.t(store.get(6).perfect);
-				t.t(cachingStore.get(6).perfect);
-				t.t(masterStore.get(6).perfect);
-			},
-			function testAddDuplicate(t){
-				var threw;
-				try{
-					store.add({
-						id: 6,
-						perfect: true
-					});
-				}catch(e){
-					threw = true;
-				}
-				t.t(threw);
-			},
-			function testAddNew(t){
-				store.add({
-					id: 7,
-					prime: true
-				});
-				t.t(store.get(7).prime);
-				t.t(cachingStore.get(7).prime);
-				t.t(masterStore.get(7).prime);
-			},
-			function testResultsFromMaster(t){
-				var originalAdd = masterStore.add;
-				masterStore.add = function(object){
-					return {
-						test: "value"
-					};
-				};
-				t.is(store.add({
-					id: 7,
-					prop: "doesn't matter"
-				}).test, "value");
-				masterStore.add = originalAdd;
-			},
-			function testCachedQuery(t){
-				store.query(); // should result in everything being cached
-				masterStore.query = function(){ throw new Error("should not be called"); };
-				t.is(store.query({prime: true}).length, 4);
-			},
-			function testDelayedCachedQuery(t){
-				var masterStore = {
-					query: function(){
-						var def = new Deferred();
-						setTimeout(function(){
-							def.resolve([
-								{id: 1, name: "one", prime: false},
-								{id: 2, name: "two", even: true, prime: true},
-								{id: 3, name: "three", prime: true},
-								{id: 4, name: "four", even: true, prime: false},
-								{id: 5, name: "five", prime: true}
-							]);
-						}, 20);
-						return new QueryResults(def);
-					}
-				};
-				var cachingStore = new Memory();
-				var options = {};
-				var store = Cache(masterStore, cachingStore, options);
-				store.query(); // should result in everything being cached
-				masterStore.query = function(){ throw new Error("should not be called"); };
-				var testDef = new Deferred();
-				store.query({prime: true}).then(function(results){
-					t.is(results.length, 3);
-					testDef.resolve(true);
-				});
-				return testDef;
+			}catch(e){
+				threw = true;
 			}
-		]
-	);
+			assert.isTrue(threw);
+		},
+
+		'add new': function(){
+			store.add({
+				id: 7,
+				prime: true
+			});
+			assert.isTrue(store.get(7).prime);
+			assert.isTrue(cachingStore.get(7).prime);
+			assert.isTrue(masterStore.get(7).prime);
+		},
+
+		'results from master': function(){
+			var originalAdd = masterStore.add;
+			masterStore.add = function(){
+				return {
+					test: 'value'
+				};
+			};
+			assert.strictEqual(store.add({
+				id: 7,
+				prop: 'doesn\'t matter'
+			}).test, 'value');
+			masterStore.add = originalAdd;
+		},
+
+		'cached query': function(){
+			store.query(); // should result in everything being cached
+			masterStore.query = function(){
+				throw new Error('should not be called');
+			};
+			assert.strictEqual(store.query({prime: true}).length, 4);
+		},
+
+		'delayed cached query': function(){
+			var masterStore = {
+				query: function(){
+					var def = new Deferred();
+					setTimeout(function(){
+						def.resolve([
+							{id: 1, name: 'one', prime: false},
+							{id: 2, name: 'two', even: true, prime: true},
+							{id: 3, name: 'three', prime: true},
+							{id: 4, name: 'four', even: true, prime: false},
+							{id: 5, name: 'five', prime: true}
+						]);
+					}, 20);
+					return new QueryResults(def);
+				}
+			};
+			var cachingStore = new Memory();
+			var options = {};
+			var store = Cache(masterStore, cachingStore, options);
+			store.query(); // should result in everything being cached
+			masterStore.query = function(){
+				throw new Error('should not be called');
+			};
+			var testDef = new Deferred();
+			store.query({prime: true}).then(function(results){
+				assert.strictEqual(results.length, 3);
+				testDef.resolve(true);
+			});
+			return testDef;
+		}
+	});
 });
