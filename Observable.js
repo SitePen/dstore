@@ -73,21 +73,30 @@ var undef, revision = 0;
 return declare(null, {
 	currentRange: [],
 	observe: function(listener, observeOptions){
-		var store = this.store || this;
+		var store = this.store || this,
+			ranges = [];
+		function registerRangeChange(rangeIndex, difference){
+			ranges[rangeIndex].count += difference;
+			for(var i = rangeIndex + 1; i < ranges.length; ++i){
+				ranges[i].start += difference;
+			}
+		}
 
 		// monitor for updates by listening to these methods
 		var handles = [
 			aspect.around(store, "add", whenFinished(function(object){
-				store.notify(object);
+				store.notify("add", object);
 			})),
 			aspect.around(store, "put", whenFinished(function(object){
-				store.notify(object, store.getIdentity(object));
+				// TODO: The weakness here is that some use put() to add new items,
+				// and this will communicate an update. How should we deal with this?
+				store.notify("update", object);
 			})),
 			aspect.around(store, "remove", whenFinished(function(id){
-				store.notify(undefined, id);
+				store.notify("remove", id);
 			}))
 		];
-
+	
 		var originalRange = this.range;
 		var observed = lang.delegate(this, {
 			store: store,
@@ -131,8 +140,26 @@ return declare(null, {
 
 		var queryUpdater;
 		// first listener was added, create the query checker and updater
-		(store.queryUpdaters || (store.queryUpdaters = [])).push(queryUpdater = function(changed, existingId){
+		(store.queryUpdaters || (store.queryUpdaters = [])).push(queryUpdater = function(type, target){
 			when(observed.data || observed.partialData, function(resultsArray){
+				function findItem(itemOrId){
+					var id = typeof itemOrId === "object" ? store.getIdentity(itemOrId) : itemOrId;
+
+					if(id){
+						for(var rangeIndex = 0; rangeIndex < ranges.length; ++rangeIndex){
+							var range = ranges[rangeIndex];
+							for(var i = range.start, l = i + range.count; i < l; ++i){
+								if(store.getIdentity(resultsArray[i]) === id){
+									return {
+										rangeIndex: rangeIndex,
+										itemIndex: i
+									};
+								}
+							}
+						}
+					}
+				}
+
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
 				var i, l;
@@ -140,97 +167,89 @@ return declare(null, {
 				/*if(++queryRevision != revision){
 					throw new Error("Query is out of date, you must observe() the query prior to any data modifications");
 				}*/
-				var removedObject, removedFrom = -1, insertedInto = -1;
-				if(existingId !== undef){
-					// remove the old one
-					for(var rangeIndex = 0; removedFrom === -1 && rangeIndex < ranges.length; ++rangeIndex){
-						var range = ranges[rangeIndex];
-						for(var i = range.start, l = i + range.count; i < l; ++i){
-							var object = resultsArray[i];
-							if(store.getIdentity(object) == existingId){
-								removedFrom = i;
-								removedObject = resultsArray[removedFrom];
-								resultsArray.splice(removedFrom, 1);
 
-								range.count--;
-								for(var j = rangeIndex + 1; j < ranges.length; ++j){
-									ranges[j].start--;
-								}
-
-								// TODO: Eventually we will want to aggregate all the listener events
-								// in an event turn, but we will wait until we have a reliable, performant queueing
-								// mechanism for this (besides setTimeout)
-								listener(removedFrom, 1);
-								break;
-							}
-						}
+				var location = findItem(target);
+				if(type === "remove"){
+					if(location){
+						resultsArray.splice(location.itemIndex, 1);
+						registerRangeChange(location.rangeIndex, -1);
 					}
-				}
-				if(queryExecutor){
-					// add the new one
-					if(changed &&
-							// if a matches function exists, use that (probably more efficient)
-							(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length)){
+					listener("remove", target, { index: location ? location.itemIndex : null });
+				}else if(type === "add" || type === "update"){
+					var previousIndex = location ? location.itemIndex : undef,
+						insertionRangeIndex, insertionIndex;
+					if(queryExecutor){
+						// if a matches function exists, use that (probably more efficient)
+						if(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length){
+							//var firstInsertedInto =  previousIndex !== undef ? 
+							//	previousIndex : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
+							//	resultsArray.length;
 
-						var firstInsertedInto = removedFrom > -1 ? 
-							removedFrom : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
-							resultsArray.length;
-
-						// TODO: Optimize this naive implementation. Could start with the item's range before update, sort, and do something like a binary search from there.
-						for(var i = 0; i < ranges.length; ++i){
-							var range = ranges[i],
-								startIndex = range.start,
-								endIndex = startIndex + range.count,
-								sampleArray = resultsArray.slice(startIndex, endIndex);
+							// TODO: Optimize this naive implementation. Could start with the item's range before update, sort, and do something like a binary search from there.
+							for(var i = 0; insertionIndex === undef && i < ranges.length; ++i){
+								var range = ranges[i],
+									startIndex = range.start,
+									endIndex = startIndex + range.count,
+									// TODO: Don't copy the results array if range is entire array
+									sampleArray = resultsArray.slice(startIndex, endIndex);
+									
+								sampleArray.push(object);
 								
-							sampleArray.push(object);
-							
-							var sortedIndex = queryExecutor(sampleArray).indexOf(object);
-							if(sortedIndex > 0
-							   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === (totalItems - 1))){
-								insertedInto = range.start + sortedIndex;
-								resultsArray.splice(insertedInto, 0, changed);
-
-								range.count++;
-								for(var j = i + 1; j < ranges.length; ++j){
-									ranges[j].start++;
+								var sortedIndex = queryExecutor(sampleArray).indexOf(object);
+								if(sortedIndex > 0
+								   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === (totalItems - 1))){
+									insertionRangeIndex = rangeIndex;
+									insertionIndex = range.start + sortedIndex;
 								}
-								break;
 							}
-						}
 
-						/*resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
-						insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
-						// we now need to push the change back into the original results array
-						resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index*/
-						
-/*							if((options.start && insertedInto == 0) ||
-							(!atEnd && insertedInto == resultsArray.length)){
-							// if it is at the end of the page, assume it goes into the prev or next page
-							insertedInto = -1;
-						}else{*/
-							//resultsArray.splice(insertedInto, 0, changed); // and insert into the results array with the correct index
-						//}
+							/*resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
+							insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
+							// we now need to push the change back into the original results array
+							resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index*/
+							
+	/*							if((options.start && insertedInto == 0) ||
+								(!atEnd && insertedInto == resultsArray.length)){
+								// if it is at the end of the page, assume it goes into the prev or next page
+								insertedInto = -1;
+							}else{*/
+								//resultsArray.splice(insertedInto, 0, changed); // and insert into the results array with the correct index
+							//}
+						}
+					}else{
+						// we don't have a queryEngine, so we can't provide any information
+						// about where it was inserted or moved to. If it is an update, we leave it's position alone, other we at least indicate a new object
+						if(location){
+							// an update, keep the index the same
+							insertionIndex = location.itemIndex;
+						}else{
+							// a new object
+							// TODO: Find or register containing range
+							insertionIndex = store.defaultIndex || 0;
+							resultsArray.splice(insertionIndex, 0, changed);
+						}
 					}
-				}else if(changed){
-					// we don't have a queryEngine, so we can't provide any information
-					// about where it was inserted or moved to. If it is an update, we leave it's position alone, other we at least indicate a new object
-					if(existingId !== undef){
-						// an update, keep the index the same
-						insertedInto = removedFrom;
-					}else /*if(!options.start)*/{
-						// a new object
-						insertedInto = store.defaultIndex || 0;
+
+					if(previousIndex !== undef){
+						resultsArray[insertionIndex] = target;
+					}else{
+						if(previousIndex !== undef){
+							resultsArray.splice(previousIndex, 1);
+							registerRangeChange(location.rangeIndex, -1);
+						}
+						if(insertionIndex !== undef){
+							resultsArray.splice(insertionIndex, 0, target);
+							registerRangeChange(insertionRangeIndex, 1)
+						}
 					}
-					resultsArray.splice(insertedInto, 0, changed);
-				}
-				if(insertedInto > -1){
-					// splice insertion arguments
-					listener(insertedInto, 0, changed);
-				}
+					listener(type, target, { index: insertionIndex, previousIndex: previousIndex });
 /*					if((removedFrom > -1 || insertedInto > -1) &&
 						(!excludeObjectUpdates || !queryExecutor || (removedFrom != insertedInto))){
 				}*/
+				}else{
+					// TODO: Would it be better to log the error to console instead?
+					throw new Error("Unknown notification type: " + type);
+				}
 			});
 		});
 		
