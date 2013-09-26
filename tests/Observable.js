@@ -14,7 +14,7 @@ define([
 			return this.inherited(arguments);
 		}
 	});
-	var memoryStore = new MyStore({
+	var store = new MyStore({
 		data: [
 			{id: 0, name: 'zero', even: true, prime: false},
 			{id: 1, name: 'one', prime: false},
@@ -24,13 +24,12 @@ define([
 			{id: 5, name: 'five', prime: true}
 		]
 	});
-	var store = new Observable(memoryStore);
 	var data = [];
 	var i;
 	for(i = 1; i <= 100; i++){
 		data.push({id: i, name: 'item ' + i, order: i});
 	}
-	var bigStore = Observable(new Memory({data: data}));
+	var bigStore = new MyStore({data: data});
 
 	registerSuite({
 		name: 'dstore Observable',
@@ -64,7 +63,7 @@ define([
 			var two = results.data[0];
 			two.prime = false;
 			store.put(two); // should remove it from the array
-			assert.strictEqual(results.data.length, 2);
+			assert.strictEqual(observer.data.length, 2);
 			expectedChanges.push({
 					removeFrom: 0,
 					count: 1,
@@ -83,15 +82,15 @@ define([
 						prime: true
 					}
 				});
-			assert.strictEqual(results.data.length, 3);
+			assert.strictEqual(observer.data.length, 3);
 			store.add({// shouldn't be added
 				id:6, name:"six"
 			});
-			assert.strictEqual(results.data.length, 3);
+			assert.strictEqual(observer.data.length, 3);
 			store.add({// should be added
 				id:7, name:"seven", prime:true
 			});
-			assert.strictEqual(results.data.length, 4);
+			assert.strictEqual(observer.data.length, 4);
 			
 			expectedChanges.push({
 					removeFrom: 3,
@@ -105,7 +104,7 @@ define([
 					"removeFrom":0,
 					count: 1
 				});
-			assert.strictEqual(results.data.length, 3);
+			assert.strictEqual(observer.data.length, 3);
 			
 			observer.remove(); // shouldn't get any more calls
 			store.add({// should not be added
@@ -117,8 +116,8 @@ define([
 		},
 
 		'query with zero id': function(){
-			var results = store.query({});
-			assert.strictEqual(results.length, 8);
+			var results = store.filter({});
+			assert.strictEqual(results.data.length, 8);
             var observer = results.observe(function(removeFrom, count, add){
                     // we only do puts so previous & new indices must always been the same
                     // unfortunately if id = 0, the removeFrom
@@ -165,7 +164,7 @@ define([
 		},
 
 		'type': function(){
-			assert.isFalse(memoryStore === store);
+			assert.isFalse(store === store.observe(function(){}));
 		}
 	});
 });

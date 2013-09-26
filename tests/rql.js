@@ -6,7 +6,7 @@ define([
 	'dojo/request/registry',
 	'dstore/rql',
 	'dstore/Memory',
-	'dstore/JsonRest'
+	'dstore/Rest'
 ], function(registerSuite, assert, declare, Deferred, registry, rql, Memory, JsonRest){
 
 	var TestModel = declare(null, {

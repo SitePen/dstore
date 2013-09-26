@@ -4,7 +4,7 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
-	'dstore/JsonRest'
+	'dstore/Rest'
 ], function(require, registerSuite, assert, declare, lang, JsonRest){
 	// NOTE: Because HTTP headers are case-insensitive they should always be provided as all-lowercase
 	// strings to simplify testing.
@@ -63,7 +63,7 @@ define([
 
 		'query': function(){
 			var d = this.async();
-			store.filter("treeTestRoot").forEach(function(object){
+			store.filter("data/treeTestRoot").forEach(function(object){
 				if(first){
 					first = false;
 					assert.strictEqual(object.name, 'node1');
@@ -76,7 +76,7 @@ define([
 		'query iterative': function(){
 			var d = this.async();
 			var i = 0;
-			return store.query('data/treeTestRoot').forEach(d.rejectOnError(function(object){
+			return store.filter('data/treeTestRoot').forEach(d.rejectOnError(function(object){
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
 			}));
@@ -95,7 +95,7 @@ define([
 		},
 
 		'headers query': function(){
-			runTest.call(this, 'query', [
+			runTest.call(this, 'filter', [
 				{},
 				{ headers: requestHeaders, start: 20, count: 42 }
 			]);

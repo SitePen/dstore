@@ -72,8 +72,8 @@ define([
 		},
 
 		'query with paging': function(){
-			assert.strictEqual(store.filter({prime: true}).range(1, 1).data.length, 1);
-			assert.strictEqual(store.filter({even: true}).range(1, 1).data[0].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).range(1, 2).data.length, 1);
+			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
 		},
 
 		'put update': function(){

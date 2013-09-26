@@ -12,28 +12,6 @@ define([
 //		dojo/store/Observable
 var undef, revision = 0;
 
-	var inMethod;
-	function whenFinished(action){
-		return function(originalMethod){
-			return function(){
-				if(inMethod){
-					// if one method calls another (like add() calling put()) we don't want two events
-					return originalMethod.apply(this, arguments);
-				}
-				inMethod = true;
-				try{
-					var results = originalMethod.apply(this, arguments);
-					when(results, function(results){
-						action.apply(this, (typeof results == "object" && results) ? [results] : arguments);
-					});
-					return results;
-				}finally{
-					inMethod = false;
-				}
-			};
-		};
-	}
-	function noOp(){}
 	function registerRange(ranges, newStart, newEnd){
 		function createRange(){
 			return {
@@ -74,20 +52,44 @@ return declare(null, {
 	currentRange: [],
 	observe: function(listener, observeOptions){
 		var store = this.store || this;
+		var inMethod;
+		function whenFinished(methodName, action){
+			handles.push(aspect.around(store, methodName, function(originalMethod){
+				return function(){
+					var args = arguments;
+					if(inMethod){
+						// if one method calls another (like add() calling put()) we don't want two events
+						return originalMethod.apply(this, args);
+					}
+					inMethod = true;
+					try{
+						var results = originalMethod.apply(this, args);
+						when(results, function(results){
+							action.apply(this, (typeof results == "object" && results) ? [results] : args);
+						});
+						return results;
+					}finally{
+						inMethod = false;
+					}
+				};
+			}));
+		}
 
 		// monitor for updates by listening to these methods
-		var handles = [
-			aspect.around(store, "add", whenFinished(function(object){
-				store.notify(object);
-			})),
-			aspect.around(store, "put", whenFinished(function(object){
-				store.notify(object, store.getIdentity(object));
-			})),
-			aspect.around(store, "remove", whenFinished(function(id){
-				store.notify(undefined, id);
-			}))
-		];
-
+		var handles = [];
+		
+		whenFinished("add", function(object){
+			notify(object);
+		});
+		whenFinished("put", function(object){
+			notify(object, store.getIdentity(object));
+		});
+		whenFinished("remove", function(id){
+			notify(undefined, id);
+		});
+		whenFinished("notify", function(object, id){
+			notify(object, id);
+		});
 		var originalRange = this.range;
 		var observed = lang.delegate(this, {
 			store: store,
@@ -96,22 +98,20 @@ return declare(null, {
 					handles.pop().remove();
 				}
 
-				store.queryUpdaters.splice(array.indexOf(store.queryUpdaters, queryUpdater), 1);
-
-				this.remove = noOp;
+				this.remove = function(){};
 			}
-
 		});
 
 		var ranges = [];
 		if(observed.data){
+			observed.data = observed.data.slice(0); // make local copy
 			// Treat in-memory data as one range to allow a single code path for all stores
 			registerRange(ranges, 0, observed.data.length);
 		}else{
 			var originalRange = observed.range;
 			observed.range = function(start, end){
 				var rangeResults = originalRange.apply(this, arguments),
-					partialData = this.partialData || (this.partialData = []);
+					partialData = this.hasOwnProperty('partialData') ? this.partial : (this.partialData = []);
 
 				// Wait for total in addition to data so updated objects sorted to
 				// the end of the list have a known index
@@ -129,9 +129,8 @@ return declare(null, {
 			}
 		}
 
-		var queryUpdater;
-		// first listener was added, create the query checker and updater
-		(store.queryUpdaters || (store.queryUpdaters = [])).push(queryUpdater = function(changed, existingId){
+		function notify(changed, existingId){
+			revision++;
 			when(observed.data || observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
@@ -151,6 +150,7 @@ return declare(null, {
 								removedFrom = i;
 								removedObject = resultsArray[removedFrom];
 								resultsArray.splice(removedFrom, 1);
+								totalItems--;
 
 								range.count--;
 								for(var j = rangeIndex + 1; j < ranges.length; ++j){
@@ -183,13 +183,14 @@ return declare(null, {
 								endIndex = startIndex + range.count,
 								sampleArray = resultsArray.slice(startIndex, endIndex);
 								
-							sampleArray.push(object);
+							sampleArray.push(changed);
 							
-							var sortedIndex = queryExecutor(sampleArray).indexOf(object);
+							var sortedIndex = queryExecutor(sampleArray).indexOf(changed);
 							if(sortedIndex > 0
-							   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === (totalItems - 1))){
+							   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === totalItems)){
 								insertedInto = range.start + sortedIndex;
 								resultsArray.splice(insertedInto, 0, changed);
+								totalItems++;
 
 								range.count++;
 								for(var j = i + 1; j < ranges.length; ++j){
@@ -223,6 +224,7 @@ return declare(null, {
 						insertedInto = store.defaultIndex || 0;
 					}
 					resultsArray.splice(insertedInto, 0, changed);
+					totalItems++;
 				}
 				if(insertedInto > -1){
 					// splice insertion arguments
@@ -232,7 +234,7 @@ return declare(null, {
 						(!excludeObjectUpdates || !queryExecutor || (removedFrom != insertedInto))){
 				}*/
 			});
-		});
+		}
 		
 		return observed;
 	},
@@ -240,11 +242,6 @@ return declare(null, {
 	// changed on the backend
 	// create a new instance
 	notify: function(object, existingId){
-		revision++;
-		var updaters = this.queryUpdaters.slice();
-		for(var i = 0, l = updaters.length; i < l; i++){
-			updaters[i](object, existingId);
-		}
 	}
 });
 });
