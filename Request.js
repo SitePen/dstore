@@ -118,7 +118,7 @@ return declare(Store, {
 	forEach: function(callback, thisObj){
 		if(!this.hasOwnProperty('data')){
 			// perform the actual query
-			var response = request(this.target + (this.query || ""), {
+			var response = request(this.target, {
 				method: "GET",
 				headers: lang.delegate(this.headers, { Accept: this.accepts })
 			});

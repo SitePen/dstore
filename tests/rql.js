@@ -4,10 +4,11 @@ define([
 	'dojo/_base/declare',
 	'dojo/Deferred',
 	'dojo/request/registry',
-	'dstore/rql',
+	'dstore/RqlClient',
+	'dstore/RqlServer',
 	'dstore/Memory',
 	'dstore/Rest'
-], function(registerSuite, assert, declare, Deferred, registry, rql, Memory, JsonRest){
+], function(registerSuite, assert, declare, Deferred, registry, RqlClient, RqlServer, Memory, Rest){
 
 	var TestModel = declare(null, {
 		describe: function(){
@@ -15,7 +16,7 @@ define([
 		}
 	});
 
-	var rqlMemory = rql(new Memory({
+	var rqlMemory = new (declare([Memory, RqlClient]))({
 		data: [
 			{id: 1, name: 'one', prime: false, mappedTo: 'E'},
 			{id: 2, name: 'two', prime: true, mappedTo: 'D', even: true},
@@ -24,7 +25,7 @@ define([
 			{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 		],
 		model: TestModel
-	}));
+	});
 
 	registerSuite({
 		name: 'dstore RqlMemory',
@@ -35,13 +36,13 @@ define([
 			assert.strictEqual(rqlMemory.get(1).describe(), 'one is not a prime');
 		},
 
-		'query': function(){
-			assert.strictEqual(rqlMemory.query('prime=true').length, 3);
-			assert.strictEqual(rqlMemory.query('prime=true&even!=true').length, 2);
-			assert.strictEqual(rqlMemory.query('prime=true&id>3').length, 1);
+		'filter': function(){
+			assert.strictEqual(rqlMemory.filter('prime=true').data.length, 3);
+			assert.strictEqual(rqlMemory.filter('prime=true&even!=true').data.length, 2);
+			assert.strictEqual(rqlMemory.filter('prime=true&id>3').data.length, 1);
 
-			assert.strictEqual(rqlMemory.query('(prime=true|id>3)').length, 4);
-			assert.strictEqual(rqlMemory.query('(prime=true|id>3)', {start: 1, count: 2}).length, 2);
+			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').data.length, 4);
+			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').range(1, 3).data.length, 2);
 		}
 	});
 
@@ -53,15 +54,15 @@ define([
 		def.response = new Deferred();
 		return def;
 	});
-	var rqlRest = rql(new JsonRest({
+	var rqlRest = new (declare([Rest, RqlServer]))({
 		target: 'http://test.com/'
-	}));
+	});
 
 	registerSuite({
-		name: 'dstore RqlJsonRest',
+		name: 'dstore RqlRest',
 
-		'query': function(){
-			rqlRest.query({prime: true, even: true});
+		'filter': function(){
+			rqlRest.filter({prime: true, even: true}).forEach(function(){});
 			assert.strictEqual(lastMockRequest, 'http://test.com/?eq(prime,true)&eq(even,true)');
 		}
 	});

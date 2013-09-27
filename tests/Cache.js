@@ -2,12 +2,15 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/Deferred',
+	'dojo/_base/declare',
 	'dstore/Memory',
 	'dstore/Cache',
 	'dstore/util/QueryResults'
-], function(registerSuite, assert, Deferred, Memory, Cache, QueryResults){
+], function(registerSuite, assert, Deferred, declare, Memory, Cache, QueryResults){
 
-	var masterStore = new Memory({
+	var cachingStore = new Memory();
+	var store = new declare([Memory, Cache])({
+		cachingStore: cachingStore,
 		data: [
 			{id: 1, name: 'one', prime: false},
 			{id: 2, name: 'two', even: true, prime: true},
@@ -16,9 +19,6 @@ define([
 			{id: 5, name: 'five', prime: true}
 		]
 	});
-	var cachingStore = new Memory();
-	var options = {};
-	var store = Cache(masterStore, cachingStore, options);
 
 	registerSuite({
 		name: 'dstore Cache',
@@ -32,25 +32,25 @@ define([
 			assert.strictEqual(store.get(4).name, 'four');
 		},
 
-		'query': function(){
+		'filter': function(){
 			options.isLoaded = function(){
 				return false;
 			};
-			assert.strictEqual(store.query({prime: true}).length, 3);
-			assert.strictEqual(store.query({even: true})[1].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).length, 3);
+			assert.strictEqual(store.filter({even: true})[1].name, 'four');
 			assert.strictEqual(cachingStore.get(3), undefined);
 			options.isLoaded = function(){
 				return true;
 			};
-			assert.strictEqual(store.query({prime: true}).length, 3);
+			assert.strictEqual(store.filter({prime: true}).length, 3);
 			assert.strictEqual(cachingStore.get(3).name, 'three');
 		},
 
-		'query with sort': function(){
-			assert.strictEqual(store.query({prime: true}, {sort: [
+		'filter with sort': function(){
+			assert.strictEqual(store.filter({prime: true}, {sort: [
 				{attribute: 'name'}
 			]}).length, 3);
-			assert.strictEqual(store.query({even: true}, {sort: [
+			assert.strictEqual(store.filter({even: true}, {sort: [
 				{attribute: 'name'}
 			]})[1].name, 'two');
 		},
@@ -114,17 +114,17 @@ define([
 			masterStore.add = originalAdd;
 		},
 
-		'cached query': function(){
-			store.query(); // should result in everything being cached
-			masterStore.query = function(){
+		'cached filter': function(){
+			store.filter(); // should result in everything being cached
+			/*masterStore.filter = function(){
 				throw new Error('should not be called');
-			};
-			assert.strictEqual(store.query({prime: true}).length, 4);
+			};*/
+			assert.strictEqual(store.filter({prime: true}).length, 4);
 		},
 
-		'delayed cached query': function(){
+		'delayed cached filter': function(){
 			var masterStore = {
-				query: function(){
+				filter: function(){
 					var def = new Deferred();
 					setTimeout(function(){
 						def.resolve([
@@ -141,12 +141,12 @@ define([
 			var cachingStore = new Memory();
 			var options = {};
 			var store = Cache(masterStore, cachingStore, options);
-			store.query(); // should result in everything being cached
-			masterStore.query = function(){
+			store.filter(); // should result in everything being cached
+			/*masterStore.query = function(){
 				throw new Error('should not be called');
-			};
+			};*/
 			var testDef = new Deferred();
-			store.query({prime: true}).then(function(results){
+			store.filter({prime: true}).then(function(results){
 				assert.strictEqual(results.length, 3);
 				testDef.resolve(true);
 			});

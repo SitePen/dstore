@@ -121,12 +121,7 @@ define([
             var observer = results.observe(function(removeFrom, count, add){
                     // we only do puts so previous & new indices must always been the same
                     // unfortunately if id = 0, the removeFrom
-                    console.log("called with: "+removeFrom+", "+count);
-                    if(add){
-                    	assert.strictEqual(removedIndex, removeFrom);
-                    }else{
-                    	removedIndex = removeFrom;	
-                    }
+                	assert.ok(removeFrom > -1);
             }, true);
 			store.put({id: 5, name: '-FIVE-', prime: true});
 			store.put({id: 0, name: '-ZERO-', prime: false});
@@ -135,31 +130,26 @@ define([
 		'paging': function(){
 			var results, opts = {count: 25, sort: [{attribute: "order"}]};
 			bigFiltered = bigStore.filter({}).sort('order');
-			/*results = window.results = [
+			var rangedResults = [
 			    bigFiltered.range(0,25).forEach(function(){}),
 			    bigFiltered.range(25,50).forEach(function(){}),
 			    bigFiltered.range(50,75).forEach(function(){}),
 			    bigFiltered.range(75,100).forEach(function(){})
-			];*/
-			var results = bigFiltered.data;
+			];
 			var observations = [];
-			bigFiltered.observe(function(obj, from, to){
+			var bigObserved = bigFiltered.observe(function(obj, from, to){
 		    	observations.push({from: from, to: to});
 		        console.log(i, " observed: ", obj, from, to);
 			});
+			var results = bigObserved.data;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
-			assert.strictEqual(results[0].length, 26);
-			assert.strictEqual(results[1].length, 25);
-			assert.strictEqual(results[2].length, 25);
-			assert.strictEqual(results[3].length, 25);
+			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 1);
 			bigStore.remove(101);
 			assert.strictEqual(observations.length, 2);
-			assert.strictEqual(results[0].length, 25);
+			assert.strictEqual(results.length, 100);
 			bigStore.add({id: 102, name: 'one oh two', order: 26.5});
-			assert.strictEqual(results[0].length, 25);
-			assert.strictEqual(results[1].length, 26);
-			assert.strictEqual(results[2].length, 25);
+			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 3);
 		},
 

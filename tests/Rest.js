@@ -5,7 +5,7 @@ define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'dstore/Rest'
-], function(require, registerSuite, assert, declare, lang, JsonRest){
+], function(require, registerSuite, assert, declare, lang, Rest){
 	// NOTE: Because HTTP headers are case-insensitive they should always be provided as all-lowercase
 	// strings to simplify testing.
 	function runTest(method, args){
@@ -43,14 +43,14 @@ define([
 		'test-local-header-b': 'yes',
 		'test-override': 'overridden'
 	};
-	var store = new JsonRest({
+	var store = new Rest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
 		headers: lang.mixin({ 'test-override': false }, globalHeaders),
 		model: TestModel
 	});
 
 	registerSuite({
-		name: 'dstore JsonRest',
+		name: 'dstore Rest',
 
 		'get': function(){
 			var d = this.async();
@@ -63,7 +63,7 @@ define([
 
 		'query': function(){
 			var d = this.async();
-			store.filter("data/treeTestRoot").forEach(function(object){
+			return store.filter("data/treeTestRoot").forEach(function(object){
 				if(first){
 					first = false;
 					assert.strictEqual(object.name, 'node1');
@@ -92,13 +92,6 @@ define([
 
 		'headers remove': function(){
 			runTest.call(this, 'remove', [ 'index.php', { headers: requestHeaders } ]);
-		},
-
-		'headers query': function(){
-			runTest.call(this, 'filter', [
-				{},
-				{ headers: requestHeaders, start: 20, count: 42 }
-			]);
 		},
 
 		'headers put': function(){

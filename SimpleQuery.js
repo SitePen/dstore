@@ -84,7 +84,7 @@ return declare(Store, {
 				// fall through
 		}
 		return this._newResults(function(data){
-			return arrayUtil.filter(data, query)
+			return arrayUtil.filter(data, query);
 		});
 	},
 		
