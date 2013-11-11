@@ -97,7 +97,7 @@ return declare(SimpleQuery, {
 		}
 		if(data.items){
 			// just for convenience with the data format IFRS expects
-			this.idProperty = data.identifier;
+			this.idProperty = data.identifier || this.idProperty;
 			data = data.items;
 		}
 		this.fullData = this.data = data;
