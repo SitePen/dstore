@@ -7,9 +7,13 @@ define(["dojo/has", "dojo/_base/declare"
 has.add('object-proto', !!{}.__proto__);
 var hasProto = has('object-proto');
 return declare(null, {
-	forEach: function(callback, thisObject){
-		// like map, except we don't return the results
-		this.map(callback, thisObject);
+	map: function(callback, thisObject){
+		var results = [];
+		// like forEach, except we collect results
+		this.forEach(function(object){
+			results.push(callback.call(thisObject, object));
+		}, thisObject);
+		return results;
 	},
 	// model: Function
 	//		This should be a entity (like a class/constructor) with a "prototype" property that will be
