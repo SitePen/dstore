@@ -12,21 +12,25 @@ define([
 //		dojo/store/Observable
 var undef, revision = 0;
 
+	function createRange(newStart, newEnd){
+		return {
+			start: newStart,
+			count: newEnd - newStart
+		};
+	}
+
 	function registerRange(ranges, newStart, newEnd){
-		function createRange(){
-			return {
-				start: newStart,
-				count: newEnd - newStart
-			};
+		function create(){
+			createRange(newStart, newEnd);
 		}
-		
-		var insertAtEnd = !ranges.some(function(range, i){
+
+		var insertAtEnd = !array.some(ranges, function(range, i){
 			var existingStart = range.start,
 				existingEnd = existingStart + range.count;
 
 			if(newEnd < existingStart){
 				// the range completely procedes before the existing range
-				ranges.splice(i + 1, 0, createRange());
+				ranges.splice(i + 1, 0, create());
 				return true;
 			}else if(newStart < existingStart){
 				// the end of the new range overlaps with the existing range
@@ -35,8 +39,8 @@ var undef, revision = 0;
 				range.count = existingEnd - newStart;
 				return true;
 			}else if(newStart <= existingEnd){
-				// the start of the new range overlaps with the existing range	
-				range.count = newEnd - existingStart;
+				// the start of the new range overlaps with the existing range
+				range.count = newEnd - existingStart + 1;
 				return true;
 			}else{
 				return false;
@@ -44,7 +48,50 @@ var undef, revision = 0;
 		});
 
 		if(insertAtEnd){
-			ranges.push(createRange());
+			ranges.push(create());
+		}
+	}
+
+	function forgetRange(ranges, start, end){
+		for(var i = 0, range; (range = ranges[i]); ++i){
+			var existingStart = range.start,
+				existingEnd = existingStart + range.count;
+
+			// Remove all
+			//	-> remove range
+			// Split
+			//	-> remove existing range and replace with two others
+			// Remove from head
+			//	-> modify existing range
+			// Remove from tail
+			//	-> modify existing range
+
+			// TODO: Are these ranges inclusive or exclusive? Currently coding as if they are inclusive.
+			if(start <= existingStart){
+				if(end >= existingEnd){
+					// The existing range is within the forgotten range
+					ranges.splice(i, 1);
+				}else{
+					// The forgotten range overlaps the beginning of the existing range
+					range.start = end + 1;
+					range.count = existingEnd - range.start + 1;
+
+					// Since the forgotten range ends before the existing range,
+					// there are no more ranges to update, and we are done
+					return;
+				}
+			}else if(start < existingEnd){
+				if(end > existingStart){
+					// The forgotten range is within the existing range
+					ranges.splice(i, 1, createRange(existingStart, start - 1), createRange(end + 1, existingEnd));
+
+					// We are done because the existing range bounded the forgotten range
+					return;
+				}else{
+					// The forgotten range overlaps the end of the existing range
+					range.count = start - range.start;
+				}
+			}
 		}
 	}
 
@@ -77,7 +124,7 @@ return declare(null, {
 
 		// monitor for updates by listening to these methods
 		var handles = [];
-		
+
 		whenFinished("add", function(object){
 			notify(object);
 		});
@@ -90,7 +137,6 @@ return declare(null, {
 		whenFinished("notify", function(object, id){
 			notify(object, id);
 		});
-		var originalRange = this.range;
 		var observed = lang.delegate(this, {
 			store: store,
 			remove: function(){
@@ -107,6 +153,11 @@ return declare(null, {
 			observed.data = observed.data.slice(0); // make local copy
 			// Treat in-memory data as one range to allow a single code path for all stores
 			registerRange(ranges, 0, observed.data.length);
+
+			// TODO: revisit. this strikes me as strange tonight
+			observed.removeRange = function(){
+				// No-op for an in-memory store
+			};
 		}else{
 			var originalRange = observed.range;
 			observed.range = function(start, end){
@@ -119,6 +170,7 @@ return declare(null, {
 					data: rangeResults.data,
 					total: rangeResults.total
 				}).then(function(result){
+					// TODO: If the range overlaps an existing range, existing objects will be refreshed. Should there be an update notification?
 					// copy the new ranged data into the parent partial data set
 					var spliceArgs = [ start, end - start ].concat(result.data);
 					partialData.splice.apply(partialData, spliceArgs);
@@ -126,7 +178,18 @@ return declare(null, {
 					registerRange(ranges, start, end);
 				});
 				return rangeResults;
-			}
+			};
+			// TODO: Maybe this should be named `releaseRange` instead as it sounds less like a deletion
+			observed.removeRange = function(start, end){
+				unregisterRange(ranges, start, end);
+
+				var partialData = this.partialData;
+
+				// TODO: Is there need to be this careful w/ Math.min?
+				for(var i = start, l = Math.min(end, partialData.length); i < l; ++i){
+					delete partialData[i];
+				}
+			};
 		}
 
 		function notify(changed, existingId){
@@ -172,7 +235,7 @@ return declare(null, {
 							// if a matches function exists, use that (probably more efficient)
 							(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length)){
 
-						var firstInsertedInto = removedFrom > -1 ? 
+						var firstInsertedInto = removedFrom > -1 ?
 							removedFrom : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
 							resultsArray.length;
 
@@ -182,9 +245,9 @@ return declare(null, {
 								startIndex = range.start,
 								endIndex = startIndex + range.count,
 								sampleArray = resultsArray.slice(startIndex, endIndex);
-								
+
 							sampleArray.push(changed);
-							
+
 							var sortedIndex = queryExecutor(sampleArray).indexOf(changed);
 							if(sortedIndex > 0
 							   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === totalItems)){
@@ -204,7 +267,7 @@ return declare(null, {
 						insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
 						// we now need to push the change back into the original results array
 						resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index*/
-						
+
 /*							if((options.start && insertedInto == 0) ||
 							(!atEnd && insertedInto == resultsArray.length)){
 							// if it is at the end of the page, assume it goes into the prev or next page
@@ -235,7 +298,7 @@ return declare(null, {
 				}*/
 			});
 		}
-		
+
 		return observed;
 	},
 	// a Comet driven store could directly call notify to notify observers when data has
