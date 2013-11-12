@@ -1,5 +1,5 @@
-define(["dojo/has", "dojo/_base/declare"
-], function(has, declare){
+define(['dojo/_base/lang', 'dojo/has', 'dojo/_base/declare'
+], function(lang, has, declare){
 
 // module:
 //		dstore/Store
@@ -12,11 +12,15 @@ return declare(null, {
 		this.map(callback, thisObject);
 	},
 	// model: Function
-	//		This should be a entity (like a class/constructor) with a "prototype" property that will be
+	//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 	//		used as the prototype for all objects returned from this store.
 	model: {},
 	
 	assignPrototype: function(object){
+		if(!object){
+			return object;
+		}
+
 		var prototype = this.model.prototype;
 		if(prototype){
 			if(hasProto){

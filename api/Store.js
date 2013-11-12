@@ -1,4 +1,4 @@
-define(["../../_base/declare"], function(declare){
+define(["dojo/_base/declare"], function(declare){
 
 // module:
 //		dojo/api/Store
@@ -200,7 +200,7 @@ var Store = declare(Collection, {
 		var data = this.data,
 			idProperty = this.idProperty;
 		for(var i = 0, l = data.length; i < l; i++){
-			if(data[i][idProperty] == id){
+			if(data[i][idProperty] === id){
 				data.splice(i, 1);
 				return;
 			}
