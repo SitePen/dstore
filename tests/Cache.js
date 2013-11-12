@@ -9,7 +9,14 @@ define([
 ], function(registerSuite, assert, Deferred, declare, Memory, Cache, QueryResults){
 
 	var cachingStore = new Memory();
-	var store = new declare([Memory, Cache])({
+	var masterFilterCalled;
+	var MasterStore = new declare([Memory], {
+		filter: function(){
+			masterFilterCalled = true;
+			return this.inherited(arguments);
+		}
+	});
+	var store = declare([MasterStore, Cache])({
 		cachingStore: cachingStore,
 		data: [
 			{id: 1, name: 'one', prime: false},
@@ -33,26 +40,22 @@ define([
 		},
 
 		'filter': function(){
-			options.isLoaded = function(){
+			store.isLoaded = store.canCacheQuery = function(){
 				return false;
 			};
-			assert.strictEqual(store.filter({prime: true}).length, 3);
-			assert.strictEqual(store.filter({even: true})[1].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).data.length, 3);
+			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
 			assert.strictEqual(cachingStore.get(3), undefined);
-			options.isLoaded = function(){
+			store.isLoaded = store.canCacheQuery = function(){
 				return true;
 			};
-			assert.strictEqual(store.filter({prime: true}).length, 3);
+			assert.strictEqual(store.filter({prime: true}).data.length, 3);
 			assert.strictEqual(cachingStore.get(3).name, 'three');
 		},
 
 		'filter with sort': function(){
-			assert.strictEqual(store.filter({prime: true}, {sort: [
-				{attribute: 'name'}
-			]}).length, 3);
-			assert.strictEqual(store.filter({even: true}, {sort: [
-				{attribute: 'name'}
-			]})[1].name, 'two');
+			assert.strictEqual(store.filter({prime: true}).sort('name').data.length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('name').data[1].name, 'two');
 		},
 
 		'put update': function(){
@@ -63,7 +66,7 @@ define([
 			assert.isTrue(four.square);
 			four = cachingStore.get(4);
 			assert.isTrue(four.square);
-			four = masterStore.get(4);
+			four = store.get(4);
 			assert.isTrue(four.square);
 		},
 
@@ -74,7 +77,6 @@ define([
 			});
 			assert.isTrue(store.get(6).perfect);
 			assert.isTrue(cachingStore.get(6).perfect);
-			assert.isTrue(masterStore.get(6).perfect);
 		},
 
 		'add duplicate': function(){
@@ -97,58 +99,48 @@ define([
 			});
 			assert.isTrue(store.get(7).prime);
 			assert.isTrue(cachingStore.get(7).prime);
-			assert.isTrue(masterStore.get(7).prime);
-		},
-
-		'results from master': function(){
-			var originalAdd = masterStore.add;
-			masterStore.add = function(){
-				return {
-					test: 'value'
-				};
-			};
-			assert.strictEqual(store.add({
-				id: 7,
-				prop: 'doesn\'t matter'
-			}).test, 'value');
-			masterStore.add = originalAdd;
 		},
 
 		'cached filter': function(){
-			store.filter(); // should result in everything being cached
-			/*masterStore.filter = function(){
-				throw new Error('should not be called');
-			};*/
-			assert.strictEqual(store.filter({prime: true}).length, 4);
+			store.forEach(function(){}); // should result in everything being cached
+			masterFilterCalled = false;
+			assert.strictEqual(store.filter({prime: true}).data.length, 4);
+			assert.isFalse(masterFilterCalled);
 		},
 
 		'delayed cached filter': function(){
-			var masterStore = {
-				filter: function(){
+			var forEachCalled;
+			var MasterCollection = declare(null, {
+				forEach: function(callback){
+					forEachCalled = true;
 					var def = new Deferred();
 					setTimeout(function(){
-						def.resolve([
+						var data = [
 							{id: 1, name: 'one', prime: false},
 							{id: 2, name: 'two', even: true, prime: true},
 							{id: 3, name: 'three', prime: true},
 							{id: 4, name: 'four', even: true, prime: false},
 							{id: 5, name: 'five', prime: true}
-						]);
+						];
+						data.forEach(callback);
+						def.resolve(data);
 					}, 20);
-					return new QueryResults(def);
+					return def;
 				}
-			};
-			var cachingStore = new Memory();
+			});
+			var store = new (declare([MasterCollection, Cache]))();
+			var cachingStore = store.cachingStore;
 			var options = {};
-			var store = Cache(masterStore, cachingStore, options);
-			store.filter(); // should result in everything being cached
-			/*masterStore.query = function(){
-				throw new Error('should not be called');
-			};*/
+			store.forEach(function(){}); // should result in everything being cached
+			forEachCalled = false;
 			var testDef = new Deferred();
-			store.filter({prime: true}).then(function(results){
-				assert.strictEqual(results.length, 3);
-				testDef.resolve(true);
+			var count = 0;
+			store.filter({prime: true}).forEach(function(results){
+				count++;
+			}).then(function(){
+				assert.strictEqual(count, 3);
+				assert.isFalse(forEachCalled);
+				testDef.resolve(true);				
 			});
 			return testDef;
 		}
