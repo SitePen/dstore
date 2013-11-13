@@ -60,7 +60,7 @@ define([
 	});
 
 	registerSuite({
-		name: 'legacy adapter - JsonRest',
+		name: 'legacy dojo/store adapter - JsonRest',
 
 		'get': function(){
 			var d = this.async();
@@ -68,6 +68,7 @@ define([
 				assert.strictEqual(object.name, 'node1.1');
 				assert.strictEqual(object.describe(), 'name is node1.1');
 				assert.strictEqual(object.someProperty, 'somePropertyA1');
+				assert.strictEqual(store.getIdentity(object), 'node1.1');
 			}));
 		},
 

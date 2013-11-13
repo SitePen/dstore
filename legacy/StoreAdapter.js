@@ -6,17 +6,36 @@ define([
 ], function(declare, lang, when, Store){
 // module:
 //		An adapter that allows a dojo/store object to be used as a dstore store object.
+
+	function delegateMethod(methodName, thisObj){
+		thisObj[methodName] = function(){
+			var store = this.store;
+			return store[methodName] && store[methodName].apply(store, arguments);
+		};
+	}
+
 	return declare(Store, {
 		// store:
 		//		The dojo/store object to be converted to a dstore object
 		store: null,
 
-		query: null,
-		queryOptions: null,
+		_query: null,
+		_queryOptions: null,
 
 		constructor: function(options){
 			lang.mixin(this, options);
-			this.queryOptions = {};
+			this._queryOptions = {};
+
+			var store = this.store;
+			if(store){
+				this.idProperty = store.idProperty || 'id';
+				this.queryEngine = store.queryEngine;
+			}
+
+			var methods = ['getIdentity', 'add', 'put', 'remove', 'transaction', 'getChildren', 'getMetadata'];
+			for(var i = 0; i < methods.length; i++){
+				delegateMethod(methods[i], this);
+			}
 		},
 
 		get: function(id){
@@ -30,30 +49,6 @@ define([
 			return when(this.store.get(id), function(object){
 				return self.assignPrototype(object);
 			});
-		},
-
-		add: function(object, options){
-			// summary:
-			//		Adds an object. This will trigger a PUT request to the server
-			//		if the object has an id, otherwise it will trigger a POST request.
-			// object: Object
-			//		The object to store.
-			// options: Object
-			//		Additional metadata for storing the data.  Includes an "id"
-			//		property if a specific id is to be used.
-			var store = this.store;
-			return store.add && store.add(object, options);
-		},
-
-		put: function(object, options){
-			// summary:
-			//		Stores an object
-			// object: Object
-			//		The object to store.
-			// directives: Object
-			//		Additional directives for storing objects.
-			var store = this.store;
-			return store.put && store.put(object, options);
 		},
 
 		filter: function(query){
@@ -86,7 +81,7 @@ define([
 				};
 				if(options && Object.prototype.toString.call(options.sort) === '[object Array]'){
 					sort = options.sort.slice(0);
-					sort.push(fieldSort);
+					sort.unshift(fieldSort);
 				}else{
 					sort = [ fieldSort ];
 				}
@@ -131,15 +126,6 @@ define([
 				}, thisObj);
 			}
 			return results;
-		},
-
-		remove: function(id, options){
-			// summary:
-			//		Deletes an object by its identity
-			// id: Number
-			//		The identity to use to delete the object
-			var store = this.store;
-			return store.remove && store.remove(id, options);
 		}
 	});
 });

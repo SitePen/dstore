@@ -6,6 +6,7 @@ define([
 	'intern/node_modules/dojo/has!host-browser?./Observable',
 	'intern/node_modules/dojo/has!host-browser?./rql',
 	'intern/node_modules/dojo/has!host-browser?./validating',
+	'intern/node_modules/dojo/has!host-browser?./legacy/DstoreAdapter-Memory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-Memory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-JsonRest'
 ], function(){
