@@ -39,3 +39,7 @@ Then kick off the runner with the following command:
 ```
 node node_modules/intern/runner config=dstore/tests/intern
 ```
+
+# License
+
+The dstore project is available under the same dual BSD/AFLv2 license as the Dojo Toolkit.
