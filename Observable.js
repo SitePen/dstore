@@ -20,51 +20,29 @@ var undef, revision = 0;
 	}
 
 	function registerRange(ranges, newStart, newEnd){
-		function create(){
-			createRange(newStart, newEnd);
-		}
-
-		var insertAtEnd = !array.some(ranges, function(range, i){
-			var existingStart = range.start,
+		for(var i = ranges.length - 1; i >= 0; --i){
+			var existingRange = ranges[i],
+				existingStart = range.start,
 				existingEnd = existingStart + range.count;
 
-			if(newEnd < existingStart){
-				// the range completely procedes before the existing range
-				ranges.splice(i + 1, 0, create());
-				return true;
-			}else if(newStart < existingStart){
-				// the end of the new range overlaps with the existing range
-				delete ranges[existingStart];
-				range.start = newStart;
-				range.count = existingEnd - newStart;
-				return true;
-			}else if(newStart <= existingEnd){
-				// the start of the new range overlaps with the existing range
-				range.count = newEnd - existingStart + 1;
-				return true;
-			}else{
-				return false;
+			if (newStart > existingEnd){
+				// existing range completely precedes new range. we are done.
+				ranges.splice(i, 0, createRange(newStart, newEnd));
+				return;
+			}else if(newEnd >= existingStart){
+				// the ranges overlap and must be merged into a single range
+				newStart = Math.min(newStart, existingStart);
+				ranges.splice(i, 1);
 			}
-		});
-
-		if(insertAtEnd){
-			ranges.push(create());
 		}
+
+		ranges.unshift(createRange(newStart, newEnd));
 	}
 
 	function forgetRange(ranges, start, end){
 		for(var i = 0, range; (range = ranges[i]); ++i){
 			var existingStart = range.start,
 				existingEnd = existingStart + range.count;
-
-			// Remove all
-			//	-> remove range
-			// Split
-			//	-> remove existing range and replace with two others
-			// Remove from head
-			//	-> modify existing range
-			// Remove from tail
-			//	-> modify existing range
 
 			// TODO: Are these ranges inclusive or exclusive? Currently coding as if they are inclusive.
 			if(start <= existingStart){
@@ -97,6 +75,7 @@ var undef, revision = 0;
 
 return declare(null, {
 	currentRange: [],
+	   // TODO: arg or prop to say range-specific changes
 	observe: function(listener, observeOptions){
 		var store = this.store || this;
 		var inMethod;
@@ -132,7 +111,7 @@ return declare(null, {
 			notify(object, store.getIdentity(object));
 		});
 		whenFinished("remove", function(id){
-			notify(undefined, id);
+			notify(undef, id);
 		});
 		whenFinished("notify", function(object, id){
 			notify(object, id);
@@ -154,10 +133,7 @@ return declare(null, {
 			// Treat in-memory data as one range to allow a single code path for all stores
 			registerRange(ranges, 0, observed.data.length);
 
-			// TODO: revisit. this strikes me as strange tonight
-			observed.removeRange = function(){
-				// No-op for an in-memory store
-			};
+			observed.releaseRange = function(){};
 		}else{
 			var originalRange = observed.range;
 			observed.range = function(start, end){
@@ -180,13 +156,13 @@ return declare(null, {
 				return rangeResults;
 			};
 			// TODO: Maybe this should be named `releaseRange` instead as it sounds less like a deletion
-			observed.removeRange = function(start, end){
+			observed.releaseRange = function(start, end){
 				unregisterRange(ranges, start, end);
 
 				var partialData = this.partialData;
 
 				// TODO: Is there need to be this careful w/ Math.min?
-				for(var i = start, l = Math.min(end, partialData.length); i < l; ++i){
+				for(var i = start, endIndex = Math.min(end, partialData.length - 1); i <= endIndex; ++i){
 					delete partialData[i];
 				}
 			};
@@ -197,7 +173,7 @@ return declare(null, {
 			when(observed.data || observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
-				var i, l;
+				var i, j, l, range;
 				var totalItems = resultsArray.length;
 				/*if(++queryRevision != revision){
 					throw new Error("Query is out of date, you must observe() the query prior to any data modifications");
@@ -206,7 +182,7 @@ return declare(null, {
 				if(existingId !== undef){
 					// remove the old one
 					for(var rangeIndex = 0; removedFrom === -1 && rangeIndex < ranges.length; ++rangeIndex){
-						var range = ranges[rangeIndex];
+						range = ranges[rangeIndex];
 						for(var i = range.start, l = i + range.count; i < l; ++i){
 							var object = resultsArray[i];
 							if(store.getIdentity(object) == existingId){
@@ -216,7 +192,7 @@ return declare(null, {
 								totalItems--;
 
 								range.count--;
-								for(var j = rangeIndex + 1; j < ranges.length; ++j){
+								for(j = rangeIndex + 1; j < ranges.length; ++j){
 									ranges[j].start--;
 								}
 
@@ -235,46 +211,41 @@ return declare(null, {
 							// if a matches function exists, use that (probably more efficient)
 							(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length)){
 
-						var firstInsertedInto = removedFrom > -1 ?
-							removedFrom : // put back in the original slot so it doesn't move unless it needs to (relying on a stable sort below)
-							resultsArray.length;
+						var begin = 0,
+							end = array.length - 1,
+							sampleArray,
+							sortedIndex;
+						while (begin <= end){
+							i = begin + Math.round((end - begin) / 2);
+							range =  ranges[i];
 
-						// TODO: Optimize this naive implementation. Could start with the item's range before update, sort, and do something like a binary search from there.
-						for(var i = 0; i < ranges.length; ++i){
-							var range = ranges[i],
-								startIndex = range.start,
-								endIndex = startIndex + range.count,
-								sampleArray = resultsArray.slice(startIndex, endIndex);
+							sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-							sampleArray.push(changed);
+							// If the original index is in range, put back in the original slot
+							// so it doesn't move unless it needs to (relying on a stable sort below)
+							if(removedFrom >= range.start && removedFrom < (range.start + range.count)){
+								sampleArray.splice(firstInsertedInto, 0, changed);
+							}else{
+								sampleArray.push(changed);
+							}
 
-							var sortedIndex = queryExecutor(sampleArray).indexOf(changed);
-							if(sortedIndex > 0
-							   && (sortedIndex < (sampleArray.length - 1) || sortedIndex === totalItems)){
-								insertedInto = range.start + sortedIndex;
+							sortedIndex = queryExecutor(sampleArray).indexOf(changed);
+
+							if(sortedIndex < 0 || (sortedIndex === 0 && range.start !== 0)){
+								end = i - 1;
+							}else if(sortedIndex >= sampleArray.length && sortedIndex < totalItems){
+								begin = i + 1;
+							}else{
+								insertedInto = range[rangeIndex].start + sortedIndex;
 								resultsArray.splice(insertedInto, 0, changed);
 								totalItems++;
 
-								range.count++;
-								for(var j = i + 1; j < ranges.length; ++j){
+								ranges[rangeIndex].count++;
+								for(j = rangeIndex + 1; j < ranges.length; ++j){
 									ranges[j].start++;
 								}
-								break;
 							}
 						}
-
-						/*resultsArray.splice(firstInsertedInto, 0, changed); // add the new item
-						insertedInto = array.indexOf(queryExecutor(resultsArray), changed); // sort it
-						// we now need to push the change back into the original results array
-						resultsArray.splice(firstInsertedInto, 1); // remove the inserted item from the previous index*/
-
-/*							if((options.start && insertedInto == 0) ||
-							(!atEnd && insertedInto == resultsArray.length)){
-							// if it is at the end of the page, assume it goes into the prev or next page
-							insertedInto = -1;
-						}else{*/
-							//resultsArray.splice(insertedInto, 0, changed); // and insert into the results array with the correct index
-						//}
 					}
 				}else if(changed){
 					// we don't have a queryEngine, so we can't provide any information
@@ -293,9 +264,6 @@ return declare(null, {
 					// splice insertion arguments
 					listener(insertedInto, 0, changed);
 				}
-/*					if((removedFrom > -1 || insertedInto > -1) &&
-						(!excludeObjectUpdates || !queryExecutor || (removedFrom != insertedInto))){
-				}*/
 			});
 		}
 
