@@ -32,6 +32,7 @@ var undef, revision = 0;
 			}else if(newEnd >= existingStart){
 				// the ranges overlap and must be merged into a single range
 				newStart = Math.min(newStart, existingStart);
+				newEnd = Math.max(newEnd, existingEnd);
 				ranges.splice(i, 1);
 			}
 		}
