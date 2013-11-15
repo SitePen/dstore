@@ -12,7 +12,7 @@ define(['dojo/_base/lang', 'dojo/Stateful', 'dojo/_base/declare'], function(lang
 	}	
 	var validating = function(/*Store*/ store, options){
 		var validatingStore = lang.delegate(store);
-		validatingStore.model = declare([typeof store.model === 'function' ? 
+		validatingStore.model = declare([(store.model && store.model.get) ? 
 				store.model : // if a model is provided, we extend it, otherwise we default to extending Stateful 
 				Stateful], {
 			set: function(name, value){
