@@ -5,12 +5,6 @@ define([
 	'dstore/Memory'
 ], function(registerSuite, assert, declare, Memory){
 
-	var TestModel = declare(null, {
-		describe: function(){
-			return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
-		}
-	});
-
 	var store = new Memory({
 		data: [
 			{id: 1, name: 'one', prime: false, mappedTo: 'E'},
@@ -18,9 +12,13 @@ define([
 			{id: 3, name: 'three', prime: true, mappedTo: 'C'},
 			{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
 			{id: 5, name: 'five', prime: true, mappedTo: 'A'}
-		],
-		model: TestModel
+		]
 	});
+	// add a method to the model prototype
+	store.model.prototype.describe = function(){
+		return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
+	};
+
 	registerSuite({
 		name: 'dstore Memory',
 
@@ -84,6 +82,14 @@ define([
 			assert.isTrue(four.square);
 		},
 
+		save: function(){
+			var four = store.get(4);
+			four.square = true;
+			four.save();
+			four = store.get(4);
+			assert.isTrue(four.square);
+		},
+
 		'put new': function(){
 			store.put({
 				id: 6,
@@ -115,6 +121,15 @@ define([
 
 		'remove': function(){
 			assert.isTrue(store.remove(7));
+			assert.strictEqual(store.get(7), undefined);
+		},
+
+		'remove from object': function(){
+			var newObject = store.add({
+				id: 7,
+				prime: true
+			});
+			assert.isTrue(newObject.remove());
 			assert.strictEqual(store.get(7), undefined);
 		},
 

@@ -27,12 +27,6 @@ define([
 		}), lang.hitch(d, 'reject'));
 	}
 
-	var TestModel = declare(null, {
-		describe: function(){
-			return 'name is ' + this.name;
-		}
-	});
-
 	var globalHeaders = {
 
 		'test-global-header-a': 'true',
@@ -45,9 +39,11 @@ define([
 	};
 	var store = new Rest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		headers: lang.mixin({ 'test-override': false }, globalHeaders),
-		model: TestModel
+		headers: lang.mixin({ 'test-override': false }, globalHeaders)
 	});
+	store.model.prototype.describe = function(){
+		return 'name is ' + this.name;
+	};
 
 	registerSuite({
 		name: 'dstore Rest',
@@ -79,6 +75,11 @@ define([
 			return store.filter('data/treeTestRoot').forEach(d.rejectOnError(function(object){
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
+				// the intrinsic methods
+				assert.equal(typeof object.save, 'function');
+				assert.equal(typeof object.remove, 'function');
+				// the method we added
+				assert.equal(typeof object.describe, 'function');
 			}));
 		},
 
@@ -106,6 +107,15 @@ define([
 				{},
 				{ headers: requestHeaders }
 			]);
+		},
+
+		'get and save': function(){
+			return store.get('index.php').then(function(object){
+				object.save().then(function(result){
+					// just make sure we got something for a response
+					assert.isTrue(!!result);
+				});
+			});
 		}
 	});
 });
