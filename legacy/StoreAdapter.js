@@ -5,37 +5,12 @@ define([
 	'../Store'
 ], function(declare, lang, when, Store){
 // module:
-//		An adapter that allows a dojo/store object to be used as a dstore store object.
+//		An adapter mixin that makes a dojo/store store object look like a dstore object.
 
-	function delegateMethod(methodName, thisObj){
-		thisObj[methodName] = function(){
-			var store = this.store;
-			return store[methodName] && store[methodName].apply(store, arguments);
-		};
-	}
+	var StoreAdapter = declare(Store, {
 
-	return declare(Store, {
-		// store:
-		//		The dojo/store object to be converted to a dstore object
-		store: null,
-
-		_query: null,
-		_queryOptions: null,
-
-		constructor: function(options){
-			lang.mixin(this, options);
+		constructor: function(){
 			this._queryOptions = {};
-
-			var store = this.store;
-			if(store){
-				this.idProperty = store.idProperty || 'id';
-				this.queryEngine = store.queryEngine;
-			}
-
-			var methods = ['getIdentity', 'add', 'put', 'remove', 'transaction', 'getChildren', 'getMetadata'];
-			for(var i = 0; i < methods.length; i++){
-				delegateMethod(methods[i], this);
-			}
 		},
 
 		get: function(id){
@@ -46,7 +21,7 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			var self = this;
-			return when(this.store.get(id), function(object){
+			return when(this.inherited(arguments), function(object){
 				return self.assignPrototype(object);
 			});
 		},
@@ -58,7 +33,7 @@ define([
 			//		The query to use for retrieving objects from the store.
 			// returns: StoreAdapter
 			return lang.delegate(this, {
-				query: query
+				_query: query
 			});
 		},
 
@@ -74,7 +49,7 @@ define([
 			if(typeof property === 'function'){
 				sort = property;
 			}else{
-				var options = this.queryOptions;
+				var options = this._queryOptions;
 				var fieldSort = {
 					attribute: property,
 					descending: descending != null && descending
@@ -87,7 +62,7 @@ define([
 				}
 			}
 			return lang.delegate(this, {
-				queryOptions: lang.delegate(this.queryOptions, { sort: sort })
+				_queryOptions: lang.delegate(this._queryOptions, { sort: sort })
 			});
 		},
 
@@ -99,12 +74,12 @@ define([
 			// end?: Number
 			//		The exclusive end of objects to return
 			// returns: StoreAdapter
-			var options = lang.delegate(this.queryOptions, { start: start });
+			var options = lang.delegate(this._queryOptions, { start: start });
 			if(end){
 				options.count = end - start;
 			}
 			return lang.delegate(this, {
-				queryOptions: options
+				_queryOptions: options
 			});
 		},
 
@@ -119,7 +94,7 @@ define([
 			// thisObject:
 			//		The object to use as |this| in the callback.
 			var self = this;
-			var results = this.store.query(this.query, this.queryOptions);
+			var results = this.query(this._query, this._queryOptions);
 			if(results){
 				results.forEach(function(obj){
 					callback.call(thisObj, self.assignPrototype(obj));
@@ -128,4 +103,21 @@ define([
 			return results;
 		}
 	});
+
+	StoreAdapter.adapt = function(obj, config){
+		// summary:
+		//		Adapts an existing dojo/store object to behave like a dstore object.
+		// obj: Object
+		//		A dojo/store object that will have an adapter applied to it.
+		// config: Object?
+		//		An optional configuration object that will be mixed into the adapted object.
+		//
+		obj = declare.safeMixin(obj, new StoreAdapter());
+		if(config){
+			obj = lang.mixin(obj, config);
+		}
+		return obj;
+	};
+
+	return StoreAdapter;
 });

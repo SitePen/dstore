@@ -4,38 +4,13 @@ define([
 	/*=====, "dojo/store/api/Store" =====*/
 ], function(declare, lang /*=====, Store =====*/){
 // module:
-//		An adapter that allows a dstore store object to be used as a dojo/store object.
+//		An adapter mixin that makes a dstore store object look like a dojo/store object.
 
 	// No base class, but for purposes of documentation, the base class is dojo/store/api/Store
 	var base = null;
 	/*===== base = Store; =====*/
 
-	function delegateMethod(methodName, thisObj){
-		thisObj[methodName] = function(){
-			var store = this.store;
-			return store[methodName] && store[methodName].apply(store, arguments);
-		};
-	}
-
-	return declare(base, {
-		// store:
-		//		The dstore object to be converted to a dojo/store object
-		store: null,
-
-		constructor: function(options){
-			lang.mixin(this, options);
-
-			var store = this.store;
-			if(store){
-				this.idProperty = store.idProperty || 'id';
-				this.queryEngine = store.queryEngine;
-			}
-
-			var methods = ['get', 'getIdentity', 'add', 'put', 'remove', 'transaction', 'getChildren', 'getMetadata'];
-			for(var i = 0; i < methods.length; i++){
-				delegateMethod(methods[i], this);
-			}
-		},
+	var DstoreAdapter = declare(base, {
 
 		query: function(query, options){
 			// summary:
@@ -56,8 +31,7 @@ define([
 			//	|	store.query({ prime: true }).forEach(function(object){
 			//	|		// handle each object
 			//	|	});
-			var store = this.store;
-			store = store.filter(query);
+			var results = this.filter(query);
 
 			if(options){
 				// Apply sorting
@@ -66,20 +40,37 @@ define([
 					if(Object.prototype.toString.call(sort) === '[object Array]'){
 						var sortOptions;
 						while((sortOptions = sort.pop())){
-							store = store.sort(sortOptions.attribute, sortOptions.descending);
+							results = results.sort(sortOptions.attribute, sortOptions.descending);
 						}
 					}else{
-						store = store.sort(sort);
+						results = results.sort(sort);
 					}
 				}
 				// Apply a range
 				var start = options.start;
 				var end = start != null && options.count && (start + options.count);
-				store = store.range(start, end);
+				results = results.range(start, end);
 			}
-			return store.map(function(object){
+			return results.map(function(object){
 				return object;
 			});
 		}
 	});
+
+	DstoreAdapter.adapt = function(obj, config){
+		// summary:
+		//		Adapts an existing dstore object to behave like a dojo/store object.
+		// obj: Object
+		//		A dstore object that will have an adapter applied to it.
+		// config: Object?
+		//		An optional configuration object that will be mixed into the adapted object.
+		//
+		obj = declare.safeMixin(obj, new DstoreAdapter());
+		if(config){
+			obj = lang.mixin(obj, config);
+		}
+		return obj;
+	};
+
+	return DstoreAdapter;
 });

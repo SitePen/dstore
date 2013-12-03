@@ -1,16 +1,18 @@
 define([
+	'dojo/_base/declare',
 	'intern!object',
 	'intern/chai!assert',
-	'dojo/_base/declare',
 	'dojo/store/Memory',
 	'dstore/legacy/StoreAdapter'
-], function(registerSuite, assert, declare, Memory, StoreAdapter){
+], function(declare, registerSuite, assert, Memory, StoreAdapter){
 
 	var TestModel = declare(null, {
 		describe: function(){
 			return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 		}
 	});
+
+	var AdaptedStore = declare([Memory, StoreAdapter]);
 
 	function getResultsArray(store){
 		var results = [];
@@ -27,18 +29,14 @@ define([
 		name: 'legacy dojo/store adapter - Memory',
 
 		beforeEach: function(){
-			legacyStore = new Memory({
+			store = new AdaptedStore({
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
 					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
 					{id: 3, name: 'three', prime: true, mappedTo: 'C'},
 					{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
 					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
-				]
-			});
-
-			store = new StoreAdapter({
-				store: legacyStore,
+				],
 				model: TestModel
 			});
 		},
@@ -167,7 +165,8 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = new StoreAdapter({ store: anotherLegacy, model: TestModel });
+			var anotherStore = StoreAdapter.adapt(anotherLegacy);
+
 			assert.strictEqual(anotherStore.get('one').name, 'one');
 			assert.strictEqual(anotherStore.getIdentity(anotherStore.get('one')), 'one');
 			assert.strictEqual(getResultsArray(anotherStore.filter({name: 'one'}))[0].name, 'one');
@@ -197,8 +196,7 @@ define([
 				]
 			});
 
-			store = new StoreAdapter({
-				store: legacyStore,
+			store = StoreAdapter.adapt(legacyStore, {
 				model: TestModel
 			});
 		},

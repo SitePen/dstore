@@ -1,17 +1,20 @@
 define([
+	'dojo/_base/declare',
 	'intern!object',
 	'intern/chai!assert',
 	'dstore/Memory',
 	'dstore/legacy/DstoreAdapter'
-], function(registerSuite, assert, Memory, DstoreAdapter){
+], function(declare, registerSuite, assert, Memory, DstoreAdapter){
 
 	var store;
+
+	var AdaptedDstoreMemory = declare([Memory, DstoreAdapter]);
 
 	registerSuite({
 		name: 'legacy dstore adapter - Memory',
 
 		beforeEach: function(){
-			var dstore = new Memory({
+			store = new AdaptedDstoreMemory({
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
 					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
@@ -20,8 +23,6 @@ define([
 					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 				]
 			});
-
-			store = new DstoreAdapter({ store: dstore });
 		},
 
 		'get': function(){
@@ -123,7 +124,7 @@ define([
 			assert.strictEqual(store.query({perfect: true}).length, 1);
 		},
 		'ifrs style data': function(){
-			var anotherDStore = new Memory({
+			var dstoreObj = new Memory({
 				data: {
 					items: [
 						{name: 'one', prime: false},
@@ -133,7 +134,7 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = new DstoreAdapter({ store: anotherDStore });
+			var anotherStore = DstoreAdapter.adapt(dstoreObj);
 			assert.strictEqual(anotherStore.get('one').name, 'one');
 			assert.strictEqual(anotherStore.query({name: 'one'})[0].name, 'one');
 		},
@@ -149,7 +150,7 @@ define([
 		name: 'legacy dstore adapter sorting - Memory',
 
 		before: function(){
-			var dstore = new Memory({
+			var dstoreObj = new Memory({
 				data: [
 					{id: 1, field1: 'one', field2: '1'},
 					{id: 2, field1: 'one', field2: '2'},
@@ -160,7 +161,7 @@ define([
 				]
 			});
 
-			store = new DstoreAdapter({ store: dstore });
+			store = DstoreAdapter.adapt(dstoreObj);
 		},
 
 		'multiple sort fields - ascend + ascend': function(){
