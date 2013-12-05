@@ -1,17 +1,13 @@
 define([
+	'dojo/_base/declare',
 	'intern!object',
 	'intern/chai!assert',
-	'dojo/_base/declare',
 	'dojo/store/Memory',
 	'dstore/legacy/StoreAdapter'
-], function(registerSuite, assert, declare, Memory, StoreAdapter){
+], function(declare, registerSuite, assert, Memory, StoreAdapter){
 
-	var TestModel = declare(null, {
-		describe: function(){
-			return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
-		}
-	});
-
+	var AdaptedStore = declare([Memory, StoreAdapter]);
+	
 	function getResultsArray(store){
 		var results = [];
 		store.forEach(function(data){
@@ -24,10 +20,10 @@ define([
 	var store;
 
 	registerSuite({
-		name: 'legacy adapter - Memory',
+		name: 'legacy dojo/store adapter - Memory',
 
 		beforeEach: function(){
-			legacyStore = new Memory({
+			store = new AdaptedStore({
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
 					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
@@ -36,17 +32,17 @@ define([
 					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 				]
 			});
-
-			store = new StoreAdapter({
-				store: legacyStore,
-				model: TestModel
-			});
+			store.model.prototype.describe =function(){
+				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
+			};
+			
 		},
 
 		'get': function(){
 			assert.strictEqual(store.get(1).name, 'one');
 			assert.strictEqual(store.get(4).name, 'four');
 			assert.isTrue(store.get(5).prime);
+			assert.strictEqual(store.getIdentity(store.get(1)), 1);
 		},
 
 		'model': function(){
@@ -166,8 +162,10 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = new StoreAdapter({ store: anotherLegacy, model: TestModel });
+			var anotherStore = StoreAdapter.adapt(anotherLegacy);
+
 			assert.strictEqual(anotherStore.get('one').name, 'one');
+			assert.strictEqual(anotherStore.getIdentity(anotherStore.get('one')), 'one');
 			assert.strictEqual(getResultsArray(anotherStore.filter({name: 'one'}))[0].name, 'one');
 		},
 
@@ -181,7 +179,7 @@ define([
 	});
 
 	registerSuite({
-		name: 'legacy adapter sorting - Memory',
+		name: 'legacy dojo/store adapter sorting - Memory',
 
 		before: function(){
 			legacyStore = new Memory({
@@ -195,15 +193,13 @@ define([
 				]
 			});
 
-			store = new StoreAdapter({
-				store: legacyStore,
-				model: TestModel
+			store = StoreAdapter.adapt(legacyStore, {
 			});
 		},
 
 		'multiple sort fields - ascend + ascend': function(){
 
-			var results = getResultsArray(store.sort('field1').sort('field2'));
+			var results = getResultsArray(store.sort('field2').sort('field1'));
 			/**
 			 * {id: 1, field1: 'one', field2: '1'},
 			 * {id: 2, field1: 'one', field2: '2'},
@@ -223,7 +219,7 @@ define([
 
 		'multiple sort fields - ascend + descend': function(){
 
-			var results = getResultsArray(store.sort('field1', false).sort('field2', true));
+			var results = getResultsArray(store.sort('field2', true).sort('field1', false));
 			assert.strictEqual(results.length, 6, 'Length is 6');
 			/**
 			 * {id: 6, field1: 'one', field2: '3'}
@@ -243,7 +239,7 @@ define([
 
 		'multiple sort fields - descend + ascend': function(){
 
-			var results = getResultsArray(store.sort('field1', true).sort('field2', false));
+			var results = getResultsArray(store.sort('field2', false).sort('field1', true));
 			/**
 			 * {id: 5, field1: 'two', field2: '3'},
 			 * {id: 4, field1: 'two', field2: '4'},
@@ -263,7 +259,7 @@ define([
 
 		'multiple sort fields - descend + descend': function(){
 
-			var results = getResultsArray(store.sort('field1', true).sort('field2', true));
+			var results = getResultsArray(store.sort('field2', true).sort('field2', true));
 			/**
 			 * {id: 3, field1: 'two', field2: '5'},
 			 * {id: 4, field1: 'two', field2: '4'},

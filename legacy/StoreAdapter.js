@@ -5,18 +5,12 @@ define([
 	'../Store'
 ], function(declare, lang, when, Store){
 // module:
-//		An adapter that allows a dojo/store object to be used as a dstore store object.
-	return declare(Store, {
-		// store:
-		//		The dojo/store object to be converted to a dstore object
-		store: null,
+//		An adapter mixin that makes a dojo/store store object look like a dstore object.
 
-		query: null,
-		queryOptions: null,
+	var StoreAdapter = declare(Store, {
 
-		constructor: function(options){
-			lang.mixin(this, options);
-			this.queryOptions = {};
+		constructor: function(){
+			this._queryOptions = {};
 		},
 
 		get: function(id){
@@ -27,33 +21,9 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			var self = this;
-			return when(this.store.get(id), function(object){
+			return when(this.inherited(arguments), function(object){
 				return self.assignPrototype(object);
 			});
-		},
-
-		add: function(object, options){
-			// summary:
-			//		Adds an object. This will trigger a PUT request to the server
-			//		if the object has an id, otherwise it will trigger a POST request.
-			// object: Object
-			//		The object to store.
-			// options: Object
-			//		Additional metadata for storing the data.  Includes an "id"
-			//		property if a specific id is to be used.
-			var store = this.store;
-			return store.add && store.add(object, options);
-		},
-
-		put: function(object, options){
-			// summary:
-			//		Stores an object
-			// object: Object
-			//		The object to store.
-			// directives: Object
-			//		Additional directives for storing objects.
-			var store = this.store;
-			return store.put && store.put(object, options);
 		},
 
 		filter: function(query){
@@ -63,7 +33,7 @@ define([
 			//		The query to use for retrieving objects from the store.
 			// returns: StoreAdapter
 			return lang.delegate(this, {
-				query: query
+				_query: query
 			});
 		},
 
@@ -79,20 +49,20 @@ define([
 			if(typeof property === 'function'){
 				sort = property;
 			}else{
-				var options = this.queryOptions;
+				var options = this._queryOptions;
 				var fieldSort = {
 					attribute: property,
 					descending: descending != null && descending
 				};
 				if(options && Object.prototype.toString.call(options.sort) === '[object Array]'){
 					sort = options.sort.slice(0);
-					sort.push(fieldSort);
+					sort.unshift(fieldSort);
 				}else{
 					sort = [ fieldSort ];
 				}
 			}
 			return lang.delegate(this, {
-				queryOptions: lang.delegate(this.queryOptions, { sort: sort })
+				_queryOptions: lang.delegate(this._queryOptions, { sort: sort })
 			});
 		},
 
@@ -104,12 +74,12 @@ define([
 			// end?: Number
 			//		The exclusive end of objects to return
 			// returns: StoreAdapter
-			var options = lang.delegate(this.queryOptions, { start: start });
+			var options = lang.delegate(this._queryOptions, { start: start });
 			if(end){
 				options.count = end - start;
 			}
 			return lang.delegate(this, {
-				queryOptions: options
+				_queryOptions: options
 			});
 		},
 
@@ -124,22 +94,30 @@ define([
 			// thisObject:
 			//		The object to use as |this| in the callback.
 			var self = this;
-			var results = this.store.query(this.query, this.queryOptions);
+			var results = this.query(this._query, this._queryOptions);
 			if(results){
 				results.forEach(function(obj){
 					callback.call(thisObj, self.assignPrototype(obj));
 				}, thisObj);
 			}
 			return results;
-		},
-
-		remove: function(id, options){
-			// summary:
-			//		Deletes an object by its identity
-			// id: Number
-			//		The identity to use to delete the object
-			var store = this.store;
-			return store.remove && store.remove(id, options);
 		}
 	});
+
+	StoreAdapter.adapt = function(obj, config){
+		// summary:
+		//		Adapts an existing dojo/store object to behave like a dstore object.
+		// obj: Object
+		//		A dojo/store object that will have an adapter applied to it.
+		// config: Object?
+		//		An optional configuration object that will be mixed into the adapted object.
+		//
+		obj = declare.safeMixin(obj, new StoreAdapter());
+		if(config){
+			obj = lang.mixin(obj, config);
+		}
+		return obj;
+	};
+
+	return StoreAdapter;
 });

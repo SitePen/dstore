@@ -42,10 +42,9 @@ return declare(null, {
 			if(hasProto){
 				// the fast easy way
 				object.__proto__ = prototype;
-				return object;
 			}else{
 				// create a new object with the correct prototype
-				return lang.delegate(prototype, object);
+				object = lang.delegate(prototype, object);
 			}
 		}
 		return object;
