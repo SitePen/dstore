@@ -7,40 +7,15 @@ define([
 	'dojo/store/JsonRest',
 	'dstore/legacy/StoreAdapter'
 ], function(require, registerSuite, assert, declare, lang, JsonRest, StoreAdapter){
-	// NOTE: Because HTTP headers are case-insensitive they should always be provided as all-lowercase
-	// strings to simplify testing.
-	function runTest(method, args, store){
-		var d = this.async();
-		store[method].apply(store, args).then(d.callback(function(result){
-			var k;
-			var resultHeaders = result.headers;
-			for(k in requestHeaders){
-				if(resultHeaders.hasOwnProperty(k)){
-					assert.strictEqual(resultHeaders[k], requestHeaders[k]);
-				}
-			}
 
-			for(k in globalHeaders){
-				if(resultHeaders.hasOwnProperty(k)){
-					assert.strictEqual(resultHeaders[k], globalHeaders[k]);
-				}
-			}
-		}), lang.hitch(d, 'reject'));
-	}
+	var TestModel = declare(null, {
+		describe: function(){
+			return 'name is ' + this.name;
+		}
+	});
 
-	var globalHeaders = {
-
-		'test-global-header-a': 'true',
-		'test-global-header-b': 'yes'
-	};
-	var requestHeaders = {
-		'test-local-header-a': 'true',
-		'test-local-header-b': 'yes',
-		'test-override': 'overridden'
-	};
 	var legacyStore = new JsonRest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		headers: lang.mixin({ 'test-override': false }, globalHeaders),
 		remove: function(id){
 			var result = this.inherited(arguments);
 			return result.then(function(response){
@@ -57,7 +32,6 @@ define([
 
 	var	store  = new (declare([JsonRest, StoreAdapter]))({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		headers: lang.mixin({ 'test-override': false }, globalHeaders),
 		remove: function(id){
 			var result = this.inherited(arguments);
 			return result.then(function(response){
@@ -101,32 +75,6 @@ define([
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
 			}));
-		},
-
-		'headers get 1': function(){
-			runTest.call(this, 'get', [ 'index.php', requestHeaders ], store);
-		},
-
-		'headers get 2': function(){
-			runTest.call(this, 'get', [ 'index.php', { headers: requestHeaders } ], store);
-		},
-
-		'headers remove': function(){
-			runTest.call(this, 'remove', [ 'index.php', { headers: requestHeaders } ], store);
-		},
-
-		'headers put': function(){
-			runTest.call(this, 'put', [
-				{},
-				{ headers: requestHeaders }
-			], store);
-		},
-
-		'headers add': function(){
-			runTest.call(this, 'add', [
-				{},
-				{ headers: requestHeaders }
-			], store);
 		}
 	});
 
@@ -162,32 +110,6 @@ define([
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
 			}));
-		},
-
-		'headers get 1': function(){
-			runTest.call(this, 'get', [ 'index.php', requestHeaders ], adaptedStore);
-		},
-
-		'headers get 2': function(){
-			runTest.call(this, 'get', [ 'index.php', { headers: requestHeaders } ], adaptedStore);
-		},
-
-		'headers remove': function(){
-			runTest.call(this, 'remove', [ 'index.php', { headers: requestHeaders } ], adaptedStore);
-		},
-
-		'headers put': function(){
-			runTest.call(this, 'put', [
-				{},
-				{ headers: requestHeaders }
-			], adaptedStore);
-		},
-
-		'headers add': function(){
-			runTest.call(this, 'add', [
-				{},
-				{ headers: requestHeaders }
-			], adaptedStore);
 		}
 	});
 });

@@ -4,8 +4,10 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
-	'dstore/Rest'
-], function(require, registerSuite, assert, declare, lang, Rest){
+	'dojo/request/registry',
+	'dstore/Rest',
+	'./mockRequest'
+], function(require, registerSuite, assert, declare, lang, request, Rest, mockRequest){
 	// NOTE: Because HTTP headers are case-insensitive they should always be provided as all-lowercase
 	// strings to simplify testing.
 	function runTest(method, args){
@@ -14,15 +16,11 @@ define([
 			var k;
 			var resultHeaders = result.headers;
 			for(k in requestHeaders){
-				if(resultHeaders.hasOwnProperty(k)){
-					assert.strictEqual(resultHeaders[k], requestHeaders[k]);
-				}
+				assert.strictEqual(resultHeaders[k], requestHeaders[k]);
 			}
 
 			for(k in globalHeaders){
-				if(resultHeaders.hasOwnProperty(k)){
-					assert.strictEqual(resultHeaders[k], globalHeaders[k]);
-				}
+				assert.strictEqual(resultHeaders[k], globalHeaders[k]);
 			}
 		}), lang.hitch(d, 'reject'));
 	}
@@ -45,8 +43,18 @@ define([
 		return 'name is ' + this.name;
 	};
 
+	var registerHandle;
+
 	registerSuite({
 		name: 'dstore Rest',
+
+		before: function(){
+			registerHandle = request.register(/.*mockRequest.*/, mockRequest);
+		},
+
+		after: function(){
+			registerHandle.remove();
+		},
 
 		'get': function(){
 			var d = this.async();
@@ -84,28 +92,33 @@ define([
 		},
 
 		'headers get 1': function(){
-			runTest.call(this, 'get', [ 'index.php', requestHeaders ]);
+			runTest.call(this, 'get', [ 'mockRequest/1', requestHeaders ]);
 		},
 
 		'headers get 2': function(){
-			runTest.call(this, 'get', [ 'index.php', { headers: requestHeaders } ]);
+			runTest.call(this, 'get', [ 'mockRequest/2', { headers: requestHeaders } ]);
 		},
 
 		'headers remove': function(){
-			runTest.call(this, 'remove', [ 'index.php', { headers: requestHeaders } ]);
+			runTest.call(this, 'remove', [ 'mockRequest/3', { headers: requestHeaders } ]);
 		},
 
 		'headers put': function(){
 			runTest.call(this, 'put', [
 				{},
-				{ headers: requestHeaders }
+				{
+					id: 'mockRequest/4',
+					headers: requestHeaders }
 			]);
 		},
 
 		'headers add': function(){
 			runTest.call(this, 'add', [
 				{},
-				{ headers: requestHeaders }
+				{
+					id: 'mockRequest/5',
+					headers: requestHeaders
+				}
 			]);
 		},
 
