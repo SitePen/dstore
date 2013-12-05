@@ -105,16 +105,17 @@ return declare(null, {
 		var handles = [];
 
 		whenFinished("add", function(object){
-			notify(object);
+			notify("add", object);
 		});
 		whenFinished("put", function(object){
-			notify(object, store.getIdentity(object));
+			notify("update", object);
 		});
 		whenFinished("remove", function(id){
-			notify(undef, id);
+			notify("remove", id);
 		});
+		// TODO: What should actually be done about notify?
 		whenFinished("notify", function(object, id){
-			notify(object, id);
+			notify("update", object);
 		});
 		var observed = lang.delegate(this, {
 			store: store,
@@ -164,7 +165,7 @@ return declare(null, {
 			};
 		}
 
-		function notify(changed, existingId){
+		function notify(type, target){
 			revision++;
 			when(observed.data || observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
@@ -174,42 +175,42 @@ return declare(null, {
 					throw new Error("Query is out of date, you must observe() the query prior to any data modifications");
 				}*/
 
-				function updateRange(rangeIndex, index, count){
-					var range = ranges[rangeIndex];
-				}
+				var targetId = type === "remove" ? target : store.getIdentity(target);
+				var info = {};
 
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
-				if(existingId !== undef){
+				if(type === "remove" || type === "update"){
 					// remove the old one
 					for(var i = 0; removedFrom === -1 && i < ranges.length; ++i){
-						range = ranges[rangeIndex];
+						range = ranges[i];
 						for(var j = range.start, l = j + range.count; j < l; ++j){
 							var object = resultsArray[j];
-							if(store.getIdentity(object) == existingId){
-								removedFrom = j;
+							if(store.getIdentity(object) == targetId){
+								removedFrom = info.previousIndex = j;
 								removalRangeIndex = i;
+								// TODO: Is there a need for removedObject?
+								// TODO: Is there a need for maintaining the totalCount that I removed?
 								removedObject = resultsArray[removedFrom];
 								resultsArray.splice(removedFrom, 1);
 
 								range.count--;
-								for(j = rangeIndex + 1; j < ranges.length; ++j){
+								for(j = i + 1; j < ranges.length; ++j){
 									ranges[j].start--;
 								}
 
-								// TODO: Eventually we will want to aggregate all the listener events
-								// in an event turn, but we will wait until we have a reliable, performant queueing
-								// mechanism for this (besides setTimeout)
-								listener(removedFrom, 1);
 								break;
 							}
 						}
 					}
 				}
-				if(changed){
+
+				if(type === "add" || type === "update"){
 					if(queryExecutor){
-						if(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length){
+						// with a queryExecutor, we can determine the correct sorted index for the change
+
+						if(queryExecutor.matches ? queryer.matches(target) : queryExecutor([target]).length){
 							var begin = 0,
-								end = array.length - 1,
+								end = ranges.length - 1,
 								sampleArray,
 								sortedIndex;
 							while (begin <= end && insertedInto === -1){
@@ -221,56 +222,65 @@ return declare(null, {
 								// If the original index is in range, put back in the original slot
 								// so it doesn't move unless it needs to (relying on a stable sort below)
 								if(removedFrom >= range.start && removedFrom < (range.start + range.count)){
-									sampleArray.splice(removedFrom, 0, changed);
+									sampleArray.splice(removedFrom, 0, target);
 								}else{
-									sampleArray.push(changed);
+									sampleArray.push(target);
 								}
 
-								sortedIndex = queryExecutor(sampleArray).indexOf(changed);
+								sortedIndex = queryExecutor(sampleArray).indexOf(target);
 
 								if(sortedIndex < 0 || (sortedIndex === 0 && range.start !== 0)){
 									end = i - 1;
 								}else if(sortedIndex >= sampleArray.length && sortedIndex < resultsArray.length){
 									begin = i + 1;
 								}else{
-									insertedInto = range[rangeIndex].start + sortedIndex;
+									insertedInto = range.start + sortedIndex;
 									insertionRangeIndex = i;
 								}
 							}
 						}
-					}else if(existingId !== undef){
+					}else{
 						// we don't have a queryEngine, so we can't provide any information
 						// about where it was inserted or moved to. If it is an update, we leave it's position alone. other we at least indicate a new object
-						insertedInto = removedFrom;
-						insertionRangeIndex = removalRangeIndex;
-					}else{
-						// a new object
-						insertedInto = store.defaultIndex || 0;
 
-						var range;
-						for(i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i){
-							range = ranges[i];
-							if(range.start <= insertedInto && insertedInto < (range.start + range.count)){
-								insertionRangeIndex = i;
+						if(type === "update"){
+							insertedInto = removedFrom;
+							insertionRangeIndex = removalRangeIndex;
+						}else{
+							// TODO: Should there be a default index for a new object of undetermined index?
+							//		It seems like sending "add" notification with no index might be more appropriate.
+							//		On the other hand, when adding to an unsorted list, I would expect the new element to be appended.
+							// a new object
+							insertedInto = store.defaultIndex || 0;
+
+							var range;
+							for(i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i){
+								range = ranges[i];
+								if(range.start <= insertedInto && insertedInto < (range.start + range.count)){
+									insertionRangeIndex = i;
+								}
 							}
 						}
 					}
 
 					if(insertedInto > -1){
-						resultsArray.splice(insertedInto, 0, changed);
+						info.index = insertedInto;
+						resultsArray.splice(insertedInto, 0, target);
 
 						// TODO: NOTE: This is broken for a non-zero store.defaultIndex because, when an insertion range is not found, this code assumes insertion at the beginning.
 						if(insertionRangeIndex > -1){
-							ranges[rangeIndex].count++;
+							ranges[insertionRangeIndex].count++;
 						}
 						for(i = insertionRangeIndex + 1; i < ranges.length; ++i){
 							ranges[i].start++;
 						}
-
-						// splice insertion arguments
-						listener(insertedInto, 0, changed);
 					}
 				}
+
+				// TODO: Eventually we will want to aggregate all the listener events
+				// in an event turn, but we will wait until we have a reliable, performant queueing
+				// mechanism for this (besides setTimeout)
+				listener(type, target, info);
 			});
 		}
 
@@ -279,7 +289,7 @@ return declare(null, {
 	// a Comet driven store could directly call notify to notify observers when data has
 	// changed on the backend
 	// create a new instance
-	notify: function(object, existingId){
+	notify: function(type, target){
 	}
 });
 });

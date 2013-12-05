@@ -24,12 +24,16 @@ define([
 			{id: 5, name: 'five', prime: true}
 		]
 	});
-	var data = [];
-	var i;
-	for(i = 1; i <= 100; i++){
-		data.push({id: i, name: 'item ' + i, order: i});
+
+	// TODO: Maybe name this differently
+	function createBigStore(numItems){
+		var data = [];
+		var i;
+		for(i = 1; i <= 100; i++){
+			data.push({id: i, name: 'item ' + i, order: i});
+		}
+		return new MyStore({data: data});
 	}
-	var bigStore = new MyStore({data: data});
 
 	registerSuite({
 		name: 'dstore Observable',
@@ -44,19 +48,11 @@ define([
 			var results = store.filter({prime: true});
 			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
-			var observer = results.observe(function(removeFrom, count, add){
-				var change = {removeFrom:removeFrom, count:count};
-				if(add){
-					change.add = add;
-				}
-				changes.push(change);
+			var observer = results.observe(function(type, target, info){
+				changes.push({type: type, target: target, info: info});
 			});
-			var secondObserver = results.observe(function(removeFrom, count, add){
-				var change = {removeFrom:removeFrom, count:count};
-				if(add){
-					change.add = add;
-				}
-				secondChanges.push(change);
+			var secondObserver = results.observe(function(type, target, info){
+				secondChanges.push({type: type, target: target, info: info});
 			});
 			var expectedChanges = [],
 				expectedSecondChanges = [];
@@ -65,8 +61,11 @@ define([
 			store.put(two); // should remove it from the array
 			assert.strictEqual(observer.data.length, 2);
 			expectedChanges.push({
-					removeFrom: 0,
-					count: 1,
+				type: "update",
+				target: two,
+				info: {
+					previousIndex: 0
+				}
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
 			secondObserver.remove();
@@ -74,62 +73,75 @@ define([
 			one.prime = true;
 			store.put(one); // should add it
 			expectedChanges.push({
-					removeFrom: 2,
-					count:0,
-					add:{
-						id: 1,
-						name: "one",
-						prime: true
-					}
-				});
-			assert.strictEqual(observer.data.length, 3);
-			store.add({// shouldn't be added
-				id:6, name:"six"
+				type: "update",
+				target: one,
+				info: {
+					index: 2
+				}
 			});
 			assert.strictEqual(observer.data.length, 3);
-			store.add({// should be added
-				id:7, name:"seven", prime:true
-			});
-			assert.strictEqual(observer.data.length, 4);
-			
+			// shouldn't be added
+			var six = {id:6, name:"six"};
+			store.add(six);
+			assert.strictEqual(observer.data.length, 3);
+
 			expectedChanges.push({
-					removeFrom: 3,
-					"count":0,
-					"add":{
-						id:7, name:"seven", prime:true
-					}
-				});
+				type: "add",
+				target: six,
+				info: {
+					// no index because the addition doesn't have a place in the filtered results
+				}
+			});
+
+			// should be added
+			var seven = {id:7, name:"seven", prime:true};
+			store.add(seven);
+			assert.strictEqual(observer.data.length, 4);
+
+			expectedChanges.push({
+				type: "add",
+				target: seven,
+				info: {
+					index: 3
+				}
+			});
 			store.remove(3);
 			expectedChanges.push({
-					"removeFrom":0,
-					count: 1
-				});
+				type: "remove",
+				target: 3,
+				info: {
+					previousIndex: 0
+				}
+			});
 			assert.strictEqual(observer.data.length, 3);
-			
+
 			observer.remove(); // shouldn't get any more calls
-			store.add({// should not be added
+			store.add({// should not be notified for this addition
 				id:11, name:"eleven", prime:true
 			});
 
-			assert.strictEqual(JSON.stringify(secondChanges), JSON.stringify(expectedSecondChanges));
-			assert.strictEqual(JSON.stringify(changes), JSON.stringify(expectedChanges));
+			assert.deepEqual(secondChanges, expectedSecondChanges);
+			assert.deepEqual(changes, expectedChanges);
 		},
 
 		'query with zero id': function(){
 			var results = store.filter({});
 			assert.strictEqual(results.data.length, 8);
-            var observer = results.observe(function(removeFrom, count, add){
+            var observer = results.observe(function(type, target, info){
                     // we only do puts so previous & new indices must always been the same
-                    // unfortunately if id = 0, the removeFrom
-                	assert.ok(removeFrom > -1);
+                	assert.ok(info.index === info.previousIndex);
             }, true);
 			store.put({id: 5, name: '-FIVE-', prime: true});
 			store.put({id: 0, name: '-ZERO-', prime: false});
 		},
 
-		'paging': function(){
-			var results, opts = {count: 25, sort: [{attribute: "order"}]};
-			bigFiltered = bigStore.filter({}).sort('order');
+		'paging with store.data': function(){
+			var results,
+				// TODO: This is unused. Should it be incorporated or removed?
+				opts = {count: 25, sort: [{attribute: "order"}]},
+				bigStore = createBigStore(100),
+				bigFiltered = bigStore.filter({}).sort('order');
+
 			var rangedResults = [
 			    bigFiltered.range(0,25).forEach(function(){}),
 			    bigFiltered.range(25,50).forEach(function(){}),
@@ -137,9 +149,9 @@ define([
 			    bigFiltered.range(75,100).forEach(function(){})
 			];
 			var observations = [];
-			var bigObserved = bigFiltered.observe(function(obj, from, to){
-		    	observations.push({from: from, to: to});
-		        console.log(i, " observed: ", obj, from, to);
+			var bigObserved = bigFiltered.observe(function(type, target, info){
+		    	observations.push({type: type, target: target, info: info});
+		        console.log(" observed: ", type, target, info);
 			});
 			var results = bigObserved.data;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
@@ -151,6 +163,92 @@ define([
 			bigStore.add({id: 102, name: 'one oh two', order: 26.5});
 			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 3);
+		},
+
+		'paging with store.partialData': function(){
+			var results,
+				// TODO: This is unused. Should it be incorporated or removed?
+				opts = {count: 25, sort: [{attribute: "order"}]},
+				bigStore = createBigStore(100),
+				bigFiltered = bigStore.filter({}).sort('order');
+
+			var rangedResults = [
+			    bigFiltered.range(0,25).forEach(function(){}),
+			    bigFiltered.range(25,50).forEach(function(){}),
+			    bigFiltered.range(50,75).forEach(function(){}),
+			    bigFiltered.range(75,100).forEach(function(){})
+			];
+			var observations = [];
+			var bigObserved = bigFiltered.observe(function(type, target, info){
+		    	observations.push({type: type, target: target, info: info});
+		        console.log(" observed: ", type, target, info);
+			});
+			var results = bigObserved.data;
+			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
+			assert.strictEqual(results.length, 101);
+			assert.strictEqual(observations.length, 1);
+			bigStore.remove(101);
+			assert.strictEqual(observations.length, 2);
+			assert.strictEqual(results.length, 100);
+			bigStore.add({id: 102, name: 'one oh two', order: 26.5});
+			assert.strictEqual(results.length, 101);
+			assert.strictEqual(observations.length, 3);
+		},
+
+		'paging releaseRange': function(){
+			// Remove all
+			//	-> remove range
+			// Split
+			//	-> remove existing range and replace with two others
+			// Remove from head
+			//	-> modify existing range
+			// Remove from tail
+			//	-> modify existing range
+
+			var itemCount = 100,
+				store = createBigStore(itemCount),
+				rangeToBeRemoved = { start: 5, end: 15 },
+				rangeToBeSplit = { start: 25, end: 45 },
+				rangeToBeHeadTrimmed = { start: 55, end: 65 },
+				rangeToBeTailTrimmed = { start: 80, end: 95 },
+				eclipsingRange = { start: 0, end: 20 },
+				splittingRange = { start: 30, end: 39 },
+				headTrimmingRange = { start: 50, end: 59 },
+				tailTrimmingRange = { start: 90, end: 99 };
+
+			var observations = [],
+				latestObservation,
+				expectedObject,
+				observedStore = store.observe(function (obj, from, to) {
+					latestObservation = { obj: obj, from: from, to: to };
+				}),
+				nextId = 101;
+
+			observedStore.range(rangeToBeRemoved.start, rangeToBeRemoved.end);
+			observedStore.range(rangeToBeSplit.start, rangeToBeSplit.end);
+			observedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
+			observedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
+
+			observedStore.removeRange(eclipsingRange.start, eclipsingRange.end);
+			latestObservation = null;
+			//expectedObject = observedStore.get(
+			store.put({ id: nextId++, name: "101", order: 10.5 });
+			assert.strictEqual(latestObservation, null);
+
+			// Verify correct split by testing in both result ranges and in the removed range between them
+			observedStore.removeRange(splittingRange.start, splittingRange.end);
+			expectedObject = { id: nextId++, name: nextId.toString(), order: 10.5 };
+			store.add(expectedObject);
+			assert.propertyVal(latestObservation, "obj", expectedObject);
+			latestObservation = null;
+			//expectedObject = { id = nextId++, name: nextId.toString(), order: 10.5 };
+			store.add(expectedObject)
+			assert.strictEqual(latestObservation, null);
+
+
+			observedStore.removeRange(headTrimmingRange.start, headTrimmingRange.end);
+
+			observedStore.removeRange(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
 		'type': function(){
