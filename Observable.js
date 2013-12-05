@@ -40,7 +40,7 @@ var undef, revision = 0;
 		ranges.unshift(createRange(newStart, newEnd));
 	}
 
-	function forgetRange(ranges, start, end){
+	function unregisterRange(ranges, start, end){
 		for(var i = 0, range; (range = ranges[i]); ++i){
 			var existingStart = range.start,
 				existingEnd = existingStart + range.count;
@@ -76,7 +76,6 @@ var undef, revision = 0;
 
 return declare(null, {
 	currentRange: [],
-	   // TODO: arg or prop to say range-specific changes
 	observe: function(listener, observeOptions){
 		var store = this.store || this;
 		var inMethod;
@@ -156,15 +155,11 @@ return declare(null, {
 				});
 				return rangeResults;
 			};
-			// TODO: Maybe this should be named `releaseRange` instead as it sounds less like a deletion
 			observed.releaseRange = function(start, end){
 				unregisterRange(ranges, start, end);
 
-				var partialData = this.partialData;
-
-				// TODO: Is there need to be this careful w/ Math.min?
-				for(var i = start, endIndex = Math.min(end, partialData.length - 1); i <= endIndex; ++i){
-					delete partialData[i];
+				for(var i = start; i <= end; ++i){
+					delete this.partialData[i];
 				}
 			};
 		}
@@ -175,22 +170,26 @@ return declare(null, {
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
 				var i, j, l, range;
-				var totalItems = resultsArray.length;
 				/*if(++queryRevision != revision){
 					throw new Error("Query is out of date, you must observe() the query prior to any data modifications");
 				}*/
-				var removedObject, removedFrom = -1, insertedInto = -1;
+
+				function updateRange(rangeIndex, index, count){
+					var range = ranges[rangeIndex];
+				}
+
+				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
 				if(existingId !== undef){
 					// remove the old one
-					for(var rangeIndex = 0; removedFrom === -1 && rangeIndex < ranges.length; ++rangeIndex){
+					for(var i = 0; removedFrom === -1 && i < ranges.length; ++i){
 						range = ranges[rangeIndex];
-						for(var i = range.start, l = i + range.count; i < l; ++i){
-							var object = resultsArray[i];
+						for(var j = range.start, l = j + range.count; j < l; ++j){
+							var object = resultsArray[j];
 							if(store.getIdentity(object) == existingId){
-								removedFrom = i;
+								removedFrom = j;
+								removalRangeIndex = i;
 								removedObject = resultsArray[removedFrom];
 								resultsArray.splice(removedFrom, 1);
-								totalItems--;
 
 								range.count--;
 								for(j = rangeIndex + 1; j < ranges.length; ++j){
@@ -206,64 +205,71 @@ return declare(null, {
 						}
 					}
 				}
-				if(queryExecutor){
-					// add the new one
-					if(changed &&
-							// if a matches function exists, use that (probably more efficient)
-							(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length)){
+				if(changed){
+					if(queryExecutor){
+						if(queryExecutor.matches ? queryer.matches(changed) : queryExecutor([changed]).length){
+							var begin = 0,
+								end = array.length - 1,
+								sampleArray,
+								sortedIndex;
+							while (begin <= end && insertedInto === -1){
+								i = begin + Math.round((end - begin) / 2);
+								range = ranges[i];
 
-						var begin = 0,
-							end = array.length - 1,
-							sampleArray,
-							sortedIndex;
-						while (begin <= end){
-							i = begin + Math.round((end - begin) / 2);
-							range =  ranges[i];
+								sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-							sampleArray = resultsArray.slice(range.start, range.start + range.count);
+								// If the original index is in range, put back in the original slot
+								// so it doesn't move unless it needs to (relying on a stable sort below)
+								if(removedFrom >= range.start && removedFrom < (range.start + range.count)){
+									sampleArray.splice(removedFrom, 0, changed);
+								}else{
+									sampleArray.push(changed);
+								}
 
-							// If the original index is in range, put back in the original slot
-							// so it doesn't move unless it needs to (relying on a stable sort below)
-							if(removedFrom >= range.start && removedFrom < (range.start + range.count)){
-								sampleArray.splice(firstInsertedInto, 0, changed);
-							}else{
-								sampleArray.push(changed);
-							}
+								sortedIndex = queryExecutor(sampleArray).indexOf(changed);
 
-							sortedIndex = queryExecutor(sampleArray).indexOf(changed);
-
-							if(sortedIndex < 0 || (sortedIndex === 0 && range.start !== 0)){
-								end = i - 1;
-							}else if(sortedIndex >= sampleArray.length && sortedIndex < totalItems){
-								begin = i + 1;
-							}else{
-								insertedInto = range[rangeIndex].start + sortedIndex;
-								resultsArray.splice(insertedInto, 0, changed);
-								totalItems++;
-
-								ranges[rangeIndex].count++;
-								for(j = rangeIndex + 1; j < ranges.length; ++j){
-									ranges[j].start++;
+								if(sortedIndex < 0 || (sortedIndex === 0 && range.start !== 0)){
+									end = i - 1;
+								}else if(sortedIndex >= sampleArray.length && sortedIndex < resultsArray.length){
+									begin = i + 1;
+								}else{
+									insertedInto = range[rangeIndex].start + sortedIndex;
+									insertionRangeIndex = i;
 								}
 							}
 						}
-					}
-				}else if(changed){
-					// we don't have a queryEngine, so we can't provide any information
-					// about where it was inserted or moved to. If it is an update, we leave it's position alone, other we at least indicate a new object
-					if(existingId !== undef){
-						// an update, keep the index the same
+					}else if(existingId !== undef){
+						// we don't have a queryEngine, so we can't provide any information
+						// about where it was inserted or moved to. If it is an update, we leave it's position alone. other we at least indicate a new object
 						insertedInto = removedFrom;
-					}else /*if(!options.start)*/{
+						insertionRangeIndex = removalRangeIndex;
+					}else{
 						// a new object
 						insertedInto = store.defaultIndex || 0;
+
+						var range;
+						for(i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i){
+							range = ranges[i];
+							if(range.start <= insertedInto && insertedInto < (range.start + range.count)){
+								insertionRangeIndex = i;
+							}
+						}
 					}
-					resultsArray.splice(insertedInto, 0, changed);
-					totalItems++;
-				}
-				if(insertedInto > -1){
-					// splice insertion arguments
-					listener(insertedInto, 0, changed);
+
+					if(insertedInto > -1){
+						resultsArray.splice(insertedInto, 0, changed);
+
+						// TODO: NOTE: This is broken for a non-zero store.defaultIndex because, when an insertion range is not found, this code assumes insertion at the beginning.
+						if(insertionRangeIndex > -1){
+							ranges[rangeIndex].count++;
+						}
+						for(i = insertionRangeIndex + 1; i < ranges.length; ++i){
+							ranges[i].start++;
+						}
+
+						// splice insertion arguments
+						listener(insertedInto, 0, changed);
+					}
 				}
 			});
 		}
