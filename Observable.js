@@ -22,8 +22,8 @@ var undef, revision = 0;
 	function registerRange(ranges, newStart, newEnd){
 		for(var i = ranges.length - 1; i >= 0; --i){
 			var existingRange = ranges[i],
-				existingStart = range.start,
-				existingEnd = existingStart + range.count;
+				existingStart = existingRange.start,
+				existingEnd = existingStart + existingRange.count;
 
 			if (newStart > existingEnd){
 				// existing range completely precedes new range. we are done.

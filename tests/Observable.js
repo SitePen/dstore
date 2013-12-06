@@ -230,7 +230,7 @@ define([
 			assert.strictEqual(observations.length, 3);
 		},
 
-		'paging releaseRange': function(){
+		'paging releaseRange with store.partialData': function(){
 			// Remove all
 			//	-> remove range
 			// Split
@@ -242,7 +242,7 @@ define([
 
 			var itemCount = 100,
 				store = createBigStore(itemCount, ObservablePartialDataStore),
-				rangeToBeRemoved = { start: 5, end: 15 },
+				rangeToBeEclipsed = { start: 5, end: 15 },
 				rangeToBeSplit = { start: 25, end: 45 },
 				rangeToBeHeadTrimmed = { start: 55, end: 65 },
 				rangeToBeTailTrimmed = { start: 80, end: 95 },
@@ -257,33 +257,40 @@ define([
 				observedStore = store.observe(function (obj, from, to) {
 					latestObservation = { obj: obj, from: from, to: to };
 				}),
-				nextId = 101;
+				assertRangeDefined = function(start, end){
+					for(var i = start; i <= end; ++i){
+						assert.notEqual(observedStore.partialData[i], undefined);
+					}
+				},
+				assertRangeUndefined = function(start, end){
+					for(var i = start; i <= end; ++i){
+						assert.equal(observedStore.partialData[i], undefined);
+					}
+				};
 
-			observedStore.range(rangeToBeRemoved.start, rangeToBeRemoved.end);
-			observedStore.range(rangeToBeSplit.start, rangeToBeSplit.end);
-			observedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
-			observedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
+			observedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).forEach(function(){});
+			assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
+			observedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
+			assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 
-			observedStore.removeRange(eclipsingRange.start, eclipsingRange.end);
-			latestObservation = null;
-			//expectedObject = observedStore.get(
-			store.put({ id: nextId++, name: "101", order: 10.5 });
-			assert.strictEqual(latestObservation, null);
+			observedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).forEach(function(){});
+			assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
+			observedStore.releaseRange(splittingRange.start, splittingRange.end);
+			assertRangeDefined(rangeToBeSplit.start, splittingRange.end - 1);
+			assertRangeUndefined(splittingRange.start, splittingRange.end);
+			assertRangeDefined(splittingRange.end + 1, rangeToBeSplit.end);
 
-			// Verify correct split by testing in both result ranges and in the removed range between them
-			observedStore.removeRange(splittingRange.start, splittingRange.end);
-			expectedObject = { id: nextId++, name: nextId.toString(), order: 10.5 };
-			store.add(expectedObject);
-			assert.propertyVal(latestObservation, "obj", expectedObject);
-			latestObservation = null;
-			//expectedObject = { id = nextId++, name: nextId.toString(), order: 10.5 };
-			store.add(expectedObject)
-			assert.strictEqual(latestObservation, null);
+			observedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).forEach(function(){});
+			assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
+			observedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
+			assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
+			assertRangeDefined(headTrimmingRange.end + 1, rangeToBeHeadTrimmed.end);
 
-
-			observedStore.removeRange(headTrimmingRange.start, headTrimmingRange.end);
-
-			observedStore.removeRange(tailTrimmingRange.start, tailTrimmingRange.end);
+			observedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).forEach(function(){});
+			assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
+			observedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
+			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start - 1);
+			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
 		'type': function(){
