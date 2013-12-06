@@ -45,15 +45,14 @@ var undef, revision = 0;
 			var existingStart = range.start,
 				existingEnd = existingStart + range.count;
 
-			// TODO: Are these ranges inclusive or exclusive? Currently coding as if they are inclusive.
 			if(start <= existingStart){
 				if(end >= existingEnd){
 					// The existing range is within the forgotten range
 					ranges.splice(i, 1);
 				}else{
 					// The forgotten range overlaps the beginning of the existing range
-					range.start = end + 1;
-					range.count = existingEnd - range.start + 1;
+					range.start = end;
+					range.count = existingEnd - range.start;
 
 					// Since the forgotten range ends before the existing range,
 					// there are no more ranges to update, and we are done
@@ -62,7 +61,7 @@ var undef, revision = 0;
 			}else if(start < existingEnd){
 				if(end > existingStart){
 					// The forgotten range is within the existing range
-					ranges.splice(i, 1, createRange(existingStart, start - 1), createRange(end + 1, existingEnd));
+					ranges.splice(i, 1, createRange(existingStart, start), createRange(end, existingEnd));
 
 					// We are done because the existing range bounded the forgotten range
 					return;
@@ -148,12 +147,13 @@ return declare(null, {
 					data: rangeCollection.data,
 					total: rangeCollection.total
 				}).then(function(result){
+					// TODO: What to do about changing totals? It seems like ignoring it will cause fewer issues than having to adjust to it.
+					partialData.length = result.total;
+
 					// TODO: If the range overlaps an existing range, existing objects will be refreshed. Should there be an update notification?
 					// copy the new ranged data into the parent partial data set
 					var spliceArgs = [ start, end - start ].concat(result.data);
 					partialData.splice.apply(partialData, spliceArgs);
-					// TODO: What to do about changing totals? It seems like ignoring it will cause fewer issues than having to adjust to it.
-					partialData.length = result.total;
 					registerRange(ranges, start, end);
 				});
 				return rangeCollection;
@@ -161,7 +161,7 @@ return declare(null, {
 			observed.releaseRange = function(start, end){
 				unregisterRange(ranges, start, end);
 
-				for(var i = start; i <= end; ++i){
+				for(var i = start; i < end; ++i){
 					delete this.partialData[i];
 				}
 			};
@@ -191,7 +191,7 @@ return declare(null, {
 								removedFrom = info.previousIndex = j;
 								removalRangeIndex = i;
 								// TODO: Is there a need for removedObject?
-								// TODO: Is there a need for maintaining the totalCount that I removed?
+								// TODO: Was there a need for maintaining the totalCount var that I removed?
 								removedObject = resultsArray[removedFrom];
 								resultsArray.splice(removedFrom, 1);
 

@@ -231,15 +231,6 @@ define([
 		},
 
 		'paging releaseRange with store.partialData': function(){
-			// Remove all
-			//	-> remove range
-			// Split
-			//	-> remove existing range and replace with two others
-			// Remove from head
-			//	-> modify existing range
-			// Remove from tail
-			//	-> modify existing range
-
 			var itemCount = 100,
 				store = createBigStore(itemCount, ObservablePartialDataStore),
 				rangeToBeEclipsed = { start: 5, end: 15 },
@@ -247,9 +238,9 @@ define([
 				rangeToBeHeadTrimmed = { start: 55, end: 65 },
 				rangeToBeTailTrimmed = { start: 80, end: 95 },
 				eclipsingRange = { start: 0, end: 20 },
-				splittingRange = { start: 30, end: 39 },
-				headTrimmingRange = { start: 50, end: 59 },
-				tailTrimmingRange = { start: 90, end: 99 };
+				splittingRange = { start: 30, end: 40 },
+				headTrimmingRange = { start: 50, end: 60 },
+				tailTrimmingRange = { start: 90, end: 100 };
 
 			var observations = [],
 				latestObservation,
@@ -258,38 +249,46 @@ define([
 					latestObservation = { obj: obj, from: from, to: to };
 				}),
 				assertRangeDefined = function(start, end){
-					for(var i = start; i <= end; ++i){
+					for(var i = start; i < end; ++i){
 						assert.notEqual(observedStore.partialData[i], undefined);
 					}
 				},
 				assertRangeUndefined = function(start, end){
-					for(var i = start; i <= end; ++i){
+					for(var i = start; i < end; ++i){
 						assert.equal(observedStore.partialData[i], undefined);
 					}
 				};
 
+			// Remove all
+			//	-> remove range
 			observedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 			observedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
 			assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 
+			// Split
+			//	-> remove existing range and replace with two others
 			observedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).forEach(function(){});
 			assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
 			observedStore.releaseRange(splittingRange.start, splittingRange.end);
-			assertRangeDefined(rangeToBeSplit.start, splittingRange.end - 1);
+			assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
 			assertRangeUndefined(splittingRange.start, splittingRange.end);
-			assertRangeDefined(splittingRange.end + 1, rangeToBeSplit.end);
+			assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
 
+			// Remove from head
+			//	-> modify existing range
 			observedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
 			observedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
-			assertRangeDefined(headTrimmingRange.end + 1, rangeToBeHeadTrimmed.end);
+			assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
 
+			// Remove from tail
+			//	-> modify existing range
 			observedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
 			observedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
-			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start - 1);
+			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
 			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
