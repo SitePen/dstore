@@ -178,6 +178,7 @@ return declare(null, {
 				}*/
 
 				var targetId = type === "remove" ? target : store.getIdentity(target);
+				// TODO: Should we explicitly define undefined `index` and `previousIndex` properties so the API is more apparent when inspecting in the debugger?
 				var info = {};
 
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
