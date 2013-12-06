@@ -4,9 +4,10 @@ define([
 	'dojo/_base/array',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
+	'dojo/when',
 	'dstore/Memory',
 	'dstore/Observable'
-], function(registerSuite, assert, array, declare, lang, Memory, Observable){
+], function(registerSuite, assert, array, declare, lang, when, Memory, Observable){
 
 	var MyStore = declare([Memory, Observable], {
 		get: function(){
@@ -26,14 +27,47 @@ define([
 	});
 
 	// TODO: Maybe name this differently
-	function createBigStore(numItems){
+	function createBigStore(numItems, Store){
 		var data = [];
 		var i;
 		for(i = 1; i <= 100; i++){
 			data.push({id: i, name: 'item ' + i, order: i});
 		}
-		return new MyStore({data: data});
+		return new Store({data: data});
 	}
+
+	function ObservablePartialDataStore(kwArgs){
+		this.backingStore = new MyStore(kwArgs);
+
+		array.forEach(["getIdentity", "get", "add", "put", "remove"], function(method){
+			this[method] = function(){
+				return this.backingStore[method].apply(this.backingStore, arguments);
+			};
+		}, this);
+
+		array.forEach(["filter", "sort", "range"], function(method){
+			this[method] = function(){
+				var newBackingStore = this.backingStore[method].apply(this.backingStore, arguments);
+				return lang.delegate(this, {
+					store: this.store || this,
+					backingStore: newBackingStore,
+					queryer: newBackingStore.queryer
+				});
+			};
+		}, this);
+
+		this.forEach = function(callback, thisObj){
+			this.backingStore.forEach(function(){});
+
+			this.data = when(this.backingStore.data).then(function(data){
+				array.forEach(data, callback, thisObj);
+				return data;
+			});
+			this.total = when(this.backingStore.total);
+			return this;
+		};
+	}
+	ObservablePartialDataStore.prototype = new Observable();
 
 	registerSuite({
 		name: 'dstore Observable',
@@ -139,20 +173,20 @@ define([
 			var results,
 				// TODO: This is unused. Should it be incorporated or removed?
 				opts = {count: 25, sort: [{attribute: "order"}]},
-				bigStore = createBigStore(100),
+				bigStore = createBigStore(100, MyStore),
 				bigFiltered = bigStore.filter({}).sort('order');
 
-			var rangedResults = [
-			    bigFiltered.range(0,25).forEach(function(){}),
-			    bigFiltered.range(25,50).forEach(function(){}),
-			    bigFiltered.range(50,75).forEach(function(){}),
-			    bigFiltered.range(75,100).forEach(function(){})
-			];
 			var observations = [];
 			var bigObserved = bigFiltered.observe(function(type, target, info){
 		    	observations.push({type: type, target: target, info: info});
 		        console.log(" observed: ", type, target, info);
 			});
+			var rangedResults = [
+			    bigObserved.range(0,25).forEach(function(){}),
+			    bigObserved.range(25,50).forEach(function(){}),
+			    bigObserved.range(50,75).forEach(function(){}),
+			    bigObserved.range(75,100).forEach(function(){})
+			];
 			var results = bigObserved.data;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);
@@ -169,28 +203,29 @@ define([
 			var results,
 				// TODO: This is unused. Should it be incorporated or removed?
 				opts = {count: 25, sort: [{attribute: "order"}]},
-				bigStore = createBigStore(100),
+				bigStore = createBigStore(100, ObservablePartialDataStore),
 				bigFiltered = bigStore.filter({}).sort('order');
 
-			var rangedResults = [
-			    bigFiltered.range(0,25).forEach(function(){}),
-			    bigFiltered.range(25,50).forEach(function(){}),
-			    bigFiltered.range(50,75).forEach(function(){}),
-			    bigFiltered.range(75,100).forEach(function(){})
-			];
 			var observations = [];
 			var bigObserved = bigFiltered.observe(function(type, target, info){
 		    	observations.push({type: type, target: target, info: info});
 		        console.log(" observed: ", type, target, info);
 			});
-			var results = bigObserved.data;
+			var rangedResults = [
+			    bigObserved.range(0,25).forEach(function(){}),
+			    bigObserved.range(25,50).forEach(function(){}),
+			    bigObserved.range(50,75).forEach(function(){}),
+			    bigObserved.range(75,100).forEach(function(){})
+			];
+			var results = bigObserved.partialData;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 1);
 			bigStore.remove(101);
 			assert.strictEqual(observations.length, 2);
 			assert.strictEqual(results.length, 100);
-			bigStore.add({id: 102, name: 'one oh two', order: 26.5});
+			// Addition on the edge of a range
+			bigStore.add({id: 102, name: 'one oh two', order: 24.5});
 			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 3);
 		},
@@ -206,7 +241,7 @@ define([
 			//	-> modify existing range
 
 			var itemCount = 100,
-				store = createBigStore(itemCount),
+				store = createBigStore(itemCount, ObservablePartialDataStore),
 				rangeToBeRemoved = { start: 5, end: 15 },
 				rangeToBeSplit = { start: 25, end: 45 },
 				rangeToBeHeadTrimmed = { start: 55, end: 65 },

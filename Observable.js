@@ -138,23 +138,25 @@ return declare(null, {
 		}else{
 			var originalRange = observed.range;
 			observed.range = function(start, end){
-				var rangeResults = originalRange.apply(this, arguments),
-					partialData = this.hasOwnProperty('partialData') ? this.partial : (this.partialData = []);
+				// TODO: Should there be a method other than forEach that triggers a request
+				var rangeCollection = originalRange.apply(this, arguments).forEach(function(){}),
+					partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
 
 				// Wait for total in addition to data so updated objects sorted to
 				// the end of the list have a known index
 				whenAll({
-					data: rangeResults.data,
-					total: rangeResults.total
+					data: rangeCollection.data,
+					total: rangeCollection.total
 				}).then(function(result){
 					// TODO: If the range overlaps an existing range, existing objects will be refreshed. Should there be an update notification?
 					// copy the new ranged data into the parent partial data set
 					var spliceArgs = [ start, end - start ].concat(result.data);
 					partialData.splice.apply(partialData, spliceArgs);
+					// TODO: What to do about changing totals? It seems like ignoring it will cause fewer issues than having to adjust to it.
 					partialData.length = result.total;
 					registerRange(ranges, start, end);
 				});
-				return rangeResults;
+				return rangeCollection;
 			};
 			observed.releaseRange = function(start, end){
 				unregisterRange(ranges, start, end);
