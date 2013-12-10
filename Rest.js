@@ -19,11 +19,11 @@ return declare(Request, {
 	// stringify: Function
 	//		This function performs the serialization of the data for requests to the server. This
 	//		defaults to JSON, but other formats can be serialized by providing an alternate
-	//		stringify function. If you do want to use an alternate format, you will probably 
+	//		stringify function. If you do want to use an alternate format, you will probably
 	//		want to use an alternate parse function for the parsing of data as well.
 	stringify: JSON.stringify,
 
-	 
+
 
 	get: function(id, options){
 		// summary:
@@ -67,7 +67,7 @@ return declare(Request, {
 		var store = this;
 		return request(hasId ? this.target + id : this.target, {
 				method: hasId && !options.incremental ? "PUT" : "POST",
-				postData: this.stringify(object),
+				data: this.stringify(object),
 				headers: lang.mixin({
 					"Content-Type": "application/json",
 					Accept: this.accepts,
