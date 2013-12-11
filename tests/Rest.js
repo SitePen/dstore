@@ -7,10 +7,11 @@ define([
 	'dojo/request/registry',
 	'dojo/promise/all',
 	'dstore/Rest',
+	'dstore/SimpleQuery',
 	'./mockRequest',
 	'dojo/text!./data/node1.1',
 	'dojo/text!./data/treeTestRoot'
-], function(require, registerSuite, assert, declare, lang, request, whenAll, Rest, mockRequest, nodeData_1_1, treeTestRootData){
+], function(require, registerSuite, assert, declare, lang, request, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
 	function runHeaderTest(method, args){
 		return store[method].apply(store, args).then(function(result){
 			mockRequest.assertRequestHeaders(requestHeaders);
@@ -240,6 +241,35 @@ define([
 				},
 				queryParams: lang.mixin({}, filter, { "sort(+prop1)": "" })
 			});
+		},
+
+		'composition with SimpleQuery': function(){
+			var RestWithSimpleQuery = declare([ Rest, SimpleQuery ], { });
+
+			var store = new RestWithSimpleQuery(),
+				expectedResults = [
+					{ id: 1, name: "one", odd: true },
+					{ id: 2, name: "two", odd: false },
+					{ id: 3, name: "three", odd: true },
+				];
+			mockRequest.setResponseText(store.stringify(expectedResults));
+			var filteredCollection = store.filter({ odd: true });
+			filteredCollection.forEach(function(){});
+
+			assert.property(filteredCollection, 'queryer');
+
+			var filteredResults = filteredCollection.queryer(expectedResults);
+			assert.equal(filteredResults.length, 2);
+			assert.deepEqual(filteredResults[0], expectedResults[0]);
+			assert.deepEqual(filteredResults[1], expectedResults[2]);
+
+			sortedCollection = filteredCollection.sort("id", true);
+			sortedCollection.forEach(function(){});
+
+			var sortedFilteredResults = sortedCollection.queryer(expectedResults);
+			assert.equal(sortedFilteredResults.length, 2);
+			assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
+			assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
 		}
 	});
 });

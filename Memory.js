@@ -5,6 +5,11 @@ function(declare, lang, SimpleQuery /*=====, Store =====*/){
 //		dstore/Memory
 var hasProto = !!{}.__proto__;
 return declare(SimpleQuery, {
+	constructor: function(){
+		// TODO: Document this.
+		this.setData(this.data || []);
+	},
+
 	get: function(id){
 		// summary:
 		//		Retrieves an object by its identity
@@ -44,7 +49,7 @@ return declare(SimpleQuery, {
 				// create a new object with the correct prototype
 				object = lang.delegate(prototype, object);
 			}
-		}		
+		}
 		if(id in index){
 			// object exists
 			if(options && options.overwrite === false){
@@ -116,6 +121,10 @@ return declare(SimpleQuery, {
 			}
 			this.index[object[this.idProperty]] = i;
 		}
+	},
+	forEach: function(callback, thisObj){
+		arrayUtil.forEach(this.data, callback, thisObj);
+		return this;
 	}
 });
 

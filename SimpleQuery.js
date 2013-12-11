@@ -18,10 +18,10 @@ return declare(Store, {
 		// options: dojo/store/Memory
 		//		This provides any configuration information that will be mixed into the store.
 		//		This should generally include the data property to provide the starting set of data.
+		// TODO: Shouldn't this args mixin be part of Store, not SimpleQuery?
 		for(var i in options){
 			this[i] = options[i];
 		}
-		this.setData(this.data || []);
 	},
 
 	// parse: Function
@@ -29,7 +29,7 @@ return declare(Store, {
 	//		default we assume the provide data is a simple JavaScript array that requires
 	//		no parsing
 	parse: null,
-	 
+
 	// data: Array
 	//		The array of all the objects in the memory store
 	data:null,
@@ -45,7 +45,10 @@ return declare(Store, {
 	queryer: null,
 	_newResults: function(queryer){
 		var previousQueryer = this.queryer;
-		var newResults = lang.delegate(this, {data: queryer(this.data), store: this.store || this});
+		var newResults = lang.delegate(this, {store: this.store || this});
+		if(this.data instanceof Array){
+			newResults.data = queryer(this.data);
+		}
 		newResults.queryer = previousQueryer ? function(data){
 			return queryer(previousQueryer(data));
 		} : queryer;
@@ -87,7 +90,7 @@ return declare(Store, {
 			return arrayUtil.filter(data, query);
 		});
 	},
-		
+
 	sort: function(property, descending){
 		return this._newResults(function(data){
 			var sortedResults = data.slice(0);
@@ -110,10 +113,6 @@ return declare(Store, {
 			total: this.data.length,
 			store: this.store || this
 		});
-	},
-	forEach: function(callback, thisObj){
-		arrayUtil.forEach(this.data, callback, thisObj);
-		return this;
 	}
 });
 
