@@ -5,24 +5,40 @@ define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'dojo/request/registry',
+	'dojo/promise/all',
 	'dstore/Rest',
-	'./mockRequest'
-], function(require, registerSuite, assert, declare, lang, request, Rest, mockRequest){
-	// NOTE: Because HTTP headers are case-insensitive they should always be provided as all-lowercase
-	// strings to simplify testing.
-	function runTest(method, args){
-		var d = this.async();
-		store[method].apply(store, args).then(d.callback(function(result){
-			var k;
-			var resultHeaders = result.headers;
-			for(k in requestHeaders){
-				assert.strictEqual(resultHeaders[k], requestHeaders[k]);
-			}
+	'./mockRequest',
+	'dojo/text!./data/node1.1',
+	'dojo/text!./data/treeTestRoot'
+], function(require, registerSuite, assert, declare, lang, request, whenAll, Rest, mockRequest, nodeData_1_1, treeTestRootData){
+	function runHeaderTest(method, args){
+		return store[method].apply(store, args).then(function(result){
+			mockRequest.assertRequestHeaders(requestHeaders);
+			mockRequest.assertRequestHeaders(globalHeaders);
+		});
+	}
 
-			for(k in globalHeaders){
-				assert.strictEqual(resultHeaders[k], globalHeaders[k]);
+	function runCollectionTest(collection, expected){
+		var expectedResults = [
+			{ id: 1, name: "one" },
+			{ id: 2, name: "two" }
+		];
+		mockRequest.setResponseText(collection.stringify(expectedResults));
+		return collection.forEach(function(){}).then(function(results){
+			expected.headers && mockRequest.assertRequestHeaders(expected.headers);
+			expected.queryParams && mockRequest.assertQueryParams(expected.queryParams);
+
+			// We cannot just assert deepEqual with results and expectedResults
+			// because the store converts results into model instances with additional members.
+			assert.strictEqual(results.length, expectedResults.length);
+			for(var i = 0; i < results.length; ++i){
+				var result = results[i],
+					expectedResult = expectedResults[i];
+				for(var key in expectedResult){
+					assert.strictEqual(result[key], expectedResult[key]);
+				}
 			}
-		}), lang.hitch(d, 'reject'));
+		});
 	}
 
 	var globalHeaders = {
@@ -35,38 +51,47 @@ define([
 		'test-local-header-b': 'yes',
 		'test-override': 'overridden'
 	};
-	var store = new Rest({
-		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		headers: lang.mixin({ 'test-override': false }, globalHeaders)
-	});
-	store.model.prototype.describe = function(){
-		return 'name is ' + this.name;
-	};
+	var store;
 
-	var registerHandle;
+	var registryHandle;
 
 	registerSuite({
 		name: 'dstore Rest',
 
 		before: function(){
-			registerHandle = request.register(/.*mockRequest.*/, mockRequest);
+			registryHandle = request.register(/.*mockRequest.*/, mockRequest);
 		},
 
 		after: function(){
-			registerHandle.remove();
+			registryHandle.remove();
+		},
+
+		beforeEach: function(){
+			mockRequest.setResponseText('{}');
+			mockRequest.setResponseHeaders({});
+			store = new Rest({
+				target: '/mockRequest/',
+				headers: globalHeaders
+			});
+			store.model.prototype.describe = function(){
+				return 'name is ' + this.name;
+			};
 		},
 
 		'get': function(){
-			var d = this.async();
-			store.get('data/node1.1').then(d.callback(function(object){
+			mockRequest.setResponseText(nodeData_1_1);
+
+			return store.get('data/node1.1').then(function(object){
 				assert.strictEqual(object.name, 'node1.1');
 				assert.strictEqual(object.describe(), 'name is node1.1');
 				assert.strictEqual(object.someProperty, 'somePropertyA1');
-			}));
+			});
 		},
 
 		'query': function(){
-			var d = this.async();
+			mockRequest.setResponseText(treeTestRootData);
+
+			var first = true;
 			return store.filter("data/treeTestRoot").forEach(function(object){
 				if(first){
 					first = false;
@@ -78,9 +103,10 @@ define([
 		},
 
 		'query iterative': function(){
-			var d = this.async();
+			mockRequest.setResponseText(treeTestRootData);
+
 			var i = 0;
-			return store.filter('data/treeTestRoot').forEach(d.rejectOnError(function(object){
+			return store.filter('data/treeTestRoot').forEach(function(object){
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
 				// the intrinsic methods
@@ -88,23 +114,23 @@ define([
 				assert.equal(typeof object.remove, 'function');
 				// the method we added
 				assert.equal(typeof object.describe, 'function');
-			}));
+			});
 		},
 
 		'headers get 1': function(){
-			runTest.call(this, 'get', [ 'mockRequest/1', requestHeaders ]);
+			return runHeaderTest('get', [ 'mockRequest/1', requestHeaders ]);
 		},
 
 		'headers get 2': function(){
-			runTest.call(this, 'get', [ 'mockRequest/2', { headers: requestHeaders } ]);
+			return runHeaderTest('get', [ 'mockRequest/2', { headers: requestHeaders } ]);
 		},
 
 		'headers remove': function(){
-			runTest.call(this, 'remove', [ 'mockRequest/3', { headers: requestHeaders } ]);
+			return runHeaderTest('remove', [ 'mockRequest/3', { headers: requestHeaders } ]);
 		},
 
 		'headers put': function(){
-			runTest.call(this, 'put', [
+			return runHeaderTest('put', [
 				{},
 				{
 					id: 'mockRequest/4',
@@ -113,7 +139,7 @@ define([
 		},
 
 		'headers add': function(){
-			runTest.call(this, 'add', [
+			return runHeaderTest('add', [
 				{},
 				{
 					id: 'mockRequest/5',
@@ -122,12 +148,97 @@ define([
 			]);
 		},
 
+		'put object without ID': function(){
+			var objectWithoutId = { name: 'one' };
+			mockRequest.setResponseText(store.stringify(objectWithoutId));
+			return store.put(objectWithoutId).then(function(){
+				mockRequest.assertHttpMethod("POST");
+			});
+		},
+
+		'put object with ID': function(){
+			var objectWithId = { id: 1, name: 'one' };
+			mockRequest.setResponseText(store.stringify(objectWithId));
+			return store.put(objectWithId).then(function(){
+				mockRequest.assertHttpMethod("PUT");
+			});
+		},
+
 		'get and save': function(){
-			return store.get('index.php').then(function(object){
+			var expectedObject = { id: 1, name: "one" };
+			mockRequest.setResponseText(store.stringify(expectedObject));
+			return store.get('anything').then(function(object){
+				expectedObject.saved = true;
+				mockRequest.setResponseText(store.stringify(expectedObject));
 				object.save().then(function(result){
-					// just make sure we got something for a response
-					assert.isTrue(!!result);
+					assert.deepEqual(store.stringify(result), store.stringify(expectedObject));
 				});
+			});
+		},
+
+		'filter': function(){
+			var filter = { prop1: "Prop1Value", prop2: "Prop2Value" };
+			return runCollectionTest(store.filter(filter), { queryParams: filter });
+		},
+
+		'sort': function(){
+			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			return runCollectionTest(sortedCollection, {
+				queryParams: {
+					"sort(-prop1,+prop2,-prop3)": ""
+				}
+			});
+		},
+
+		'sort with this.sortParam': function(){
+			store.sortParam = 'sort-param';
+
+			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			return runCollectionTest(sortedCollection, {
+				queryParams: {
+					"sort-param": "-prop1,+prop2,-prop3"
+				}
+			});
+		},
+
+		'sort with different prefixes': function(){
+			store.descendingPrefix = "--";
+			store.ascendingPrefix = "++";
+
+			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			return runCollectionTest(sortedCollection, {
+				queryParams: {
+					"sort(--prop1,++prop2,--prop3)": ""
+				}
+			});
+		},
+
+		'range': function(){
+			var rangeCollection = store.range(15, 25);
+			return runCollectionTest(rangeCollection, {
+				headers: {
+					Range: "items=15-24"
+				}
+			});
+		},
+
+		'range without end': function(){
+			var rangeCollection = store.range(15);
+			return runCollectionTest(rangeCollection, {
+				headers: {
+					Range: "items=15-"
+				}
+			});
+		},
+
+		'filter+sort+range': function(){
+			var filter = { prop1: "Prop1Value", prop2: "Prop2Value" };
+			var collection = store.filter(filter).sort("prop1").range(15, 25);
+			return runCollectionTest(collection, {
+				headers: {
+					Range: "items=15-24"
+				},
+				queryParams: lang.mixin({}, filter, { "sort(+prop1)": "" })
 			});
 		}
 	});
