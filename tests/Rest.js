@@ -1,5 +1,4 @@
 define([
-	'require',
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
@@ -11,7 +10,7 @@ define([
 	'./mockRequest',
 	'dojo/text!./data/node1.1',
 	'dojo/text!./data/treeTestRoot'
-], function(require, registerSuite, assert, declare, lang, request, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
+], function(registerSuite, assert, declare, lang, request, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
 	function runHeaderTest(method, args){
 		return store[method].apply(store, args).then(function(result){
 			mockRequest.assertRequestHeaders(requestHeaders);
