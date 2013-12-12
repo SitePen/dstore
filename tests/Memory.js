@@ -168,6 +168,20 @@ define([
 			};
 			store.add(object);
 			assert.isTrue(!!object.id);
+		},
+
+		'total property': function(){
+			var filteredCollection = store.filter(function(o){
+				return o.id <= 3;
+			});
+			assert.property(filteredCollection, 'total');
+			assert.strictEqual(filteredCollection.total, filteredCollection.data.length);
+
+			var sortedCollection = store.sort("id");
+			assert.strictEqual(sortedCollection.total, sortedCollection.data.length);
+
+			var rangedCollection = store.range(0, 5);
+			assert.strictEqual(rangedCollection.total, rangedCollection.data.length);
 		}
 	});
 

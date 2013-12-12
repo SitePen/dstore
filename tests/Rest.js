@@ -243,7 +243,9 @@ define([
 		},
 
 		'composition with SimpleQuery': function(){
-			var RestWithSimpleQuery = declare([ Rest, SimpleQuery ], { });
+			var RestWithSimpleQuery = declare([ Rest, SimpleQuery ], {
+				target: "/mockRequest/"
+			});
 
 			var store = new RestWithSimpleQuery(),
 				expectedResults = [
@@ -252,23 +254,38 @@ define([
 					{ id: 3, name: "three", odd: true },
 				];
 			mockRequest.setResponseText(store.stringify(expectedResults));
-			var filteredCollection = store.filter({ odd: true });
-			filteredCollection.forEach(function(){});
+			var filter = { odd: true },
+				filteredCollection = store.filter(filter),
+				sortedCollection,
+				rangeCollection;
+			return filteredCollection.forEach(function(){}).then(function(results){;
+				mockRequest.assertQueryParams(filter);
+				assert.strictEqual(results.length, expectedResults.length);
 
-			assert.property(filteredCollection, 'queryer');
+				assert.property(filteredCollection, 'queryer');
 
-			var filteredResults = filteredCollection.queryer(expectedResults);
-			assert.equal(filteredResults.length, 2);
-			assert.deepEqual(filteredResults[0], expectedResults[0]);
-			assert.deepEqual(filteredResults[1], expectedResults[2]);
+				var filteredResults = filteredCollection.queryer(expectedResults);
+				assert.equal(filteredResults.length, 2);
+				assert.deepEqual(filteredResults[0], expectedResults[0]);
+				assert.deepEqual(filteredResults[1], expectedResults[2]);
 
-			sortedCollection = filteredCollection.sort("id", true);
-			sortedCollection.forEach(function(){});
+				sortedCollection = filteredCollection.sort("id", true);
+				return sortedCollection.forEach(function(){});
+			}).then(function(results){
+				mockRequest.assertQueryParams({ "sort(-id)": "" });
+				assert.strictEqual(results.length, expectedResults.length);
 
-			var sortedFilteredResults = sortedCollection.queryer(expectedResults);
-			assert.equal(sortedFilteredResults.length, 2);
-			assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
-			assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
+				var sortedFilteredResults = sortedCollection.queryer(expectedResults);
+				assert.equal(sortedFilteredResults.length, 2);
+				assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
+				assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
+
+				rangeCollection = sortedCollection.range(15, 25);
+				return rangeCollection.forEach(function(){});
+			}).then(function(results){
+				mockRequest.assertRequestHeaders({ Range: "items=15-24" });
+				assert.strictEqual(results.length, expectedResults.length);
+			});
 		}
 	});
 });

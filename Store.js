@@ -28,6 +28,7 @@ return declare(null, {
 			return results;
 		});
 	},
+
 	// model: Function
 	//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 	//		used as the prototype for all objects returned from this store. One can set this

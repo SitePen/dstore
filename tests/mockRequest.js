@@ -60,7 +60,7 @@ define([
 	mockRequest.assertQueryParams = function(expectedParams){
 		for(var name in expectedParams){
 			assert.property(latestQuery, name);
-			assert.equal(expectedParams[name], latestQuery[name]);
+			assert.equal(expectedParams[name].toString(), latestQuery[name]);
 		}
 	};
 

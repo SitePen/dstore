@@ -76,52 +76,39 @@ return declare(Store, {
 	//		The prefix to apply to sort attribute names that are ascending
 	descendingPrefix: "-",
 
+	// TODO: Can this be removed now that we are building the URL from this.filtered?
 	query: '',
 
-	_createSubCollection: function(props){
-		return lang.delegate(this, lang.mixin({ store: this }, props));
-	},
 	_renderUrl: function(){
-		var sort = this._sort,
-			sortParamValue,
-			sortParamString = "";
-		if(sort.length > 0){
-			sortParamValue = array.map(sort, function(sortOption){
-				var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-				return prefix + encodeURIComponent(sortOption.attribute);
-			}, this).join(",");
+		var filterParamString = this.filtered && array.map(this.filtered, function(filter){
+			return typeof filter === "object" ? ioQuery.objectToQuery(filter) : filter;
+		}).join("&");
 
-			sortParamString =
-				(this.query.length > 0 ? "&" : "") +
-				(this.sortParam ? this.sortParam + "=" + sortParamValue : "sort(" + sortParamValue + ")");
-		}
-		return this.target + "?" + this.query + sortParamString;
-	},
-	filter: function(query){
-		if(query && typeof query == "object"){
-			query = ioQuery.objectToQuery(query);
-		}
-		return this._createSubCollection({
-			query: (this.query.length > 0 ? this.query + "&" : "") + query
-		});
-	},
+		var sortString = this.sorted && array.map(this.sorted, function(sortOption){
+			var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+			return prefix + encodeURIComponent(sortOption.attribute);
+		}, this).join(",");
 
-	// TODO: Should this be without the prefix?
-	_sort: null,
+		var query = "";
+		if(filterParamString || sortString){
+			query += "?";
 
-	sort: function(attribute, descending){
-		var sort = this._sort.slice(0);
-		for(var i = 0; i < sort.length; ++i){
-			if(sort[i].attribute === attribute){
-				sort.splice(i, 1);
-				break;
+			if(filterParamString){
+				query += filterParamString;
+			}
+			if(sortString){
+				query += (filterParamString ? "&" : "") + (this.sortParam
+					? encodeURIComponent(this.sortParam) + "=" + sortString
+					: "sort(" + sortString + ")"
+				);
 			}
 		}
-		sort.push({ attribute: attribute, descending: !!descending });
-		return this._createSubCollection({ _sort: sort });
+
+		return this.target + query;
 	},
+
 	range: function(start, end){
-		return this._createSubCollection({
+		return lang.mixin(this.inherited(arguments),{
 			headers: lang.delegate(this.headers,{
 				Range: "items=" + (start || '0') + '-' +
 					((end > -1 && end != Infinity) ?
