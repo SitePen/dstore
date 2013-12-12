@@ -32,9 +32,9 @@ return declare(null, {
 	//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 	//		used as the prototype for all objects returned from this store. One can set this
 	//		to an empty object if you don't want any methods to decorate the returned
-	// 		objects (this can improve performance by avoiding prototype setting) 
+	// 		objects (this can improve performance by avoiding prototype setting)
 	model: null,
-	
+
 	assignPrototype: function(object){
 		var model = this.model;
 		if(model && object){
@@ -48,6 +48,28 @@ return declare(null, {
 			}
 		}
 		return object;
+	},
+
+	_createSubCollection: function(kwArgs){
+		return lang.delegate(this, lang.mixin({ store: this.store || this }, kwArgs));
+	},
+
+	filter: function(filter){
+		return this._createSubCollection({
+			filtered: (this.filtered || []).concat(filter)
+		});
+	},
+
+	sort: function(attribute, descending){
+		return this._createSubCollection({
+			sorted: (this.sorted || []).concat({ attribute: attribute, descending: !!descending })
+		});
+	},
+
+	range: function(start, end){
+		return this._createSubCollection({
+			ranged: { start: start, end: end }
+		});
 	}
 });
 });
