@@ -1,5 +1,12 @@
-define(["dojo/request/registry", "dojo/_base/lang", "dojo/json", "dojo/io-query", "dojo/_base/declare", "./Store"
-], function(request, lang, JSON, ioQuery, declare, Store){
+define([
+	"dojo/request/registry",
+	"dojo/_base/lang",
+	"dojo/_base/array",
+	"dojo/json",
+	"dojo/io-query",
+	"dojo/_base/declare",
+	"./Store"
+], function(request, lang, array, JSON, ioQuery, declare, Store){
 
 
 /*=====
@@ -22,6 +29,7 @@ return declare(Store, {
 		// options: dojo/store/JsonRest
 		//		This provides any configuration information that will be mixed into the store
 		this.headers = {};
+		this._sort = [];
 		declare.safeMixin(this, options);
 	},
 
@@ -38,10 +46,10 @@ return declare(Store, {
 	// parse: Function
 	//		This function performs the parsing of the response text from the server. This
 	//		defaults to JSON, but other formats can be parsed by providing an alternate
-	//		parsing function. If you do want to use an alternate format, you will probably 
+	//		parsing function. If you do want to use an alternate format, you will probably
 	//		want to use an alternate stringify function for the serialization of data as well.
 	//		Also, if you want to support parsing a larger set of JavaScript objects
-	//		outside of strict JSON parsing, you can provide dojo/_base/json.fromJson as the parse function 
+	//		outside of strict JSON parsing, you can provide dojo/_base/json.fromJson as the parse function
 	parse: JSON.parse,
 
 	// target: String
@@ -67,39 +75,45 @@ return declare(Store, {
 	// descendingPrefix: String
 	//		The prefix to apply to sort attribute names that are ascending
 	descendingPrefix: "-",
-	 
-	query: '?',
-	_createWithQuery: function(query){
-		return lang.delegate(this, {
-			target: this.target + query,
-			store: this
-		});
-		
-	},
-	filter: function(query){
-		if(query && typeof query == "object"){
-			query = ioQuery.objectToQuery(query);
-			query = query ? (this.query.length > 1 ? "&" : "") + query: "";
+
+	// TODO: Can this be removed now that we are building the URL from this.filtered?
+	query: '',
+
+	_renderUrl: function(){
+		var filterParamString = this.filtered && array.map(this.filtered, function(filter){
+			return typeof filter === "object" ? ioQuery.objectToQuery(filter) : filter;
+		}).join("&");
+
+		var sortString = this.sorted && array.map(this.sorted, function(sortOption){
+			var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+			return prefix + encodeURIComponent(sortOption.attribute);
+		}, this).join(",");
+
+		var query = "";
+		if(filterParamString || sortString){
+			query += "?";
+
+			if(filterParamString){
+				query += filterParamString;
+			}
+			if(sortString){
+				query += (filterParamString ? "&" : "") + (this.sortParam
+					? encodeURIComponent(this.sortParam) + "=" + sortString
+					: "sort(" + sortString + ")"
+				);
+			}
 		}
-		return this._createWithQuery(query);
+
+		return this.target + query;
 	},
-	sort: function(attribute, descending){
-		query += (query || hasQuestionMark ? "&" : "?") + (sortParam ? sortParam + '=' : "sort(");
-		for(var i = 0; i<options.sort.length; i++){
-			var sort = options.sort[i];
-			query += (i > 0 ? "," : "") + (sort.descending ? this.descendingPrefix : this.ascendingPrefix) + encodeURIComponent(sort.attribute);
-		}
-		if(!sortParam){
-			query += ")";
-		}
-		return this._createWithQuery(query);
-	},
+
 	range: function(start, end){
-		var results = this._createWithQuery(query);
-		results.headers = lang.delegate(this.headers,{
-			Range: "items=" + (start || '0') + '-' +
-				((end > -1 && end != Infinity) ?
-					(end - 1) : '')
+		return lang.mixin(this.inherited(arguments),{
+			headers: lang.delegate(this.headers,{
+				Range: "items=" + (start || '0') + '-' +
+					((end > -1 && end != Infinity) ?
+						(end - 1) : '')
+			})
 		});
 	},
 
@@ -118,7 +132,7 @@ return declare(Store, {
 	forEach: function(callback, thisObj){
 		if(!this.hasOwnProperty('data')){
 			// perform the actual query
-			var response = request(this.target, {
+			var response = request(this._renderUrl(), {
 				method: "GET",
 				headers: lang.delegate(this.headers, { Accept: this.accepts })
 			});
