@@ -27,7 +27,7 @@ var undef, revision = 0;
 
 			if (newStart > existingEnd){
 				// existing range completely precedes new range. we are done.
-				ranges.splice(i, 0, createRange(newStart, newEnd));
+				ranges.splice(i + 1, 0, createRange(newStart, newEnd));
 				return;
 			}else if(newEnd >= existingStart){
 				// the ranges overlap and must be merged into a single range
@@ -147,7 +147,6 @@ return declare(null, {
 					data: rangeCollection.data,
 					total: rangeCollection.total
 				}).then(function(result){
-					// TODO: What to do about changing totals? It seems like ignoring it will cause fewer issues than having to adjust to it.
 					partialData.length = result.total;
 
 					// TODO: If the range overlaps an existing range, existing objects will be refreshed. Should there be an update notification?
@@ -184,16 +183,13 @@ return declare(null, {
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
 				if(type === "remove" || type === "update"){
 					// remove the old one
-					for(var i = 0; removedFrom === -1 && i < ranges.length; ++i){
+					for(i = 0; removedFrom === -1 && i < ranges.length; ++i){
 						range = ranges[i];
-						for(var j = range.start, l = j + range.count; j < l; ++j){
+						for(j = range.start, l = j + range.count; j < l; ++j){
 							var object = resultsArray[j];
 							if(store.getIdentity(object) == targetId){
 								removedFrom = info.previousIndex = j;
 								removalRangeIndex = i;
-								// TODO: Is there a need for removedObject?
-								// TODO: Was there a need for maintaining the totalCount var that I removed?
-								removedObject = resultsArray[removedFrom];
 								resultsArray.splice(removedFrom, 1);
 
 								range.count--;
@@ -215,29 +211,32 @@ return declare(null, {
 							var begin = 0,
 								end = ranges.length - 1,
 								sampleArray,
-								sortedIndex;
+								sortedIndex,
+								adjustedIndex;
 							while (begin <= end && insertedInto === -1){
 								i = begin + Math.round((end - begin) / 2);
 								range = ranges[i];
 
 								sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-								// If the original index is in range, put back in the original slot
+								// If the original index came from this range, put back in the original slot
 								// so it doesn't move unless it needs to (relying on a stable sort below)
-								if(removedFrom >= range.start && removedFrom < (range.start + range.count)){
+								if(removedFrom >= Math.max(0, range.start - 1) && removedFrom <= (range.start + range.count)){
 									sampleArray.splice(removedFrom, 0, target);
 								}else{
 									sampleArray.push(target);
 								}
 
 								sortedIndex = queryExecutor(sampleArray).indexOf(target);
+								// TODO: Is there a better name than adjustedIndex?
+								adjustedIndex = range.start + sortedIndex;
 
-								if(sortedIndex < 0 || (sortedIndex === 0 && range.start !== 0)){
+								if(sortedIndex === 0 && range.start !== 0){
 									end = i - 1;
-								}else if(sortedIndex >= sampleArray.length && sortedIndex < resultsArray.length){
+								}else if(sortedIndex >= (sampleArray.length - 1) && adjustedIndex < resultsArray.length){
 									begin = i + 1;
 								}else{
-									insertedInto = range.start + sortedIndex;
+									insertedInto = adjustedIndex;
 									insertionRangeIndex = i;
 								}
 							}
