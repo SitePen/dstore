@@ -6,8 +6,10 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dstore/Memory',
-	'dstore/Observable'
-], function(registerSuite, assert, array, declare, lang, when, Memory, Observable){
+	'dstore/Store',
+	'dstore/Observable',
+	'dstore/SimpleQuery'
+], function(registerSuite, assert, array, declare, lang, when, Memory, Store, Observable, SimpleQuery){
 
 	var MyStore = declare([Memory, Observable], {
 		get: function(){
@@ -37,44 +39,42 @@ define([
 	}
 
 	// A store for testing Observable with only partial in-memory data
-	var ObservablePartialDataStore = declare(Observable, (function(){
+	var ObservablePartialDataStore = declare([ Store, Observable, SimpleQuery ], (function(){
 		var proto = {
 			constructor: function(kwArgs){
-				this.backingStore = new MyStore(kwArgs);
+				this.backingMemoryStore = new MyStore(kwArgs);
 			}
 		};
 
 		array.forEach(["getIdentity", "get", "add", "put", "remove"], function(method){
 			proto[method] = function(){
-				return this.backingStore[method].apply(this.backingStore, arguments);
+				return this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 			};
 		});
 
 		array.forEach(["filter", "sort", "range"], function(method){
 			proto[method] = function(){
-				var newBackingStore = this.backingStore[method].apply(this.backingStore, arguments);
-				return lang.delegate(this, {
-					store: this.store || this,
-					backingStore: newBackingStore,
-					queryer: newBackingStore.queryer
+				var newBackingStore = this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
+				return lang.mixin(this.inherited(arguments), {
+					backingMemoryStore: newBackingStore
 				});
 			};
 		});
 
 		// Make backing store an observed collection so its data is kept up-to-date
 		proto.observe = function(){
-			this.backingStore = this.backingStore.observe(function(){});
+			this.backingMemoryStore = this.backingMemoryStore.observe(function(){});
 			return this.inherited(arguments);
 		};
 
 		proto.forEach = function(callback, thisObj){
-			this.backingStore.forEach(function(){});
+			this.backingMemoryStore.forEach(function(){});
 
-			this.data = when(this.backingStore.data).then(function(data){
+			this.data = when(this.backingMemoryStore.data).then(function(data){
 				array.forEach(data, callback, thisObj);
 				return data;
 			});
-			this.total = when(this.backingStore.total);
+			this.total = when(this.backingMemoryStore.store.total);
 			return this;
 		};
 
@@ -218,7 +218,7 @@ define([
 					latestObservation = {type: type, target: target, info: info};
 					console.log(" observed: ", type, target, info);
 				}),
-				backingData = bigObserved.backingStore.data,
+				backingData = bigObserved.backingMemoryStore.data,
 				item,
 				assertObservationIs = function(expectedObservation){
 					assert.deepEqual(latestObservation, expectedObservation);
