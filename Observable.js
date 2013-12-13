@@ -180,6 +180,7 @@ return declare(null, {
 				// TODO: Should we explicitly define undefined `index` and `previousIndex` properties so the API is more apparent when inspecting in the debugger?
 				var info = {};
 
+				// TODO: `total` should probably be updated when items are added and removed from the data
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
 				if(type === "remove" || type === "update"){
 					// remove the old one
