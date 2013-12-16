@@ -157,25 +157,18 @@ return declare(SimpleQuery, {
 		this.data = data;
 		this.total = data.length;
 	},
-	// TODO: Should `total` be updated when items are added and removed from the data?
-	filter: function(filter){
-		var newCollection = this.inherited(arguments);
-		newCollection.setData(newCollection.queryer(this.data));
-		return newCollection;
-	},
-	sort: function(sort){
-		var newCollection = this.inherited(arguments);
-		newCollection.setData(newCollection.queryer(this.data));
-		return newCollection;
-	},
-	range: function(start, end){
-		var newCollection = this.inherited(arguments);
-		newCollection.setData(this.data.slice(start || 0, end || Infinity));
-		return newCollection;
-	},
-	forEach: function(callback, thisObj){
-		arrayUtil.forEach(this.data, callback, thisObj);
-		return this;
+	materialize: function(){
+		// summary:
+		//	Actually compute the data for this collection. Returns the 
+		//	computed data as an array or promise to an array
+		var data = this.parent.data;
+		data = this.data = this.queryer ? this.queryer(data) : data;
+		this.total = data.length;
+		var ranged = this.ranged;
+		if(ranged){
+			this.data = data.slice(ranged.start || 0, ranged.end || Infinity);
+		}
+		return this.data;
 	}
 });
 

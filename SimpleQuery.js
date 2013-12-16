@@ -52,8 +52,8 @@ return declare(Store, {
 	},
 
 	sort: function(property, descending){
-		return this._addQueryer(this.inherited(arguments), function(data){
-			var sortedResults = data.slice(0);
+		return this._addQueryer(this.inherited(arguments), function(data, dontCopy){
+			var sortedResults = dontCopy ? data : data.slice(0);
 			sortedResults.sort(typeof property == "function" ? property : function(a, b){
 				var aValue = a[property];
 				var bValue = b[property];
@@ -69,10 +69,11 @@ return declare(Store, {
 	_addQueryer: function(collection, queryer){
 		var previousQueryer = this.queryer;
 		collection.queryer = previousQueryer ? function(data){
-			return queryer(previousQueryer(data));
+			return queryer(previousQueryer(data, true));
 		} : queryer;
 		return collection;
 	}
+
 });
 
 });

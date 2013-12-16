@@ -43,19 +43,19 @@ define([
 			store.isLoaded = store.canCacheQuery = function(){
 				return false;
 			};
-			assert.strictEqual(store.filter({prime: true}).data.length, 3);
-			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 3);
+			assert.strictEqual(store.filter({even: true}).materialize()[1].name, 'four');
 			assert.strictEqual(cachingStore.get(3), undefined);
 			store.isLoaded = store.canCacheQuery = function(){
 				return true;
 			};
-			assert.strictEqual(store.filter({prime: true}).data.length, 3);
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 3);
 			assert.strictEqual(cachingStore.get(3).name, 'three');
 		},
 
 		'filter with sort': function(){
-			assert.strictEqual(store.filter({prime: true}).sort('name').data.length, 3);
-			assert.strictEqual(store.filter({even: true}).sort('name').data[1].name, 'two');
+			assert.strictEqual(store.filter({prime: true}).sort('name').materialize().length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('name').materialize()[1].name, 'two');
 		},
 
 		'put update': function(){
@@ -104,7 +104,7 @@ define([
 		'cached filter': function(){
 			store.forEach(function(){}); // should result in everything being cached
 			masterFilterCalled = false;
-			assert.strictEqual(store.filter({prime: true}).data.length, 4);
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 4);
 			assert.isFalse(masterFilterCalled);
 		},
 

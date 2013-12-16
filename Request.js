@@ -129,7 +129,7 @@ return declare(Store, {
 		// returns: Number
 		return object[this.idProperty];
 	},
-	forEach: function(callback, thisObj){
+	materialize: function(){
 		if(!this.hasOwnProperty('data')){
 			// perform the actual query
 			var response = request(this._renderUrl(), {
@@ -150,11 +150,6 @@ return declare(Store, {
 				return range && (range = range.match(/\/(.*)/)) && +range[1];
 			});
 		}
-		this.data.then(function(results){
-			for(var i = 0, l = results.length; i < l; i++){
-				callback.call(thisObj, results[i]);
-			}
-		});
 		return this.data;
 	}
 });

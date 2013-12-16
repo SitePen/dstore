@@ -33,47 +33,47 @@ define([
 		'model': function(){
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
-			assert.strictEqual(store.filter({even: true}).data[1].describe(), 'four is not a prime');
+			assert.strictEqual(store.filter({even: true}).materialize()[1].describe(), 'four is not a prime');
 		},
 
 		'query': function(){
-			assert.strictEqual(store.filter({prime: true}).data.length, 3);
-			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 3);
+			assert.strictEqual(store.filter({even: true}).materialize()[1].name, 'four');
 		},
 
 		'query with string': function(){
-			assert.strictEqual(store.filter({name: 'two'}).data.length, 1);
-			assert.strictEqual(store.filter({name: 'two'}).data[0].name, 'two');
+			assert.strictEqual(store.filter({name: 'two'}).materialize().length, 1);
+			assert.strictEqual(store.filter({name: 'two'}).materialize()[0].name, 'two');
 		},
 
 		'query with regexp': function(){
-			assert.strictEqual(store.filter({name: /^t/}).data.length, 2);
-			assert.strictEqual(store.filter({name: /^t/}).data[1].name, 'three');
-			assert.strictEqual(store.filter({name: /^o/}).data.length, 1);
-			assert.strictEqual(store.filter({name: /o/}).data.length, 3);
+			assert.strictEqual(store.filter({name: /^t/}).materialize().length, 2);
+			assert.strictEqual(store.filter({name: /^t/}).materialize()[1].name, 'three');
+			assert.strictEqual(store.filter({name: /^o/}).materialize().length, 1);
+			assert.strictEqual(store.filter({name: /o/}).materialize().length, 3);
 		},
 
 		'query with test function': function(){
 			assert.strictEqual(store.filter({id: {test: function(id){
 				return id < 4;
-			}}}).data.length, 3);
+			}}}).materialize().length, 3);
 			assert.strictEqual(store.filter({even: {test: function(even, object){
 				return even && object.id > 2;
-			}}}).data.length, 1);
+			}}}).materialize().length, 1);
 		},
 
 		'query with sort': function(){
-			assert.strictEqual(store.filter({prime: true}).sort('name').data.length, 3);
-			assert.strictEqual(store.filter({even: true}).sort('name').data[1].name, 'two');
+			assert.strictEqual(store.filter({prime: true}).sort('name').materialize().length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('name').materialize()[1].name, 'two');
 			assert.strictEqual(store.filter({even: true}).sort(function(a, b){
 				return a.name < b.name ? -1 : 1;
-			}).data[1].name, 'two');
-			assert.strictEqual(store.filter(null).sort('mappedTo').data[4].name, 'four');
+			}).materialize()[1].name, 'two');
+			assert.strictEqual(store.filter(null).sort('mappedTo').materialize()[4].name, 'four');
 		},
 
 		'query with paging': function(){
-			assert.strictEqual(store.filter({prime: true}).range(1, 2).data.length, 1);
-			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).range(1, 2).materialize().length, 1);
+			assert.strictEqual(store.filter({even: true}).range(1, 2).materialize()[0].name, 'four');
 		},
 
 		'put update': function(){
@@ -142,8 +142,8 @@ define([
 		},
 
 		'query after changes': function(){
-			assert.strictEqual(store.filter({prime: true}).data.length, 3);
-			assert.strictEqual(store.filter({perfect: true}).data.length, 1);
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 3);
+			assert.strictEqual(store.filter({perfect: true}).materialize().length, 1);
 		},
 
 		'ifrs style data': function(){
@@ -159,7 +159,7 @@ define([
 				}
 			});
 			assert.strictEqual(anotherStore.get('one').name, 'one');
-			assert.strictEqual(anotherStore.filter({name: 'one'}).data[0].name, 'one');
+			assert.strictEqual(anotherStore.filter({name: 'one'}).materialize()[0].name, 'one');
 		},
 
 		'add new id assignment': function(){
@@ -174,14 +174,18 @@ define([
 			var filteredCollection = store.filter(function(o){
 				return o.id <= 3;
 			});
+			filteredCollection.materialize();
 			assert.property(filteredCollection, 'total');
-			assert.strictEqual(filteredCollection.total, filteredCollection.data.length);
+			assert.strictEqual(filteredCollection.total, filteredCollection.materialize().length);
 
 			var sortedCollection = store.sort("id");
-			assert.strictEqual(sortedCollection.total, sortedCollection.data.length);
+			sortedCollection.materialize();
+			assert.strictEqual(sortedCollection.total, sortedCollection.materialize().length);
 
 			var rangedCollection = store.range(0, 5);
-			assert.strictEqual(rangedCollection.total, rangedCollection.data.length);
+			rangedCollection.materialize();
+			assert.strictEqual(rangedCollection.total, 7);
+			assert.strictEqual(rangedCollection.materialize().length, 5);
 		}
 	});
 

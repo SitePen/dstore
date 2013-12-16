@@ -92,6 +92,8 @@ define([
 
 		'filter': function(){
 			var results = store.filter({prime: true});
+
+			results.materialize();
 			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
 			var observer = results.observe(function(type, target, info){
@@ -105,6 +107,7 @@ define([
 			var two = results.data[0];
 			two.prime = false;
 			store.put(two); // should remove it from the array
+			observer.materialize();
 			assert.strictEqual(observer.data.length, 2);
 			expectedChanges.push({
 				type: "update",
@@ -172,6 +175,7 @@ define([
 
 		'filter with zero id': function(){
 			var results = store.filter({});
+			results.materialize();
 			assert.strictEqual(results.data.length, 8);
             var observer = results.observe(function(type, target, info){
                     // we only do puts so previous & new indices must always been the same
@@ -197,6 +201,8 @@ define([
 			    bigObserved.range(50,75).forEach(function(){}),
 			    bigObserved.range(75,100).forEach(function(){})
 			];
+
+			bigObserved.materialize();
 			var results = bigObserved.data;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);
