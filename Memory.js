@@ -122,32 +122,29 @@ return declare(SimpleQuery, {
 		// data: Object[]
 		//		An array of objects to use as the source of data.
 
-		// Only parse and build the index for a root store.
-		if(!this.store){
-			if(this.parse){
-				data = this.parse(data);
-			}
-			if(data.items){
-				// just for convenience with the data format IFRS expects
-				this.idProperty = data.identifier || this.idProperty;
-				data = data.items;
-			}
-			this.fullData = data;
-			this.index = {};
-			var prototype = this.model.prototype;
-			for(var i = 0, l = data.length; i < l; i++){
-				var object = data[i];
-				if(prototype){
-					if(hasProto){
-						// the fast easy way
-						object.__proto__ = prototype;
-					}else{
-						// create a new object with the correct prototype
-						data[i] = lang.delegate(prototype, object);
-					}
+		if(this.parse){
+			data = this.parse(data);
+		}
+		if(data.items){
+			// just for convenience with the data format IFRS expects
+			this.idProperty = data.identifier || this.idProperty;
+			data = data.items;
+		}
+		this.fullData = data;
+		this.index = {};
+		var prototype = this.model.prototype;
+		for(var i = 0, l = data.length; i < l; i++){
+			var object = data[i];
+			if(prototype){
+				if(hasProto){
+					// the fast easy way
+					object.__proto__ = prototype;
+				}else{
+					// create a new object with the correct prototype
+					data[i] = lang.delegate(prototype, object);
 				}
-				this.index[object[this.idProperty]] = i;
 			}
+			this.index[object[this.idProperty]] = i;
 		}
 
 		this.data = data;

@@ -5,24 +5,29 @@ define([
 	'dstore/Memory'
 ], function(registerSuite, assert, declare, Memory){
 
-	var store = new Memory({
-		data: [
-			{id: 1, name: 'one', prime: false, mappedTo: 'E'},
-			{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
-			{id: 3, name: 'three', prime: true, mappedTo: 'C'},
-			{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
-			{id: 5, name: 'five', prime: true, mappedTo: 'A'}
-		]
-	});
-	// add a method to the model prototype
-	store.model.prototype.describe = function(){
-		return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
-	};
+	var store;
 
 	function passThrough(object){ return object; }
 
 	registerSuite({
 		name: 'dstore Memory',
+
+		beforeEach: function(){
+			store = new Memory({
+				data: [
+					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
+					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
+					{id: 3, name: 'three', prime: true, mappedTo: 'C'},
+					{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
+					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
+				]
+			});
+
+			// add a method to the model prototype
+			store.model.prototype.describe = function(){
+				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
+			};
+		},
 
 		'get': function(){
 			assert.strictEqual(store.get(1).name, 'one');
@@ -101,6 +106,11 @@ define([
 		},
 
 		'add duplicate': function(){
+			store.put({
+				id: 6,
+				perfect: true
+			});
+
 			var threw;
 			try{
 				store.add({
@@ -122,6 +132,10 @@ define([
 		},
 
 		'remove': function(){
+			store.add({
+				id: 7,
+				prime: true
+			});
 			assert.isTrue(store.remove(7));
 			assert.strictEqual(store.get(7), undefined);
 		},
@@ -136,13 +150,16 @@ define([
 		},
 
 		'remove missing': function(){
+			var expectedLength = store.data.length;
 			assert(!store.remove(77));
 			// make sure nothing changed
-			assert.strictEqual(store.get(1).id, 1);
+			assert.strictEqual(store.data.length, expectedLength);
 		},
 
 		'query after changes': function(){
-			assert.strictEqual(store.filter({prime: true}).materialize().length, 3);
+			store.remove(2);
+			store.add({ id: 6, perfect: true });
+			assert.strictEqual(store.filter({prime: true}).materialize().length, 2);
 			assert.strictEqual(store.filter({perfect: true}).materialize().length, 1);
 		},
 
