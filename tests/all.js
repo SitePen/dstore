@@ -1,4 +1,5 @@
 define([
+	'intern/node_modules/dojo/has!host-browser?./Model',
 	'intern/node_modules/dojo/has!host-browser?./Cache',
 	'intern/node_modules/dojo/has!host-browser?./Csv',
 	'intern/node_modules/dojo/has!host-browser?./Rest',

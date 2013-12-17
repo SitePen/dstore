@@ -22,21 +22,15 @@ return declare(Store, {
 	//		This is a basic store for RESTful communicating with a server through JSON
 	//		formatted data. It implements dojo/store/api/Store.
 
-	constructor: function(options){
+	constructor: function(options) {
 		// summary:
 		//		This is a basic store for RESTful communicating with a server through JSON
 		//		formatted data.
 		// options: dojo/store/JsonRest
 		//		This provides any configuration information that will be mixed into the store
-		this.headers = {};
+		this.headers || (this.headers = {});
 		this._sort = [];
-		declare.safeMixin(this, options);
 	},
-
-	// model: Function
-	//		This should be a entity (like a class/constructor) with a "prototype" property that will be
-	//		used as the prototype for all objects returned from this store.
-	model: {},
 
 	// headers: Object
 	//		Additional headers to pass in all requests to the server. These can be overridden

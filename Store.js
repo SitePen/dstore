@@ -1,5 +1,5 @@
-define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare'
-], function(lang, has, when, Deferred, declare){
+define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare', './Model'
+], function(lang, has, when, Deferred, declare, Model){
 
 // module:
 //		dstore/Store
@@ -7,17 +7,11 @@ define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base
 has.add('object-proto', !!{}.__proto__);
 var hasProto = has('object-proto');
 return declare(null, {
-	constructor: function(){
-		var store = this;
-		// create the default data model
-		(this.model = function(){}).prototype = {
-			save: function(){
-				return store.put(this);
-			},
-			remove: function(){
-				return store.remove(store.getIdentity(this));
-			}
-		};
+	constructor: function(options){
+		// perform the mixin
+		declare.safeMixin(this, options);
+		// give a reference back to the store for saving, etc.
+		this.model.prototype._store = this;
 	},
 	map: function(callback, thisObject){
 		var results = [];
@@ -60,7 +54,7 @@ return declare(null, {
 	//		used as the prototype for all objects returned from this store. One can set this
 	//		to an empty object if you don't want any methods to decorate the returned
 	//		objects (this can improve performance by avoiding prototype setting)
-	model: null,
+	model: Model,
 
 	assignPrototype: function(object){
 		// Set the object's prototype

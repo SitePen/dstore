@@ -11,10 +11,6 @@ return declare(SimpleQuery, {
 		// options: dojo/store/Memory
 		//		This provides any configuration information that will be mixed into the store.
 		//		This should generally include the data property to provide the starting set of data.
-		// TODO: Shouldn't this args mixin be part of Store, not SimpleQuery?
-		for(var i in options){
-			this[i] = options[i];
-		}
 		this.setData(this.data || []);
 	},
 
