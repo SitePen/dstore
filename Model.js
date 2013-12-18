@@ -64,6 +64,8 @@ define([
 		return true;
 	}
 
+	var slice = [].slice;
+
 	var Model = declare(null, {
 		//	summary:
 		//		A base class for modelled data objects.
@@ -138,6 +140,11 @@ define([
 			});
 		},
 
+		remove: function () {
+			var store = object._store;
+			return store.remove(store.getIdentity(this));
+		},
+
 		prepareForSerialization: function () {
 			//	summary:
 			//		This method is responsible for cleaing up any properties on the instance
@@ -155,7 +162,7 @@ define([
 			return new Error('Validation error');
 		},
 
-		property: function (/*string*/ key, /*function?*/ listener) {
+		property: function (/*string+*/ key, /*function?*/ listener) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
 			//		of the provided property. You can optionally provide a listener, to be notified
@@ -181,8 +188,13 @@ define([
 				var parent = property.parent = this;
 			}
 			if (listener) {
-				// if we have the second arg, setup the listener
-				return property.receive(listener);
+				if (typeof listener === 'function') {
+					// if we have the second arg, setup the listener
+					return property.receive(listener);
+				} else {
+					// go to the next property, if there are multiple
+					return property.property.apply(property, slice.call(arguments, 1));
+				}
 			}
 			return property;
 		},
@@ -240,7 +252,9 @@ define([
 				// TODO: Shouldn't this throw an error instead of just giving a warning?
 				return console.warn('Schema does not contain a definition for', key);
 			}
-			var property = getTentativePropertyInstance(this, key, 'setter');
+			var property = value && typeof value === 'object' ?
+				(hasOwnPropertyInstance = this.property(key)) :
+				getTentativePropertyInstance(this, key, 'setter');
 			if (property) {
 				if (property.coerce) {
 					value = property.coerce(value);
@@ -450,31 +464,26 @@ define([
 			// if this was set to an object (or was an object), we need to notify
 			// update all the sub-property objects, so they can possibly notify their
 			// listeners
-			var key, property, properties = this._properties;
-			if (properties) {
+			var key, property, properties = this._properties,
+				hasOldObject = oldValue && typeof oldValue === 'object',
+				hasNewObject = value && typeof value === 'object';
+			if (hasOldObject ||  hasNewObject) {
 				// we will iterate through the properties recording the changes
 				var changes = {};
-				if (oldValue && typeof oldValue === 'object'){
+				if (hasOldObject){
 					for (key in oldValue) {
-						property = properties[key];
-						if (property) {
-							changes[key] = {old: oldValue[key]};
-						}
+						changes[key] = {old: oldValue[key]};
 					}
 				}
-				if (value && typeof oldValue === 'object'){
+				if (hasNewObject){
 					for (key in value) {
-						property = properties[key];
-						if (property) {
-							(changes[key] = changes[key] || {}).value = value;
-						}
+						(changes[key] = changes[key] || {}).value = value[key];
 					}
 				}
 				for(key in changes){
 					// now for each change, we can notify the property object
 					var change = changes[key];
-					property = properties[key];
-					property.is(change.value, change.old);
+					this.set(key, change.value, change.old);
 				}
 			}
 		},

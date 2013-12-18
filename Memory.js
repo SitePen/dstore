@@ -16,7 +16,7 @@ return declare(SimpleQuery, {
 
 	// data: Array
 	//		The array of all the objects in the memory store
-	data:null,
+	data: null,
 
 	// idProperty: String
 	//		Indicates the property to use as the identity property. The values of this
@@ -25,7 +25,7 @@ return declare(SimpleQuery, {
 
 	// index: Object
 	//		An index of data indices into the data array by id
-	index:null,
+	index: null,
 
 	// TODO: Migrated from SimpleQuery. Does this belong in the base Store?
 	// parse: Function
@@ -65,7 +65,7 @@ return declare(SimpleQuery, {
 			idProperty = this.idProperty;
 		var id = object[idProperty] = (options && "id" in options) ? options.id : idProperty in object ? object[idProperty] : Math.random();
 		var prototype = this.model.prototype;
-		if(prototype){
+		if(prototype && !(object instanceof this.model)){
 			if(hasProto){
 				// the fast easy way
 				object.__proto__ = prototype;

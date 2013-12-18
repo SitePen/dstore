@@ -259,12 +259,68 @@ define([
 			assert.isFalse(model.isFieldRequired('optionalField'), 'Field should not be required');
 		},
 
-		'with store': function () {
-			var store = new Memory({data: [
-				{id: 1, num: 1, str: 'hi', bool: true}
-			]});
-			var myObject = store.get(1);
+		chaining: function () {
+			var model = createPopulatedModel(),
+				order = [];
 
+			model.set('number', 1);
+			var doubled = model.property('number').receive(function (value) {
+				return value * 2;
+			});
+			doubled.receive(function (value) {
+				order.push(value);
+			});
+			model.set('number', 2);
+			model.set('number', 3);
+			doubled.remove();
+			model.set('number', 4);
+			assert.deepEqual(order, [2, 4, 6]);
+		},
+
+		'object values': function () {
+			var model = new Model(),
+				order = [];
+			model.set('object', {
+				number: 1
+			});
+			var number = model.property('object', 'number');
+			number.receive(function (value) {
+				order.push(value);
+			});
+			model.set('object', {
+				number: 2
+			});
+			model.property('object').set('number', 3);
+			assert.deepEqual(order, [1, 2, 3]);
+		},
+
+		'with store': function () {
+			var store = new Memory({
+				data: [
+					{id: 1, num: 1, str: 'hi', bool: true}
+				],
+				model: declare(Model, {
+					schema: {
+						str: {
+							type: 'string',
+							required: true
+						},
+						num: 'number'
+					}
+				})
+			});
+			var myObject = store.get(1);
+			assert.strictEqual(myObject.get('num'), 1);
+			myObject.set('num', 5);
+			myObject.set('str', '');
+			assert.throw(function () {
+				return myObject.save();
+			}, Error);
+			assert.isFalse(myObject.isValid());
+			myObject.set('str', 'hellow');
+			myObject.save();
+			myObject = store.get(1);
+			assert.strictEqual(myObject.get('num'), 5);
 		}
 
 	});
