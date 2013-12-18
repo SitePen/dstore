@@ -1,87 +1,70 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
-	'dojo/Stateful',
 	'dojo/Deferred',
+	'dojo/aspect',
 	'dojo/when'
-], function (declare, lang, Stateful, Deferred, when) {
-
-	function watchNotification(key, oldValue, newValue) {
-		// this is a generic function for handling watch notifications,
-		// and triggering updates in the reactive property objects.
-		// By creating a single function, we can save some memory
-		if (oldValue !== newValue) {
-			var property = (this._properties || 0)[key];
-			if (property) {
-				property.is(newValue, oldValue);
-			}
-		}
-	}
+], function (declare, lang, Deferred, aspect, when) {
 
 	function getSchemaProperty (object, key) {
 		// this function will retrieve the individual property definition
 		// from the schema, for the provided object and key
 		var definition = object.schema[key];
 		if (definition !== undefined && !(definition instanceof Property)) {
-			return object.schema[key] = new Property(definition);
+			definition = new Property(definition);
+			definition.parent = object;
 		}
 		if (definition) {
-			definition.key = key;
+			definition.name = key;
 		}
 		return definition;
 	}
 
-	function validate(object, key, value, setting) {
-		// this performs validation, delegating validation, and coercion
-		// handling to the property definitions objects.
-		var inheritingProperty,
-			// we get the reactive property object from our hash of properties
-			property = object.hasOwnProperty('_properties') && object._properties[key];
+	var hasOwnPropertyInstance;
+	function getTentativePropertyInstance(object, key, createInstanceIfProperty) {
+		// this is a tentative property instance for doing validation and property
+		// setting. It may be feasible to keep this temporary, especially if no
+		// errors need to be set on it.
+		var property = hasOwnPropertyInstance = object.hasOwnProperty('_properties') && object._properties[key];
 		if (!property) {
 			// or, if we don't our own property object, we inherit from the schema
-			inheritingProperty = true;
 			property = getSchemaProperty(object, key);
-		}
-		var result;
-		if (property) {
-			// clear any errors
-			if (!inheritingProperty && property.errors) {
-				property.set('errors', []);
-			}
-			// perform coercion
-			if (setting && property.coerce) {
-				value = property.coerce(value);
-			}
-			// perform validation, if we are set to do this
-			if (property.validate && (!setting || object.validateOnSet)) {
-				if (inheritingProperty) {
-					// validate may set errors on itself, so we need to 
-					// tentatively create our own property object instance.
-					// if nothing fails to validate, this can be GC'ed
-					property = lang.delegate(property, {
-						parent: object,
-						value: value
-					});
-				}
-				property.value = value;
-				result = when(property.validate(), function(isValid) {
-					if (!isValid) {
-						// errors, so don't perform set
-						if (inheritingProperty) {
-							// but we do need to store our property
-							// instance if we don't have our own
-							(object.hasOwnProperty('_properties') ?
-								object._properties :
-								object._properties = new Hidden())[key] = property;
-						}
-					}
-					return isValid;
+			if (property && createInstanceIfProperty in property) {
+				property = lang.delegate(property, {
+					parent: object,
+					key: key
 				});
 			}
 		}
-		return setting ? value : result;
+		return property;
 	}
-	var Model = declare(Stateful, {
+
+	function validate(object, key) {
+		// this performs validation, delegating validation, and coercion
+		// handling to the property definitions objects.
+		var result, 
+			property = getTentativePropertyInstance(object, key, 'validate'),
+			thisHasOwnPropertyInstance = hasOwnPropertyInstance;
+
+		if (property && property.validate) {
+			return when(property.validate(), function(isValid) {
+				if (!isValid) {
+					// errors, so don't perform set
+					if (!thisHasOwnPropertyInstance) {
+						// but we do need to store our property
+						// instance if we don't have our own
+						(object.hasOwnProperty('_properties') ?
+							object._properties :
+							object._properties = new Hidden())[key] = property;
+					}
+				}
+				return isValid;
+			});
+		}
+		return true;
+	}
+
+	var Model = declare(null, {
 		//	summary:
 		//		A base class for modelled data objects.
 
@@ -172,10 +155,15 @@ define([
 			return new Error('Validation error');
 		},
 
-		receive: function (/*string*/ key, /*function?*/ callback) {
+		property: function (/*string*/ key, /*function?*/ listener) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
-			//		of the provided property. You can optionally provide a callback as well.
+			//		of the provided property. You can optionally provide a listener, to be notified
+			//		of the value of this property, now and in the future
+			//	key:
+			//		The name of the property to retrieve
+			//	listener:
+			//		
 
 			// create the properties object, if it doesn't exist yet
 			var properties = this.hasOwnProperty('_properties') ? this._properties :
@@ -188,23 +176,50 @@ define([
 				property = getSchemaProperty(this, key);
 				// delegate, or just create a new instance if no schema definition exists
 				property = properties[key] = property ? lang.delegate(property) : new Property();
+				property.name = key;
 				// give it the correct initial value
-				property.value = this.get(key);
-				var parent = this;
-				// define it's put function, so it syncs back to this object
-				property.put = function (value) {
-					parent.set(key, value);
-				};
-				// and listen for changes, so that property instance is synced to this object
-				this.watch(key, watchNotification);
+				var parent = property.parent = this;
 			}
-			if (callback) {
+			if (listener) {
 				// if we have the second arg, setup the listener
-				return property.receive(callback);
+				return property.receive(listener);
 			}
 			return property;
 		},
 
+		get: function (/*string*/ key, /*function?*/ listener) {
+			//	summary:
+			//		Standard get() function to retrieve the current value
+			//		of a property, augmented with the ability to listen
+			//		for future changes
+
+			var property, definition = this.schema[key];
+			if (listener) {
+				// if there is a listener, we need to register it on the actual
+				// property instance object
+				property = this.property(key);
+				property.receive(listener, true);
+			}
+			// now we need to see if there is a getter involved, or if we can just
+			// shortcut to retrieving the property value
+			definition = property || this.schema[key];
+			if (definition && definition.getter) {
+				// we do have a getter, need to create at least a temporary property
+				// instance
+				property = property || (this.hasOwnProperty('_properties') && this._properties[key]);
+				if (!property) {
+					// no property instance, so we create a temporary one
+					property = lang.delegate(getSchemaProperty(this, key), {
+						key: key,
+						parent: this
+					});
+				}
+				// let the property instance handle retrieving the value
+				return property.get(listener);
+			}
+			// default action of just retrieving the property value
+			return this[key];
+		},
 
 		set: function (/*string*/ key, /*any?*/ value) {
 			//	summary:
@@ -212,14 +227,45 @@ define([
 			//		and remove any error conditions for the given key when
 			//		its value is set.
 
-			if (typeof key !== 'object') {
-				value = validate(this, key, value, true);
-				if (!(key in this.schema) && !this.additionalProperties) {
-					// TODO: Shouldn't this throw an error instead of just giving a warning?
-					return console.warn('Schema does not contain a definition for', key);
+			if (typeof key === 'object') {
+				for (var i in key) {
+					var value = key[i];
+					if (key.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
+						this.set(i, value);
+					}
 				}
+				return;
 			}
-			return this.inherited(arguments);
+			if (!(key in this.schema) && !this.additionalProperties) {
+				// TODO: Shouldn't this throw an error instead of just giving a warning?
+				return console.warn('Schema does not contain a definition for', key);
+			}
+			var property = getTentativePropertyInstance(this, key, 'setter');
+			if (property) {
+				if (property.coerce) {
+					value = property.coerce(value);
+				}
+				if (property.setter) {
+					// use the setter
+					property.setter(value);
+				} else if (hasOwnPropertyInstance) {
+					// if the property instance exists, use this to do the set
+					if (property.errors) {
+						// first clear the errors
+						property.set('errors', null);
+					}
+					property.is(value);
+				} else {
+					this[key] = value;
+				}
+			} else {
+				this[key] = value;
+			}
+			if (this.validateOnSet){
+				validate(this, key);
+			}
+
+			return value;
 		},
 
 		validate: function (/*string[]?*/ fields) {
@@ -252,7 +298,7 @@ define([
 				// check to see if we are allowed to validate this key
 				if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
 					// run validation
-					var result = validate(this, key, this[key]);
+					var result = validate(this, key);
 					if (result) {
 						// valid or the result might be a promise
 						if (result.then) {
@@ -324,28 +370,70 @@ define([
 			return !!getSchemaProperty(this, key).required;
 		}
 	});
-	var Reactive = declare(Model, {
+	var Reactive = declare([Model], {
 		//	summary:
 		//		A reactive object is a data model that can contain a value,
 		//		and notify listeners of changes to that value, in the future.
-		receive: function (/*string?*/ key, /*function?*/ callback) {
-			if (typeof key === 'function') {
-				// single callback argument
+		receive: function (/*function*/ listener, /*boolean?*/ justGetFuture) {
+			//	summary:
+			//		Registers a listener for any changes in the current value
+			//	listener:
+			//		Function to be called for each change
+			//	justGetFuture:
+			//		If this is true, it won't call the listener for the current value,
+			//		just future updates. If this is true, it also won't return
+			//		a new reactive object
+			
+			if (!justGetFuture) {
 				// create a new reactive to contain the results of the execution
 				// of the provided function
 				var reactive = new Reactive();
-				if (this.hasOwnProperty('value')){
+				if (this._has()) {
 					// we need to notify of the value of the present (as well as future)
-					reactive.value = key(this.value);
+					reactive.value = listener(this.get());
 				}
-				// add to the listeners
-				(this._listeners || (this._listeners = [])).push(function (value) {
-					reactive.is(key(value));
-				});
-				return reactive;
 			}
-			// otherwise, a standard receive
-			return this.inherited(arguments);
+			var property = this;
+			// add to the listeners
+			var handle = aspect.after(this, 'onchange', function (value) {
+				if (property.getter) {
+					value = property.getter();
+				}
+				var result = listener(value);
+				if (reactive) {
+					reactive.is(result);
+				}
+			}, true);
+			if (reactive) {
+				reactive.remove = handle.remove;
+			}
+			return reactive;
+		},
+
+		get: function (/*string?*/ key, /*function?*/ listener) {
+			if (typeof key === 'string') {
+				// use standard model get to retrieve object by name
+				return this.inherited(arguments);
+			}
+			if (key) {
+				// just a listener was provided
+				this.receive(key, true);
+			}
+			if (this.getter) {
+				return this.getter();
+			}
+			return this._get();
+		},
+
+		_get: function () {
+			return this.value;
+		},
+
+		_has: function () {
+			return this.hasOwnProperty('value');
+		},
+		_set: function (value) {
+			this.value = value;
 		},
 
 		is: function (/*any*/ value, oldValue) {
@@ -354,18 +442,14 @@ define([
 
 			// notify all the listeners of this object, that the value has changed
 			var listeners = this._listeners;
-			if (oldValue) {
-				oldValue = this.value;
+			if (oldValue === undefined) {
+				oldValue = this._get();
 			}
-			if (listeners) {
-				for (var i = 0; i < listeners.length; i++){
-					listeners[i].call(this, value);
-				}
-			}
+			this._set(value);
+			this.onchange && this.onchange(value, oldValue);
 			// if this was set to an object (or was an object), we need to notify
 			// update all the sub-property objects, so they can possibly notify their
 			// listeners
-			this.value = value;
 			var key, property, properties = this._properties;
 			if (properties) {
 				// we will iterate through the properties recording the changes
@@ -394,39 +478,11 @@ define([
 				}
 			}
 		},
+
 		put: function (/*any*/ value) {
 			//	summary:
 			//		Request to change the main value of this reactive object
 			this.is(value);
-		}
-	});
-	// a function that returns a function, to stop JSON serialization of an
-	// object
-	function toJSONHidden () {
-		return toJSONHidden;
-	}
-	// An object that will be hidden from JSON serialization
-	var Hidden = declare(null, {
-		toJSON: toJSONHidden
-	});
-	var Property = Model.Property = declare(Reactive, {
-		//	summary:
-		//		A Property represents a time-varying property value on an object,
-		//		along with meta-data. One can listen to changes in this value (through
-		//		receive), as well as access and monitor metadata, like default values,
-		//		validation information, required status, and any validation errors.
-
-		//	value: any
-		//		This represents the value of this property, which can be
-		//		monitored for changes and validated
-
-		constructor: function (options) {
-			// handle simple definitions
-			if (typeof options === 'string' || typeof options === 'function') {
-				options = {type: options};
-			}
-			// and/or mixin any provided properties
-			declare.safeMixin(this, options);
 		},
 
 		coerce: function (value) {
@@ -457,13 +513,13 @@ define([
 			//	summary:
 			//		This method is responsible for validating this particular
 			//		property instance.
-			var errors = [];
-			if (this.type && !((this.type === typeof this.value) ||
-					(this.value instanceof this.type))) {
-				errors.push(this.type + ' is not a ' + this.type);
+			var errors = [], value = this.get();
+			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) : 
+				(this.type === typeof value))) {
+				errors.push(value + ' is not a ' + this.type);
 			}
 			
-			if(this.required && !(this.value != null && this.value !== '')) {
+			if(this.required && !(value != null && value !== '')) {
 				errors.push('required, and it was not present');
 			}
 			if (!errors.length) {
@@ -472,6 +528,53 @@ define([
 			}
 			this.set('errors', errors);
 		}
+
+	});
+	// a function that returns a function, to stop JSON serialization of an
+	// object
+	function toJSONHidden () {
+		return toJSONHidden;
+	}
+	// An object that will be hidden from JSON serialization
+	var Hidden = function() {
+	}
+	Hidden.prototype.toJSON = toJSONHidden;
+
+	var Property = Model.Property = declare(Reactive, {
+		//	summary:
+		//		A Property represents a time-varying property value on an object,
+		//		along with meta-data. One can listen to changes in this value (through
+		//		receive), as well as access and monitor metadata, like default values,
+		//		validation information, required status, and any validation errors.
+
+		//	value: any
+		//		This represents the value of this property, which can be
+		//		monitored for changes and validated
+
+		constructor: function (options) {
+			// handle simple definitions
+			if (typeof options === 'string' || typeof options === 'function') {
+				options = {type: options};
+			}
+			// and/or mixin any provided properties
+			declare.safeMixin(this, options);
+		},
+
+		put: function (value) {
+			// override to set the value on the parent property
+			return this.parent.set(this.name, value);
+		},
+
+		_get: function () {
+			return this.parent[this.name];
+		},
+		_has: function () {
+			return this.getter || (this.name in this.parent);
+		},
+		_set: function (value) {
+			this.parent[this.name] = value;
+		}
+
 	});
 	return Model;
 });

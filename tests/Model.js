@@ -16,18 +16,17 @@ define([
 				object: Object,
 				array: Array,
 				any: null,
-				accessor: 'string'
+				accessor: {
+					setter: function (value) {
+						return this.parent._accessor = value;
+					},
+					getter: function () {
+						return this.parent._accessor;
+					}
+				}
 			},
-			additionalProperties: false,
+			additionalProperties: false
 
-			_accessorGetter: function () {
-				return this._accessor;
-			},
-
-			_accessorSetter: function (value) {
-				this._accessor = value;
-				return value;
-			}
 		}))();
 
 		model.set({
@@ -96,38 +95,46 @@ define([
 			model.set('invalid', 'foo');
 			assert.strictEqual(model.get('invalid'), undefined, 'non-existant schema properties should not be mutable');
 		},
-		'#receive': function () {
+		'#property and #receive': function () {
 			var model = createPopulatedModel();
-			var wasReceived;
 			function assertReceived (expected, test) {
-				var wasReceived = false;
+				var receivedCount = 0;
 				test(function (value) {
 					assert.strictEqual(expected, value);
-					wasReceived = true;
+					receivedCount++;
 				});
-				assert.isTrue(wasReceived);
+				assert.strictEqual(receivedCount, 1);
 			}
 			assertReceived('foo', function (callback) {
-				model.receive('string', callback);
+				model.property('string', callback);
 			});
 			assertReceived('foo', function (callback) {
-				model.receive('string').receive(callback);
+				model.property('string').receive(callback);
+			});
+			assertReceived('foo', function (callback) {
+				callback(model.property('string').get());
 			});
 			assertReceived(1234, function (callback) {
-				model.receive('number', callback);
+				model.property('number', callback);
 			});
 			assertReceived(true, function (callback) {
-				model.receive('boolean').receive(callback);
+				model.property('boolean').receive(callback);
 			});
 			// reset the model, so don't have to listeners
 			model = createPopulatedModel();
-			var string = model.receive('string');
+			var string = model.property('string');
 			string.put(1234);
 			assertReceived('1234', function (callback) {
 				string.receive(callback);
-				model.receive('string').receive(callback);
 			});
-			var number = model.receive('number');
+			assertReceived('1234', function (callback) {
+				model.property('string').receive(callback);
+			});
+			assertReceived(true, function (callback) {
+				model.get('boolean', callback);
+				model.set('boolean', true);
+			});
+			var number = model.property('number');
 			number.put(0);
 			var order = [];
 			number.receive(function (newValue) {
@@ -136,7 +143,7 @@ define([
 			number.put(1);
 			model.set('number', 2);
 			model.set('number', '3');
-			model.receive('number').put(4);
+			model.property('number').put(4);
 			number.put('5');
 
 			assert.deepEqual(order, [0, 1, 2, 3, 4, 5]);
@@ -155,7 +162,8 @@ define([
 					}),
 					range: {
 						validate: function() {
-							if (this.value > 10 && this.value < 20) {
+							var value = this.get();
+							if (value > 10 && value < 20) {
 								this.set('errors', null);
 								return true;
 							}
@@ -173,15 +181,15 @@ define([
 			model.set('range', 15);
 			assert.isTrue(model.validate());
 			var lastReceivedErrors;
-			model.receive('range').receive('errors', function(errors){
+			model.property('range').property('errors', function(errors){
 				lastReceivedErrors = errors;
 			});
 			model.set('requiredString', '');
 			assert.isFalse(model.validate());
 			model.set('range', 33);
 			assert.isFalse(model.validate());
-			assert.deepEqual(model.receive('requiredString').get('errors'), ['required, and it was not present']);
-			assert.deepEqual(model.receive('range').get('errors'), ['not in range']);
+			assert.deepEqual(model.property('requiredString').get('errors'), ['required, and it was not present']);
+			assert.deepEqual(model.property('range').get('errors'), ['not in range']);
 			assert.deepEqual(lastReceivedErrors, ['not in range']);
 			model.set('requiredString', 'a string');
 			model.set('range', 15);
@@ -228,11 +236,11 @@ define([
 			return model.validate().then(function (isValid) {
 				assert.isFalse(isValid, 'Invalid model should validate to false');
 
-				var errors = model.receive('test').get('errors');
+				var errors = model.property('test').get('errors');
 				assert.strictEqual(errors.length, 1, 'Invalid model field should have only one error');
 				assert.strictEqual(errors[0], 'it is not b', 'Invalid model error should be set properly from validator');
 
-				errors = model.receive('test2').get('errors');
+				errors = model.property('test2').get('errors');
 				assert.isNotArray(errors, 'Valid model field should have zero errors');
 			});
 		},
