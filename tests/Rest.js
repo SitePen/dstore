@@ -182,7 +182,15 @@ define([
 		},
 
 		'sort': function(){
-			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			var sortedCollection = store.sort({
+				property: "prop1", 
+				descending: true
+			}, {
+				property: "prop2"
+			}, {
+				property: "prop3", 
+				descending: true
+			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
 					"sort(-prop1,+prop2,-prop3)": ""
@@ -193,7 +201,15 @@ define([
 		'sort with this.sortParam': function(){
 			store.sortParam = 'sort-param';
 
-			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			var sortedCollection = store.sort({
+				property: "prop1", 
+				descending: true
+			}, {
+				property: "prop2"
+			}, {
+				property: "prop3", 
+				descending: true
+			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
 					"sort-param": "-prop1,+prop2,-prop3"
@@ -205,7 +221,15 @@ define([
 			store.descendingPrefix = "--";
 			store.ascendingPrefix = "++";
 
-			var sortedCollection = store.sort("prop1", true).sort("prop2", false).sort("prop3", true);
+			var sortedCollection = store.sort({
+				property: "prop1", 
+				descending: true
+			}, {
+				property: "prop2"
+			}, {
+				property: "prop3", 
+				descending: true
+			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
 					"sort(--prop1,++prop2,--prop3)": ""

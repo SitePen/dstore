@@ -1,15 +1,20 @@
-define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare', './Model'
-], function(lang, has, when, Deferred, declare, Model){
+define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare', './Model', 'dojo/Evented'
+], function(lang, has, when, Deferred, declare, Model, Evented){
 
 // module:
 //		dstore/Store
 // detect __proto__
 has.add('object-proto', !!{}.__proto__);
 var hasProto = has('object-proto');
-return declare(null, {
+return declare(Evented, {
 	constructor: function(options){
 		// perform the mixin
 		declare.safeMixin(this, options);
+		if (!this.hasOwnProperty('model')) {
+			// we need a distinct model for each store, so we can
+			// save the reference back to this store on it
+			this.model = declare(Model, {});
+		}
 		// give a reference back to the store for saving, etc.
 		this.model.prototype._store = this;
 	},
@@ -29,7 +34,6 @@ return declare(null, {
 			}
 			return data;
 		});
-
 	},
 	getData: function(){
 		// summary:
@@ -47,6 +51,18 @@ return declare(null, {
 			deferred.resolve(this.data);
 			return deferred.then(callback);
 		}
+	},
+	on: function(type, listener){
+		//	summary:
+		//		Listen for data changes
+		if (type !== 'refresh' && this.store && this.store !== this){
+			return this.store.on(type, listener);
+		}
+		return this.inherited(arguments);
+	},
+	emit: function(type, event){
+		event.type = type;
+		return this.inherited(arguments);
 	},
 
 	// model: Function
@@ -73,6 +89,10 @@ return declare(null, {
 		return object;
 	},
 
+	create: function(properties){
+		return new this.model(properties);
+	},
+
 	_createSubCollection: function(kwArgs){
 		return lang.delegate(this, lang.mixin({
 			store: this.store || this,
@@ -86,10 +106,16 @@ return declare(null, {
 		});
 	},
 
-	sort: function(attribute, descending){
-		return this._createSubCollection({
-			sorted: (this.sorted || []).concat({ attribute: attribute, descending: !!descending })
-		});
+	sort: function(property, descending){
+		if(typeof property === 'object'){
+			this.sorted = [].slice.call(arguments, 0);
+		}else{
+			this.sorted = [{
+				property: property,
+				descending: !!descending
+			}];
+		}
+		return this;
 	},
 
 	range: function(start, end){

@@ -4,9 +4,8 @@ define([
 	'dojo/Deferred',
 	'dojo/_base/declare',
 	'dstore/Memory',
-	'dstore/Cache',
-	'dstore/util/QueryResults'
-], function(registerSuite, assert, Deferred, declare, Memory, Cache, QueryResults){
+	'dstore/Cache'
+], function(registerSuite, assert, Deferred, declare, Memory, Cache){
 
 	var cachingStore = new Memory();
 	var masterFilterCalled;

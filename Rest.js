@@ -1,7 +1,7 @@
 define(["dojo/request/registry", "dojo/_base/lang", "dojo/json", "dojo/io-query", "dojo/_base/declare", "./Request" /*=====, "./api/Store" =====*/
 ], function(request, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/){
 
-// No base class, but for purposes of documentation, the base class is dojo/store/api/Store
+// No base class, but for purposes of documentation, the base class is dstore/api/Store
 var base = null;
 /*===== base = Store; =====*/
 
@@ -75,7 +75,8 @@ return declare(Request, {
 					"If-None-Match": options.overwrite === false ? "*" : null
 				}, this.headers, options.headers)
 			}).then(function(response){
-				return store.assignPrototype(parse(response));
+				var result = store.assignPrototype(parse(response));
+				store.emit(options.overwrite === false ? 'add' : 'update', {target: result || object});
 			});
 	},
 
@@ -101,10 +102,14 @@ return declare(Request, {
 		// options: __HeaderOptions?
 		//		HTTP headers.
 		options = options || {};
+		var store = this;
 		return request(this.target + id, {
 			method: "DELETE",
 			headers: lang.mixin({}, this.headers, options.headers)
-		}).then(this.parse);
+		}).then(function(response){
+			store.emit('remove', {id: id});
+			return store.parse(response);
+		});
 	}
 });
 

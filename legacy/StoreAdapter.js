@@ -5,7 +5,7 @@ define([
 	'../Store'
 ], function(declare, lang, when, Store){
 // module:
-//		An adapter mixin that makes a dojo/store store object look like a dstore object.
+//		An adapter mixin that makes a dstore store object look like a dstore object.
 
 	var StoreAdapter = declare(Store, {
 
@@ -106,9 +106,9 @@ define([
 
 	StoreAdapter.adapt = function(obj, config){
 		// summary:
-		//		Adapts an existing dojo/store object to behave like a dstore object.
+		//		Adapts an existing dstore object to behave like a dstore object.
 		// obj: Object
-		//		A dojo/store object that will have an adapter applied to it.
+		//		A dstore object that will have an adapter applied to it.
 		// config: Object?
 		//		An optional configuration object that will be mixed into the adapted object.
 		//

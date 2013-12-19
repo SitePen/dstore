@@ -20,13 +20,13 @@ var __HeaderOptions = {
 return declare(Store, {
 	// summary:
 	//		This is a basic store for RESTful communicating with a server through JSON
-	//		formatted data. It implements dojo/store/api/Store.
+	//		formatted data. It implements dstore/api/Store.
 
 	constructor: function(options) {
 		// summary:
 		//		This is a basic store for RESTful communicating with a server through JSON
 		//		formatted data.
-		// options: dojo/store/JsonRest
+		// options: dstore/JsonRest
 		//		This provides any configuration information that will be mixed into the store
 		this.headers || (this.headers = {});
 		this._sort = [];
@@ -63,11 +63,11 @@ return declare(Store, {
 	//		with the set of name/value pairs.
 
 	// ascendingPrefix: String
-	//		The prefix to apply to sort attribute names that are ascending
+	//		The prefix to apply to sort property names that are ascending
 	ascendingPrefix: "+",
 
 	// descendingPrefix: String
-	//		The prefix to apply to sort attribute names that are ascending
+	//		The prefix to apply to sort property names that are ascending
 	descendingPrefix: "-",
 
 	// TODO: Can this be removed now that we are building the URL from this.filtered?
@@ -80,7 +80,7 @@ return declare(Store, {
 
 		var sortString = this.sorted && array.map(this.sorted, function(sortOption){
 			var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-			return prefix + encodeURIComponent(sortOption.attribute);
+			return prefix + encodeURIComponent(sortOption.property);
 		}, this).join(",");
 
 		var query = "";

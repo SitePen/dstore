@@ -255,8 +255,8 @@ define([
 				}
 			}))();
 
-			assert.isTrue(model.isFieldRequired('requiredField'), 'Field should be required');
-			assert.isFalse(model.isFieldRequired('optionalField'), 'Field should not be required');
+			assert.isTrue(model.property('requiredField').required, 'Field should be required');
+			assert.isFalse(!!model.property('optionalField').required, 'Field should not be required');
 		},
 
 		chaining: function () {

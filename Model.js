@@ -104,6 +104,7 @@ define([
 			// if we are being constructed, we default to the insert scenario
 			this.scenario = 'insert';
 			// copy in the default values
+			lang.mixin(this, options);
 			for (var key in this.schema) {
 				var definition = this.schema[key];
 				if (definition && typeof definition === 'object' && 'default' in definition) {
@@ -141,7 +142,7 @@ define([
 		},
 
 		remove: function () {
-			var store = object._store;
+			var store = this._store;
 			return store.remove(store.getIdentity(this));
 		},
 
@@ -371,17 +372,6 @@ define([
 				}
 			}
 			return isValid;
-		},
-
-		isFieldRequired: function (/*String*/ key) {
-			// summary:
-			//		Asks whether the specified field is required.
-			// key:
-			//		The field in question
-			// returns: boolean
-			//		A boolean value indicating whether the field is required.
-
-			return !!getSchemaProperty(this, key).required;
 		}
 	});
 	var Reactive = declare([Model], {

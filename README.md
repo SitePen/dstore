@@ -36,7 +36,7 @@ Method | Description
 `forEach(callback, thisObject)` | Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns.
 `map(callback, thisObject)` | Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
 `then(callback, [errorHandler])` | This registers a callback for when the query is complete, if the query is asynchronous. This is an optional method, and may not be present for synchronous queries.
-`observe(listener, [excludeInPlaceUpdates])` | This registers a callback for notification of when data is modified in the query results. This is an optional method, and is usually provided by `dojo/store/Observable`.
+`observe(listener, [excludeInPlaceUpdates])` | This registers a callback for notification of when data is modified in the query results. This is an optional method, and is usually provided by `dstore/Observable`.
 
 ## Store
 
@@ -49,6 +49,8 @@ In addition to the methods and properties inherited from `Store.Collection`, the
 Property | Description
 -------- | -----------
 `idProperty` | If the store has a single primary key, this indicates the property to use as the identity property. The values of this property should be unique.  Defaults to "id".
+`model` | This is the model class to use for all the data objects that originate from this store. By default this will be set to the class from `dstore/Model`. However, you can create your own model classes (and schemas), and assign them to a store. All object that come from the store will have their prototype set such that they will be instances of the model.
+
 
 ### Method Summary
 
@@ -60,6 +62,7 @@ Method | Description
 `add(object, [directives])` | Creates an object, throws an error if the object already exists
 `remove(id)` | Deletes an object by its identity
 `transaction()` | Starts a new transaction.
+`create()` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object.
 `getChildren(parent)` | Retrieves the children of an object.
 `getMetadata(object)` | Returns any metadata about the object. This may include attribution, cache directives, history, or version information.
 
@@ -76,6 +79,7 @@ Method | Description
 `property(name)` | This returns a property object instance for the given name.
 `validate()` | This will validate the object, determining if there are any errors on the object.
 `save()` | This will save the object, validating and then storing the object in the store.
+`remove()` This will delete the object from the object store.
 
 ## Property Objects
 
@@ -114,17 +118,17 @@ Once we have the property object, we can access meta-data, watch, and modify thi
 
 ## StoreAdapter
 
-The `dstore/legacy/StoreAdapter` module allows a `dojo/store` object store to be used as a dstore object store.  There are two ways to use this adapter.
+The `dstore/legacy/StoreAdapter` module allows a `dstore` object store to be used as a dstore object store.  There are two ways to use this adapter.
 
-Combine the `StoreAdapter` mixin with a `dojo/store` class to create a new class.
+Combine the `StoreAdapter` mixin with a `dstore` class to create a new class.
 ```js
 require([
-    'dojo/_base/declare', 'dojo/store/Memory', 'dstore/legacy/StoreAdapter`
+    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/StoreAdapter`
 ], function(declare, Memory, StoreAdapter) {
     var AdaptedMemory = declare([Memory, StoreAdapter]);
 });
 ```
-Create an adapted version of an existing `dojo/store` object store by calling `StoreAdapter.adapt()`.
+Create an adapted version of an existing `dstore` object store by calling `StoreAdapter.adapt()`.
 ```js
 require([
     'dstore/legacy/StoreAdapter`
@@ -139,11 +143,11 @@ In addition to the methods and properties inherited from `dstore/api/Store`, the
 
 Method | Description
 ------ | -------------
-`StoreAdapter.adapt()` | Adapts an existing `dojo/store` object to behave like a dstore object.
+`StoreAdapter.adapt()` | Adapts an existing `dstore` object to behave like a dstore object.
 
 ## DstoreAdapter
 
-The `dstore/legacy/DstoreAdapter` module allows a dstore object store to be used as `dojo/store` object stores.  There are two ways to use this adapter.
+The `dstore/legacy/DstoreAdapter` module allows a dstore object store to be used as `dstore` object stores.  There are two ways to use this adapter.
 
 Combine the `DstoreAdapter` mixin with a dstore object store class to create a new class.
 ```js
@@ -161,13 +165,13 @@ require([
     var adaptedStore = DstoreAdapter.adapt(store);
 });
 ```
-In addition to the methods and properties inherited from `dojo/store/api/Store`, the `DstoreAdapter` module also exposes the following method.
+In addition to the methods and properties inherited from `dstore/api/Store`, the `DstoreAdapter` module also exposes the following method.
 
 ### Method Summary
 
 Method | Description
 ------ | -------------
-`DstoreAdapter.adapt()` | Adapts an existing dstore object to behave like a `dojo/store` object.
+`DstoreAdapter.adapt()` | Adapts an existing dstore object to behave like a `dstore` object.
 
 ## StoreSeries
 

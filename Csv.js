@@ -1,7 +1,7 @@
 define([
 	"dojo/_base/lang",
 	"dojo/_base/declare",
-	"dojo/store/Memory"
+	"dstore/Memory"
 ], function(lang, declare, Memory) {
 	// originally from https://github.com/kfranqueiro/dojo-smore/blob/master/Csv.js
 	var quoteRx = /^\s*"([\S\s]*)"\s*$/,

@@ -62,8 +62,13 @@ define([
 		});
 
 		// Make backing store an observed collection so its data is kept up-to-date
-		proto.observe = function(){
-			this.backingMemoryStore = this.backingMemoryStore.observe(function(){});
+		proto.track = function(){
+			this.backingMemoryStore = this.backingMemoryStore.track(function(){});
+			return this.inherited(arguments);
+		};
+		// Make backing store events go to both
+		proto.on = function(type, listener){
+			this.backingMemoryStore.on(type, listener);
 			return this.inherited(arguments);
 		};
 
@@ -93,81 +98,80 @@ define([
 		'filter': function(){
 			var results = store.filter({prime: true});
 
-			results.materialize();
 			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
-			var observer = results.observe(function(type, target, info){
-				changes.push({type: type, target: target, info: info});
+			var tracked = results.track();
+			tracked.on('update', function(event){
+				changes.push(event);
 			});
-			var secondObserver = results.observe(function(type, target, info){
-				secondChanges.push({type: type, target: target, info: info});
+			tracked.on('remove', function(event){
+				changes.push(event);
+			});
+			tracked.on('add', function(event){
+				changes.push(event);
+			});
+			var secondObserverUpdate = tracked.on('update', function(event){
+				secondChanges.push(event);
+			});
+			var secondObserverRemove = tracked.on('remove', function(event){
+				secondChanges.push(event);
+			});
+			var secondObserverAdd = tracked.on('add', function(event){
+				secondChanges.push(event);
 			});
 			var expectedChanges = [],
 				expectedSecondChanges = [];
 			var two = results.data[0];
 			two.prime = false;
 			store.put(two); // should remove it from the array
-			observer.materialize();
-			assert.strictEqual(observer.data.length, 2);
+			tracked.materialize();
+			assert.strictEqual(tracked.data.length, 2);
 			expectedChanges.push({
 				type: "update",
 				target: two,
-				info: {
-					previousIndex: 0
-				}
+				previousIndex: 0
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
-			secondObserver.remove();
+			secondObserverUpdate.remove();
+			secondObserverRemove.remove();
+			secondObserverAdd.remove();
 			var one = store.get(1);
 			one.prime = true;
 			store.put(one); // should add it
 			expectedChanges.push({
 				type: "update",
 				target: one,
-				info: {
-					index: 2
-				}
+				index: 2
 			});
-			assert.strictEqual(observer.data.length, 3);
+			assert.strictEqual(tracked.data.length, 3);
 			// shouldn't be added
 			var six = {id:6, name:"six"};
 			store.add(six);
-			assert.strictEqual(observer.data.length, 3);
+			assert.strictEqual(tracked.data.length, 3);
 
 			expectedChanges.push({
 				type: "add",
-				target: six,
-				info: {
-					// no index because the addition doesn't have a place in the filtered results
-				}
+				target: six
+				// no index because the addition doesn't have a place in the filtered results
 			});
 
 			// should be added
 			var seven = {id:7, name:"seven", prime:true};
 			store.add(seven);
-			assert.strictEqual(observer.data.length, 4);
+			assert.strictEqual(tracked.data.length, 4);
 
 			expectedChanges.push({
 				type: "add",
 				target: seven,
-				info: {
-					index: 3
-				}
+				index: 3
 			});
 			store.remove(3);
 			expectedChanges.push({
 				type: "remove",
-				target: 3,
-				info: {
-					previousIndex: 0
-				}
+				id: 3,
+				previousIndex: 0
 			});
-			assert.strictEqual(observer.data.length, 3);
-
-			observer.remove(); // shouldn't get any more calls
-			store.add({// should not be notified for this addition
-				id:11, name:"eleven", prime:true
-			});
+			assert.strictEqual(tracked.data.length, 3);
 
 			assert.deepEqual(secondChanges, expectedSecondChanges);
 			assert.deepEqual(changes, expectedChanges);
@@ -176,11 +180,12 @@ define([
 		'filter with zero id': function(){
 			var results = store.filter({});
 			results.materialize();
-			assert.strictEqual(results.data.length, 8);
-            var observer = results.observe(function(type, target, info){
-                    // we only do puts so previous & new indices must always been the same
-                	assert.ok(info.index === info.previousIndex);
-            });
+			assert.strictEqual(results.data.length, 7);
+			var tracked = results.track();
+			tracked.on('update', function(event){
+					// we only do puts so previous & new indices must always been the same
+					assert.ok(event.index === event.previousIndex);
+			});
 			store.put({id: 5, name: '-FIVE-', prime: true});
 			store.put({id: 0, name: '-ZERO-', prime: false});
 		},
@@ -191,15 +196,24 @@ define([
 				bigFiltered = bigStore.filter({}).sort('order');
 
 			var observations = [];
-			var bigObserved = bigFiltered.observe(function(type, target, info){
-		    	observations.push({type: type, target: target, info: info});
-		        console.log(" observed: ", type, target, info);
+			var bigObserved = bigFiltered.track();
+			bigObserved.on('update', function(event){
+				observations.push(event);
+				console.log(" observed: ", event);
+			});
+			bigObserved.on('add', function(event){
+				observations.push(event);
+				console.log(" observed: ", event);
+			});
+			bigObserved.on('remove', function(event){
+				observations.push(event);
+				console.log(" observed: ", event);
 			});
 			var rangedResults = [
-			    bigObserved.range(0,25).forEach(function(){}),
-			    bigObserved.range(25,50).forEach(function(){}),
-			    bigObserved.range(50,75).forEach(function(){}),
-			    bigObserved.range(75,100).forEach(function(){})
+				bigObserved.range(0,25).forEach(function(){}),
+				bigObserved.range(25,50).forEach(function(){}),
+				bigObserved.range(50,75).forEach(function(){}),
+				bigObserved.range(75,100).forEach(function(){})
 			];
 
 			bigObserved.materialize();
@@ -220,15 +234,21 @@ define([
 			var bigStore = createBigStore(100, ObservablePartialDataStore),
 				bigFiltered = bigStore.filter({}).sort('order'),
 				latestObservation,
-				bigObserved = bigFiltered.observe(function(type, target, info){
-					latestObservation = {type: type, target: target, info: info};
-					console.log(" observed: ", type, target, info);
-				}),
+				bigObserved = bigFiltered.track(),
 				backingData = bigObserved.backingMemoryStore.data,
 				item,
 				assertObservationIs = function(expectedObservation){
 					assert.deepEqual(latestObservation, expectedObservation);
 				};
+			bigObserved.on('update', function(event){
+				latestObservation = event;
+			});
+			bigObserved.on('add', function(event){
+				latestObservation = event;
+			});
+			bigObserved.on('remove', function(event){
+				latestObservation = event;
+			});
 			// TODO: Fix names bigXyz names. Probably use the term collection instead of store for return value of filter and sort
 
 			// An update outside of requested ranges has an indeterminate index
@@ -352,51 +372,49 @@ define([
 				tailTrimmingRange = { start: 90, end: 100 };
 
 			var observations = [],
-				observedStore = store.observe(function (obj, from, to) {
-					// Do nothing
-				}),
+				trackedStore = store.track(),
 				assertRangeDefined = function(start, end){
 					for(var i = start; i < end; ++i){
-						assert.notEqual(observedStore.partialData[i], undefined);
+						assert.notEqual(trackedStore.partialData[i], undefined);
 					}
 				},
 				assertRangeUndefined = function(start, end){
 					for(var i = start; i < end; ++i){
-						assert.equal(observedStore.partialData[i], undefined);
+						assert.equal(trackedStore.partialData[i], undefined);
 					}
 				};
 
 			// Remove all of a range
-			observedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).forEach(function(){});
+			trackedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
-			observedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
+			trackedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
 			assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 
 			// Split a range
-			observedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).forEach(function(){});
+			trackedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).forEach(function(){});
 			assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
-			observedStore.releaseRange(splittingRange.start, splittingRange.end);
+			trackedStore.releaseRange(splittingRange.start, splittingRange.end);
 			assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
 			assertRangeUndefined(splittingRange.start, splittingRange.end);
 			assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
 
 			// Remove from range head
-			observedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).forEach(function(){});
+			trackedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
-			observedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
+			trackedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
 
 			// Remove from range tail
-			observedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).forEach(function(){});
+			trackedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).forEach(function(){});
 			assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
-			observedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
+			trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
 			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
 			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
 		'type': function(){
-			assert.isFalse(store === store.observe(function(){}));
+			assert.isFalse(store === store.track(function(){}));
 		}
 	});
 });

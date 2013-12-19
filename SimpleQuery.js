@@ -4,7 +4,7 @@ function(declare, has, lang, arrayUtil, Store /*=====, Store =====*/){
 // module:
 //		dstore/Memory
 
-// No base class, but for purposes of documentation, the base class is dojo/store/api/Store
+// No base class, but for purposes of documentation, the base class is dstore/api/Store
 var base = null;
 /*===== base = Store; =====*/
 
@@ -52,9 +52,12 @@ return declare(Store, {
 	},
 
 	sort: function(property, descending){
-		return this._addQueryer(this.inherited(arguments), function(data, dontCopy){
-			var sortedResults = dontCopy ? data : data.slice(0);
-			sortedResults.sort(typeof property == "function" ? property : function(a, b){
+		if(typeof property === 'object'){
+			descending = property.descending;
+			property = property.property;
+		}
+		return this._addQueryer(this.inherited(arguments), function(data){
+			data.sort(typeof property == "function" ? property : function(a, b){
 				var aValue = a[property];
 				var bValue = b[property];
 				if (aValue != bValue){
@@ -62,7 +65,7 @@ return declare(Store, {
 				}
 				return 0;
 			});
-			return sortedResults;
+			return data;
 		});
 	},
 

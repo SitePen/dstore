@@ -66,7 +66,7 @@ var Collection = declare(null, {
 		//		Function that is called for each object in the query results
 		// thisObject:
 		//		The object to use as |this| in the callback.
-		// returns: dojo/store/api/Store.Collection
+		// returns: dstore/api/Store.Collection
 	},
 	then: function(callback, errorHandler){
 		// summary:
@@ -79,31 +79,34 @@ var Collection = declare(null, {
 		//		This is called if the query failed, and is passed a single argument that is the error
 		//		for the failure.
 	},
-	observe: function(listener, excludeInPlaceUpdates){
+	on: function(type, listener){
 		// summary:
 		//		This registers a callback for notification of when data is modified in the query results.
-		//		This is an optional method, and is usually provided by dojo/store/Observable.
+		// type: String
+		//		There are four types of events defined in this API:
+		//		- add - A new object was added
+		//		- update - An object was updated
+		//		- remove - An object was deleted
+		//		- refresh - The entire collection has been changed, and the listener should reiterate over the results
 		// listener: Function
 		//		The listener function is called when objects in the query results are modified
-		//		to affect the query result. The listener function is called with the following arguments:
-		//		| listener(object, removedFrom, insertedInto);
+		//		to affect the query result. The listener function is called with a single event object argument:
+		//		| listener(event);
 		//
-		//		- The object parameter indicates the object that was create, modified, or deleted.
-		//		- The removedFrom parameter indicates the index in the result array where
+		//		- The event object as the following properties:
+		//		- type - The event type (of the four above)
+		//		- data - This indicates the object that was create or modified.
+		//		- id - If an object was removed, this indicates the object that was removed.
+		//		The next two properties will only be available if array tracking is employed,
+		//		which is usually provided by dstore/Observable
+		//		- previousIndex - The previousIndex parameter indicates the index in the result array where
 		//		the object used to be. If the value is -1, then the object is an addition to
 		//		this result set (due to a new object being created, or changed such that it
-		//		is a part of the result set).
-		//		- The insertedInto parameter indicates the index in the result array where
+		//		is a part of the result set). 
+		//		- index - The inex parameter indicates the index in the result array where
 		//		the object should be now. If the value is -1, then the object is a removal
 		//		from this result set (due to an object being deleted, or changed such that it
 		//		is not a part of the result set).
-		// excludeInPlaceUpdates:
-		//		This indicates whether or not to include object updates that do not affect
-		//		the inclusion or order of the object in the query results. By default this is false,
-		//		but if set to true it means means that if any object is updated in such a way that it remains
-		//		in the result set and it's position in result sets is not affected, then the listener
-		//		will not be fired.
-		//	returns: Collection
 
 	},
 	// model: Function
@@ -137,7 +140,7 @@ var Store = declare(Collection, {
 	//		This is an abstract API that data provider implementations conform to.
 	//		This file defines methods signatures and intentionally leaves all the
 	//		methods unimplemented.  For more information on the ,
-	//		please visit: http://dojotoolkit.org/reference-guide/dojo/store.html
+	//		please visit: http://dojotoolkit.org/reference-guide/dstore.html
 	//		Every method and property is optional, and is only needed if the functionality
 	//		it provides is required.
 	//		Every method may return a promise for the specified return value if the
@@ -183,7 +186,7 @@ var Store = declare(Collection, {
 		//		Stores an object
 		// object: Object
 		//		The object to store.
-		// directives: dojo/store/api/Store.PutDirectives?
+		// directives: dstore/api/Store.PutDirectives?
 		//		Additional directives for storing objects.
 		// returns: Number|String
 	},
@@ -192,7 +195,7 @@ var Store = declare(Collection, {
 		//		Creates an object, throws an error if the object already exists
 		// object: Object
 		//		The object to store.
-		// directives: dojo/store/api/Store.PutDirectives?
+		// directives: dstore/api/Store.PutDirectives?
 		//		Additional directives for creating objects.
 		// returns: Number|String
 	},
@@ -217,7 +220,7 @@ var Store = declare(Collection, {
 		//		Note that a store user might not call transaction() prior to using put,
 		//		delete, etc. in which case these operations effectively could be thought of
 		//		as "auto-commit" style actions.
-		// returns: dojo/store/api/Store.Transaction
+		// returns: dstore/api/Store.Transaction
 		//		This represents the new current transaction.
 	},
 	getChildren: function(parent){
@@ -225,7 +228,7 @@ var Store = declare(Collection, {
 		//		Retrieves the children of an object.
 		// parent: Object
 		//		The object to find the children of.
-		// returns: dojo/store/api/Store.Collection
+		// returns: dstore/api/Store.Collection
 		//		A result set of the children of the parent object.
 	},
 	getMetadata: function(object){
@@ -275,7 +278,7 @@ Store.SortInformation = declare(null, {
 Store.QueryOptions = declare(null, {
 	// summary:
 	//		Optional object with additional parameters for query results.
-	// sort: dojo/store/api/Store.SortInformation[]?
+	// sort: dstore/api/Store.SortInformation[]?
 	//		A list of attributes to sort on, as well as direction
 	//		For example:
 	//		| [{attribute:"price, descending: true}].

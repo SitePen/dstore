@@ -1,12 +1,12 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/lang'
-	/*=====, "dojo/store/api/Store" =====*/
+	/*=====, "dstore/api/Store" =====*/
 ], function(declare, lang /*=====, Store =====*/){
 // module:
-//		An adapter mixin that makes a dstore store object look like a dojo/store object.
+//		An adapter mixin that makes a dstore store object look like a dstore object.
 
-	// No base class, but for purposes of documentation, the base class is dojo/store/api/Store
+	// No base class, but for purposes of documentation, the base class is dstore/api/Store
 	var base = null;
 	/*===== base = Store; =====*/
 
@@ -18,9 +18,9 @@ define([
 			//		set of data from the store.
 			// query: String|Object|Function
 			//		The query to use for retrieving objects from the store.
-			// options: dojo/store/api/Store.QueryOptions
+			// options: dstore/api/Store.QueryOptions
 			//		The optional arguments to apply to the resultset.
-			// returns: dojo/store/api/Store.QueryResults
+			// returns: dstore/api/Store.QueryResults
 			//		The results of the query, extended with iterative methods.
 			//
 			// example:
@@ -59,7 +59,7 @@ define([
 
 	DstoreAdapter.adapt = function(obj, config){
 		// summary:
-		//		Adapts an existing dstore object to behave like a dojo/store object.
+		//		Adapts an existing dstore object to behave like a dstore object.
 		// obj: Object
 		//		A dstore object that will have an adapter applied to it.
 		// config: Object?

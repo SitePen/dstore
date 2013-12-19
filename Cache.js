@@ -2,9 +2,8 @@ define([
 	"dojo/_base/lang",
 	"dojo/when",
 	"dojo/_base/declare",
-	"./Memory",
-	"./util/QueryResults"],
-function(lang, when, declare, Memory, QueryResults){
+	"./Memory"],
+function(lang, when, declare, Memory){
 
 // module:
 //		dstore/Cache

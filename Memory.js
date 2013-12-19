@@ -8,7 +8,7 @@ return declare(SimpleQuery, {
 	constructor: function(options){
 		// summary:
 		//		Creates a memory object store.
-		// options: dojo/store/Memory
+		// options: dstore/Memory
 		//		This provides any configuration information that will be mixed into the store.
 		//		This should generally include the data property to provide the starting set of data.
 		this.setData(this.data || []);
@@ -56,7 +56,7 @@ return declare(SimpleQuery, {
 		//		Stores an object
 		// object: Object
 		//		The object to store.
-		// options: dojo/store/api/Store.PutDirectives?
+		// options: dstore/api/Store.PutDirectives?
 		//		Additional metadata for storing the data.  Includes an "id"
 		//		property if a specific id is to be used.
 		// returns: Number
@@ -81,9 +81,11 @@ return declare(SimpleQuery, {
 			}
 			// replace the entry in data
 			data[index[id]] = object;
+			this.emit('update', {target: object});
 		}else{
 			// add the new object
 			index[id] = data.push(object) - 1;
+			this.emit('add', {target: object});
 		}
 		return object;
 	},
@@ -92,7 +94,7 @@ return declare(SimpleQuery, {
 		//		Creates an object, throws an error if the object already exists
 		// object: Object
 		//		The object to store.
-		// options: dojo/store/api/Store.PutDirectives?
+		// options: dstore/api/Store.PutDirectives?
 		//		Additional metadata for storing the data.  Includes an "id"
 		//		property if a specific id is to be used.
 		// returns: Number
@@ -113,6 +115,7 @@ return declare(SimpleQuery, {
 			data.splice(index[id], 1);
 			// now we have to reindex
 			this.setData(data);
+			this.emit('remove', {id: id});
 			return true;
 		}
 	},
@@ -150,19 +153,30 @@ return declare(SimpleQuery, {
 		this.data = data;
 		this.total = data.length;
 	},
+	filter: function(filter){
+		var newCollection = this.inherited(arguments);
+		var data = newCollection.data = newCollection.queryer(this.data);
+		newCollection.total = data.length;
+		return newCollection;
+	},
+	sort: function(sort){
+		this.inherited(arguments);
+		this.data = this.queryer(this.data);
+		this.emit('refresh', {target: this.data});
+		return this;
+	},
+	range: function(start, end){
+		var newCollection = this.inherited(arguments);
+		newCollection.data = this.data.slice(start || 0, end || Infinity);
+		return newCollection;
+	},
 	materialize: function(){
-		// summary:
-		//	Actually compute the data for this collection. Returns the 
-		//	computed data as an array or promise to an array
-		var data = this.parent.data;
-		data = this.data = this.queryer ? this.queryer(data) : data;
-		this.total = data.length;
-		var ranged = this.ranged;
-		if(ranged){
-			this.data = data.slice(ranged.start || 0, ranged.end || Infinity);
+		if(!this.hasOwnProperty('data')){
+			this.data = this.queryer(this.data);
 		}
 		return this.data;
-	}
+	},
+
 });
 
 });

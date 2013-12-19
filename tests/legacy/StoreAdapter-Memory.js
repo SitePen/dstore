@@ -20,7 +20,7 @@ define([
 	var store;
 
 	registerSuite({
-		name: 'legacy dojo/store adapter - Memory',
+		name: 'legacy dstore adapter - Memory',
 
 		beforeEach: function(){
 			store = new AdaptedStore({
@@ -179,7 +179,7 @@ define([
 	});
 
 	registerSuite({
-		name: 'legacy dojo/store adapter sorting - Memory',
+		name: 'legacy dstore adapter sorting - Memory',
 
 		before: function(){
 			legacyStore = new Memory({

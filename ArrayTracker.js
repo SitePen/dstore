@@ -80,16 +80,16 @@ return declare(null, {
 
 		// monitor for updates by listening to these methods
 		var handles = [];
-		var eventTypes = {add: 1, update: 1, remove: 1};
-		// register to listen for updates
-		for(var type in eventTypes){
-			this.on(type, (function(type){
-				return function(event){
-					notify(type, event.target || event.id, event);
-				};
-			})(type));
-		}
 
+		this.on("add", function(event){
+			notify("add", event.data, event);
+		});
+		this.on("update", function(event){
+			notify("update", event.data, event);
+		});
+		this.on("remove", function(event){
+			notify("remove", event.id, event);
+		});
 		var observed = lang.delegate(this, {
 			store: store,
 			remove: function(){
@@ -100,14 +100,6 @@ return declare(null, {
 				this.remove = function(){};
 			}
 		});
-
-		var originalOn = this.on;
-		// now setup our own event scope, for tracked events
-		observed.on = function(type, listener){
-			return type in eventTypes ?
-				aspect.after(observed, 'ontracked' + type, listener, true) :
-				originalOn.call(observed, type, listener);
-		};
 
 		var ranges = [];
 		if(observed.data){
@@ -150,7 +142,6 @@ return declare(null, {
 
 		function notify(type, target, event){
 			revision++;
-			event = lang.delegate(event);
 			when(observed.data || observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
@@ -265,8 +256,7 @@ return declare(null, {
 				// TODO: Eventually we will want to aggregate all the listener events
 				// in an event turn, but we will wait until we have a reliable, performant queueing
 				// mechanism for this (besides setTimeout)
-				type = 'ontracked' + type;
-				observed[type] && observed[type](event);
+				//listener(type, target, info);
 			});
 		}
 

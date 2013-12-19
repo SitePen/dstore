@@ -44,7 +44,7 @@ define([
 	};
 
 	registerSuite({
-		name: 'legacy dojo/store adapter - JsonRest',
+		name: 'legacy dstore adapter - JsonRest',
 
 		'get': function(){
 			var d = this.async();
@@ -79,7 +79,7 @@ define([
 	});
 
 	registerSuite({
-		name: 'legacy dojo/store adapter - JsonRest - adapted obj',
+		name: 'legacy dstore adapter - JsonRest - adapted obj',
 
 		'get': function(){
 			var d = this.async();

@@ -1,7 +1,7 @@
 define([
 	'rql/query',
 	'rql/js-array',
-	'./util/SimpleQueryEngine'
+//	'./util/SimpleQueryEngine'
 ], function (rql, arrayEngine, SimpleQueryEngine) {
 	return function (store) {
 		// to use rql we need to adjust the query on the store...
