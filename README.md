@@ -5,7 +5,7 @@ The dstore package is a data infrastructure framework, providing the tools for m
 
 * Collection - This is a list of objects, which can be iterated over to access the objects in the collection, and monitored for changes. It can also be filtered, sorted, and sliced into new collections.
 * Store - A Store is a Collection that may also include the ability to identify, to add, remove, and update objects.
-* Model - A Model is an object, a set of properties consisting various different name-values.
+* Model - A Model is an object, a set of properties, or name value pairs.
 * Property - A Property is an object representing a particular property on a Model object, facilitating access to, modification of, and monitoring of the value of a property.
 
 # Store API
@@ -20,7 +20,7 @@ This is an abstract API that for a collection of items, which can be filtered, s
 
 Property | Description
 -------- | -----------
-`model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should be return true from `object instanceof store.model`.
+`model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof store.model`.
 `total` | This property should be included in if the query options included the "count" property limiting the result set. This property indicates the total number of objects matching the query (as if "start" and "count" weren't present). This may be a promise if the query is asynchronous.
 `sorted` | If the collection has been sorted, this is an object that indicates the property that it was sorted on and if it was descending.
 `filtered` | If the collection has been filtered, this is an object that indicates the query that was used to filter it.
@@ -31,12 +31,14 @@ Property | Description
 Method | Description
 ------ | -------------
 `filter(query)` | Filters the collection, returning a new subset collection
-`sort(property, [descending])` | Sorts the collection, returning a new collection with the objects sorted.  This may be called successively on collections, and should result in the last sort have precedence over previous sorts. For example: `collection.sort('firstName').sort('lastName')` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
+`sort(property, [descending])` | Sorts the current collection, modifying the array in place.  This may be called successively on a collection, and should result in the last sort have precedence over previous sorts.
+`sort(highestSortOrder, nextSortOrder...) | This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort({property:'lastName'}, {property: 'firstName'})` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
 `range(start, [end])` | Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range.
 `forEach(callback, thisObject)` | Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns.
 `map(callback, thisObject)` | Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
-`then(callback, [errorHandler])` | This registers a callback for when the query is complete, if the query is asynchronous. This is an optional method, and may not be present for synchronous queries.
-`observe(listener, [excludeInPlaceUpdates])` | This registers a callback for notification of when data is modified in the query results. This is an optional method, and is usually provided by `dstore/Observable`.
+`then(callback, [errorHandler])` | This registers a callback for when the collection has been retrieved or 'materialized', if the query is asynchronous. This is an optional method, and may not be present for synchronous collections.
+`materialize()` | Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed through an iterative method (like `forEach`, `filter`, or `map`). Calling `materialize()` will force the data to be retrieved.
+`track()` | This method will create a new collection that will be tracked and updated as the parent store changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`.
 
 ## Store
 
