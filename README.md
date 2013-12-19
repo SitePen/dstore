@@ -28,17 +28,43 @@ Property | Description
 
 ### Method Summary
 
-Method | Description
------- | -------------
-`filter(query)` | Filters the collection, returning a new subset collection
-`sort(property, [descending])` | Sorts the current collection, modifying the array in place.  This may be called successively on a collection, and should result in the last sort have precedence over previous sorts.
-`sort(highestSortOrder, nextSortOrder...) | This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort({property:'lastName'}, {property: 'firstName'})` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
-`range(start, [end])` | Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range.
-`forEach(callback, thisObject)` | Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns.
-`map(callback, thisObject)` | Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
-`then(callback, [errorHandler])` | This registers a callback for when the collection has been retrieved or 'materialized', if the query is asynchronous. This is an optional method, and may not be present for synchronous collections.
-`materialize()` | Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed through an iterative method (like `forEach`, `filter`, or `map`). Calling `materialize()` will force the data to be retrieved.
-`track()` | This method will create a new collection that will be tracked and updated as the parent store changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`.
+#### `filter(query)`
+
+Filters the collection, returning a new subset collection
+
+#### `sort(property, [descending])`
+
+Sorts the current collection, modifying the array in place.
+
+#### `sort(highestSortOrder, nextSortOrder...)
+
+This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort({property:'lastName'}, {property: 'firstName'})` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
+
+#### `range(start, [end])`
+
+Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range.
+
+#### `forEach(callback, thisObject)`
+
+Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns.
+
+#### `map(callback, thisObject)`
+
+Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
+
+#### `on(type, listener)`
+
+#### `then(callback, [errorHandler])`
+
+This registers a callback for when the collection has been retrieved or 'fetchd', if the query is asynchronous. This is an optional method, and may not be present for synchronous collections.
+
+#### `fetch()`
+
+Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed through an iterative method (like `forEach`, `filter`, or `map`). Calling `fetch()` will force the data to be retrieved, returning an array, or a promise to an array.
+
+#### `track()`
+
+This method will create a new collection that will be tracked and updated as the parent store changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`.
 
 ## Store
 
@@ -91,7 +117,7 @@ Property objects actually extend the data model class, so the methods listed for
 
 Method | Description
 ------ | -----------
-`receive(listener)` | This registers a listener for the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
+`receive(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
 

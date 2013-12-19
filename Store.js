@@ -28,17 +28,12 @@ return declare(Evented, {
 		});
 	},
 	forEach: function(callback, thisObject){
-		return when(this.getData(), function(data){
+		return when(this.fetch(), function(data){
 			for(var i = 0, l = data.length; i < l; i++){
 				callback.call(thisObject, data[i]);
 			}
 			return data;
 		});
-	},
-	getData: function(){
-		// summary:
-		//		Retrieve the collection as an array, or a promise to an array
-		return this.hasOwnProperty('data') ? this.data : (this.data = this.materialize());
 	},
 	then: function(callback, errback){
 		// summary:

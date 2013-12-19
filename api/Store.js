@@ -24,12 +24,7 @@ var Collection = declare(null, {
 	},
 	sort: function(property, descending) {
 		// summary:
-		//		Sorts the collection, returning a new collection with the objects sorted
-		//		This may be called successively on collections, and should result in the last
-		//		sort have precedence over previous sorts. For example:
-		//		collection.sort('firstName').sort('lastName')
-		//		would result in a collection sorted by lastName, with firstName used to sort
-		//		identical lastName values.
+		//		Sorts the current collection, reordering the objects by the provided sort order.
 		// property: String|Function
 		//		The property to sort on. Alternately a function can be provided to sort with
 		// descending?: Boolean

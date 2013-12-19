@@ -123,7 +123,7 @@ return declare(Store, {
 		// returns: Number
 		return object[this.idProperty];
 	},
-	materialize: function(){
+	fetch: function(){
 		if(!this.hasOwnProperty('data')){
 			// perform the actual query
 			var response = request(this._renderUrl(), {

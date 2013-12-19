@@ -124,7 +124,7 @@ define([
 			var two = results.data[0];
 			two.prime = false;
 			store.put(two); // should remove it from the array
-			tracked.materialize();
+			tracked.fetch();
 			assert.strictEqual(tracked.data.length, 2);
 			expectedChanges.push({
 				type: "update",
@@ -179,7 +179,7 @@ define([
 
 		'filter with zero id': function(){
 			var results = store.filter({});
-			results.materialize();
+			results.fetch();
 			assert.strictEqual(results.data.length, 7);
 			var tracked = results.track();
 			tracked.on('update', function(event){
@@ -216,7 +216,7 @@ define([
 				bigObserved.range(75,100).forEach(function(){})
 			];
 
-			bigObserved.materialize();
+			bigObserved.fetch();
 			var results = bigObserved.data;
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);

@@ -50,8 +50,8 @@ define([
 			destroy: function(){
 				// summary:
 				//		Clean up before GC.
-				if(this.observeHandle){
-					this.observeHandle.remove();
+				if(this.tracked){
+					this.tracked.remove();
 				}
 			},
 
@@ -68,8 +68,8 @@ define([
 				//		Fetches data from the store and updates a chart.
 				var store = this.store;
 				var self = this;
-				if(this.observeHandle){
-					this.observeHandle.remove();
+				if(this.tracked){
+					this.tracked.remove();
 				}
 				var objects = this.objects = [];
 				when(store.forEach(function(object){
@@ -77,11 +77,15 @@ define([
 				}), function(){
 					self._update();
 				});
-				if(store.observe){
-					this.observeHandle = store.observe(function(){
-						self.objects.splice.apply(self.objects, arguments);
-						self._update();
-					});
+				if(store.track){
+					var tracked = this.tracked = store.track();
+					tracked.on('add', update);
+					tracked.on('update', update);
+					tracked.on('remove', update);
+				}
+				function update(){
+					self.objects = tracked.data;
+					self._update();
 				}
 			},
 

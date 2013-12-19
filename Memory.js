@@ -170,7 +170,7 @@ return declare(SimpleQuery, {
 		newCollection.data = this.data.slice(start || 0, end || Infinity);
 		return newCollection;
 	},
-	materialize: function(){
+	fetch: function(){
 		if(!this.hasOwnProperty('data')){
 			this.data = this.queryer(this.data);
 		}
