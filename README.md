@@ -17,6 +17,7 @@ The dstore package includes several store implementations that can be used for t
 * Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
 * Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
 * Observable - This a mixin store that adds will track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
+* RqlServer, RqlClient - Mixins for adding RQL querying capabilities to stores.
 
 # Store API
 
@@ -230,6 +231,15 @@ Here is an example of a schema that employs getters and setters
             }
         }
     }
+
+# Resource Query Language
+
+[Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a consistent query language suitable for both client and server-delegated queries. The dstore packages includes mixins for adding RQL support to stores.
+
+* RqlServer - This adds support for converting basic object filters, sort parameters, and range requests to URLs with RQL queries to send to the server. This can be used as a mixin with the `dstore/Rest` store.
+* RqlClient - This adds support for interpreting RQL queries provided as a filter argument, for filtering, ordering, and manipulating in-memory data sets, using the RQL query engine.
+
+Make sure you have installed/included the [rql](https://github.com/persvr/rql) package if you are using either of these mixins.
 
 # Adapters
 
