@@ -131,7 +131,7 @@ Method | Description
 `property(name)` | This returns a property object instance for the given name.
 `validate()` | This will validate the object, determining if there are any errors on the object.
 `save()` | This will save the object, validating and then storing the object in the store.
-`remove()` This will delete the object from the object store.
+`remove()` | This will delete the object from the object store.
 
 ## Property Objects
 
@@ -240,6 +240,26 @@ Here is an example of a schema that employs getters and setters
 * RqlClient - This adds support for interpreting RQL queries provided as a filter argument, for filtering, ordering, and manipulating in-memory data sets, using the RQL query engine.
 
 Make sure you have installed/included the [rql](https://github.com/persvr/rql) package if you are using either of these mixins.
+
+# Included Stores
+
+All the stores can be instantiated with an options argument to the constructor, to provide properties to be copied to the store.
+
+## Memory
+
+The Memory store is a basic client-side in-memory object store, that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor, or by calling `store.setData(data)`.
+
+## Request
+
+This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be define with the `target` property.
+
+## Rest
+
+This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications trigger HTTP requests to the server, using the corresponding RESTful HTTP methods.
+
+## Store
+
+This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances.
 
 # Adapters
 

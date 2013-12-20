@@ -114,7 +114,7 @@ return declare(SimpleQuery, {
 		if(id in index){
 			data.splice(index[id], 1);
 			// now we have to reindex
-			this.setData(data);
+			this._reindex(data);
 			this.emit('remove', {id: id});
 			return true;
 		}
@@ -133,6 +133,11 @@ return declare(SimpleQuery, {
 			this.idProperty = data.identifier || this.idProperty;
 			data = data.items;
 		}
+		this._reindex(data);
+		this.emit('refresh', {target: data});
+	},
+
+	_reindex: function(data){
 		this.fullData = data;
 		this.index = {};
 		var prototype = this.model.prototype;
