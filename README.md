@@ -270,7 +270,7 @@ The `dstore/legacy/StoreAdapter` module allows a `dstore` object store to be use
 Combine the `StoreAdapter` mixin with a `dstore` class to create a new class.
 ```js
 require([
-    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/StoreAdapter`
+    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/StoreAdapter'
 ], function(declare, Memory, StoreAdapter) {
     var AdaptedMemory = declare([Memory, StoreAdapter]);
 });
@@ -278,7 +278,7 @@ require([
 Create an adapted version of an existing `dstore` object store by calling `StoreAdapter.adapt()`.
 ```js
 require([
-    'dstore/legacy/StoreAdapter`
+    'dstore/legacy/StoreAdapter'
 ], function(StoreAdapter) {
     var adaptedStore = StoreAdapter.adapt(store);
 });
@@ -299,7 +299,7 @@ The `dstore/legacy/DstoreAdapter` module allows a dstore object store to be used
 Combine the `DstoreAdapter` mixin with a dstore object store class to create a new class.
 ```js
 require([
-    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/DstoreAdapter`
+    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/DstoreAdapter'
 ], function(declare, Memory, DstoreAdapter) {
     var AdaptedMemory = declare([Memory, DstoreAdapter]);
 });
@@ -307,7 +307,7 @@ require([
 Create an adapted version of an existing dstore object store by calling `DstoreAdapter.adapt()`.
 ```js
 require([
-    'dstore/legacy/DstoreAdapter`
+    'dstore/legacy/DstoreAdapter'
 ], function(DstoreAdapter) {
     var adaptedStore = DstoreAdapter.adapt(store);
 });
