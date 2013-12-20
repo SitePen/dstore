@@ -46,7 +46,7 @@ Filters the collection, returning a new subset collection
 
 Sorts the current collection, modifying the array in place.
 
-#### `sort(highestSortOrder, nextSortOrder...)
+#### `sort(highestSortOrder, nextSortOrder...)`
 
 This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort({property:'lastName'}, {property: 'firstName'})` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
 
@@ -56,7 +56,7 @@ Retrieves a range of objects from the collection, returning a new collection wit
 
 #### `forEach(callback, thisObject)`
 
-Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns.
+Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns. If this is executed asynchronously, a promise will be returned to indicate the completion.
 
 #### `map(callback, thisObject)`
 
@@ -73,10 +73,6 @@ Type | Description
 `remove` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
 `refresh` | This indicates that the entire collection has changed, and the user interface should iterate over the collection again to retrieve the latest list of objects.
 
-#### `then(callback, [errorHandler])`
-
-This registers a callback for when the collection has been retrieved or 'fetchd', if the query is asynchronous. This is an optional method, and may not be present for synchronous collections.
-
 #### `fetch()`
 
 Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed through an iterative method (like `forEach`, `filter`, or `map`). Calling `fetch()` will force the data to be retrieved, returning an array, or a promise to an array.
@@ -87,7 +83,7 @@ This method will create a new collection that will be tracked and updated as the
 
 ## Store
 
-This is an abstract API that data provider implementations conform to. This file defines methods signatures and intentionally leaves all the methods unimplemented. Every method and property is optional, and is only needed if the functionality it provides is required. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for query() which already defines an async return value).
+A store is an extension of a collection and is an entity that not only contains a set of objects, and but provides an interface for identifying, adding, modifying, removing, and querying data. Below is the definition of the store interface. Every method and property is optional, and is only needed if the functionality it provides is required. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for query() which already defines an async return value).
 
 In addition to the methods and properties inherited from `Store.Collection`, the `Store` API also exposes the following properties and methods.
 
@@ -97,7 +93,6 @@ Property | Description
 -------- | -----------
 `idProperty` | If the store has a single primary key, this indicates the property to use as the identity property. The values of this property should be unique.  Defaults to "id".
 `model` | This is the model class to use for all the data objects that originate from this store. By default this will be set to the class from `dstore/Model`. However, you can create your own model classes (and schemas), and assign them to a store. All object that come from the store will have their prototype set such that they will be instances of the model.
-
 
 ### Method Summary
 
@@ -109,7 +104,7 @@ Method | Description
 `add(object, [directives])` | Creates an object, throws an error if the object already exists
 `remove(id)` | Deletes an object by its identity
 `transaction()` | Starts a new transaction.
-`create()` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object.
+`create(properties)` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object.
 `getChildren(parent)` | Retrieves the children of an object.
 `getMetadata(object)` | Returns any metadata about the object. This may include attribution, cache directives, history, or version information.
 
@@ -148,7 +143,7 @@ Method | Description
 `receive(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
-`validate()` | Called to validate the current property value.
+`validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the errors property be set, if any errors were found in the validation process.
 
 Property | Description
 ------ | -----------
@@ -188,7 +183,7 @@ You can also define your own methods, to override the normal validation, access,
 
 Method | Description
 ------ | -----------
-`validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed.
+`validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
 `coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
 `is(value)` | This method can be called by a setter to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
 `setter(value)` | By defining this method, you can define your own setter, with custom behavior for handling attempts to change a property.
