@@ -98,7 +98,16 @@ Method | Description
 
 In addition to handling collections of items, dstore also provides robust data modeling capabilities for managing individual objects themselves. dstore provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes.
 
-By default, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model. The default data model is `dstore/Model`. Since objects are instances of this model, they all inherit the following properties:
+By default, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model. The default data model is `dstore/Model`. Since objects are instances of this model, they all inherit the following properties and methods:
+
+### Property Summary
+
+Property | Description
+-------- | -----------
+`schema` | The schema is an object that with property definitions that define various metadata about the instance objects' properties.
+`additionalProperties` | This indicates whether or not to allow additional properties outside of those defined by the schema. This defaults to true.
+`validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
+
 
 Method | Description
 ------ | -----------
@@ -120,12 +129,15 @@ Method | Description
 `receive(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
+`validate()` | Called to validate the current property value.
 
 Property | Description
 ------ | -----------
 `type` | This indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This indicates whether a (non-empty) value is required for this property.
 `errors` | This is an array of errors from the last validation of this property. This may be null to indicate no errors.
+`parent` | This is the parent object for the property
+`name` | This is the name of the property
 
 To get a property object from an data object, we simply call the property method:
 
@@ -141,6 +153,61 @@ Once we have the property object, we can access meta-data, watch, and modify thi
 	});
 	nameProperty.put("Mark");
 	object.name -> "Mark"
+
+## Schema
+
+A data model is largely defined through the schema. The model object has a `schema` property to define the schema object and the schema object has properties with definitions that correspond to the properties of model instances that they describe. Each property's value is a property definition. A property definition can be a simple string, defining the primitive type to be accepted, or it can be a property definition object. The property definition can have the following properties and/or methods:
+
+Property | Description
+------ | -----------
+`type` | This indicates the primitive type of the property value (string, number, boolean, or object).
+`required` | This indicates whether a (non-empty) value is required for this property.
+
+The property definition is as the basis for the property object instances for each model instance's properties. If the property definition object is an instance of `dstore/Property`, it will be used as the direct prototype for the instance property objects. If not, the property definition will be used to construct a `dstore/Property` instance, (properties are copied over), to use as the prototype of the instance property objects.
+
+You can also define your own methods, to override the normal validation, access, and modification functionality of properties, by subclassing `dstore/Property` or directly defining methods in the property definition. The following methods can be defined or overriden:
+
+Method | Description
+------ | -----------
+`validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed.
+`coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
+`is(value)` | This method can be called by a setter to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
+`setter(value)` | By defining this method, you can define your own setter, with custom behavior for handling attempts to change a property.
+`getter()` | By defining this method, you can define customer behavior for retrieving the value of a property.
+
+Here is an example of creating a model using a schema:
+
+    MyModel = declare(Model, {
+        schema: {
+            firstName: 'string', // simple definition
+            lastName: {
+                type: 'string',
+                required: true
+            }
+        }
+    })
+
+### Getters and Setters
+
+Getters and setters can be defined on the property definition. A getter will be called when a property is accessed, and should return the value that should be returned from the property access. The setter will be called with the value that is has been requested for the new property value, and it can actually set the property value on the parent object by calling `this.is(value)`. Getters and setters may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this.parent`.
+
+Here is an example of a schema that employs getters and setters
+
+    schema: {
+        firstName: 'string'
+        lastName: 'string'
+        fullName: {
+            getter: function(){
+                return this.parent.get('firstName') + ' ' +
+                    this.parent.get('lastName');
+            },
+            setter: function(value){
+                var parts = value.split(' ');
+                this.parent.set('firstName', parts[0]);
+                this.parent.set('lastName', parts[1]);
+            }
+        }
+    }
 
 # Adapters
 

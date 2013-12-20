@@ -260,15 +260,15 @@ define([
 				if (property.coerce) {
 					value = property.coerce(value);
 				}
+				if (property.errors) {
+					// first clear the errors
+					property.set('errors', undefined);
+				}
 				if (property.setter) {
 					// use the setter
 					property.setter(value);
 				} else if (hasOwnPropertyInstance) {
 					// if the property instance exists, use this to do the set
-					if (property.errors) {
-						// first clear the errors
-						property.set('errors', null);
-					}
 					property.is(value);
 				} else {
 					this[key] = value;

@@ -23,8 +23,8 @@ define([
 			}
 
 			q = new rql.Query(q);
-			// it is our responsibility to prepend '?' (and coerce the query to a string)
-			return this.inherited(arguments, ['?' + q, options]);
+			// it is not our responsibility to prepend '?' (but we should coerce the query to a string)
+			return this.inherited(arguments, ['' + q, options]);
 		}
 	});
 });
