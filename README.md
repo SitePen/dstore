@@ -8,6 +8,16 @@ The dstore package is a data infrastructure framework, providing the tools for m
 * Model - A Model is an object, a set of properties, or name value pairs.
 * Property - A Property is an object representing a particular property on a Model object, facilitating access to, modification of, and monitoring of the value of a property.
 
+# Included Stores
+
+The dstore package includes several store implementations that can be used for the needs of different applications. These include:
+
+* Memory - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
+* Rest - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
+* Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
+* Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
+* Observable - This a mixin store that adds will track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
+
 # Store API
 
 This is a description of the `dstore/api/Store` API.
@@ -53,6 +63,15 @@ Iterates over the query results.  Note that this may executed asynchronously. Th
 Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
 
 #### `on(type, listener)`
+
+This allows you to define a lister for events that take place on the collection or parent store. When an event takes place, the listener will be called with an event object as the single argument. The following event types are defined:
+
+Type | Description
+-------- | -----------
+`add` | This indicates that a new object was added to the store. The new object is available on the `target` property.
+`update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
+`remove` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
+`refresh` | This indicates that the entire collection has changed, and the user interface should iterate over the collection again to retrieve the latest list of objects.
 
 #### `then(callback, [errorHandler])`
 
@@ -185,7 +204,15 @@ Here is an example of creating a model using a schema:
                 required: true
             }
         }
-    })
+    });
+
+We can then define our model as the model to be used for a store:
+
+    myStore = new Rest({
+        model: MyModel
+    });
+
+It is important to note that each store should have its own distinct model class.
 
 ### Getters and Setters
 
