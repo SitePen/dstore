@@ -233,7 +233,8 @@ define([
 
 		'multiple sort fields - ascend + ascend': function(){
 
-			var results = store.sort('field2').sort('field1').map(passThrough);
+			var results = store.sort({property: 'field1'},
+				{property: 'field2'}).fetch();
 			/**
 			 * {id: 1, field1: 'one', field2: '1'},
 			 * {id: 2, field1: 'one', field2: '2'},
@@ -253,7 +254,8 @@ define([
 
 		'multiple sort fields - ascend + descend': function(){
 
-			var results = store.sort('field2', true).sort('field1', false).map(passThrough);
+			var results = store.sort({property: 'field1', descending: false},
+				{property: 'field2', descending: true}).map(passThrough);
 			assert.strictEqual(results.length, 6, 'Length is 6');
 			/**
 			 * {id: 6, field1: 'one', field2: '3'}
@@ -273,7 +275,8 @@ define([
 
 		'multiple sort fields - descend + ascend': function(){
 
-			var results = store.sort('field2', false).sort('field1', true).map(passThrough);
+			var results = store.sort({property: 'field1', descending: true},
+				{property: 'field2', descending: false}).map(passThrough);
 			/**
 			 * {id: 5, field1: 'two', field2: '3'},
 			 * {id: 4, field1: 'two', field2: '4'},
@@ -293,7 +296,8 @@ define([
 
 		'multiple sort fields - descend + descend': function(){
 
-			var results = store.sort('field2', true).sort('field1', true).map(passThrough);
+			var results = store.sort({property: 'field1',descending: true},
+				{property: 'field2', descending: true}).map(passThrough);
 			/**
 			 * {id: 3, field1: 'two', field2: '5'},
 			 * {id: 4, field1: 'two', field2: '4'},

@@ -52,16 +52,18 @@ return declare(Store, {
 	},
 
 	sort: function(property, descending){
-		if(typeof property === 'object'){
-			descending = property.descending;
-			property = property.property;
-		}
+		var store = this;
 		return this._addQueryer(this.inherited(arguments), function(data){
+			var sorted = store.sorted;
 			data.sort(typeof property == "function" ? property : function(a, b){
-				var aValue = a[property];
-				var bValue = b[property];
-				if (aValue != bValue){
-					return !!descending == (aValue == null || aValue > bValue) ? -1 : 1;
+				for(var i = 0; i < sorted.length; i++){
+					var property = sorted[i].property;
+					var descending = sorted[i].descending;
+					var aValue = a[property];
+					var bValue = b[property];
+					if (aValue != bValue){
+						return !!descending == (aValue == null || aValue > bValue) ? -1 : 1;
+					}
 				}
 				return 0;
 			});
