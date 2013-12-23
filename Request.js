@@ -101,6 +101,12 @@ return declare(Store, {
 		return this.target + query;
 	},
 
+	sort: function(){
+		// clear the old data
+		delete this.data;
+		return this.inherited(arguments);
+	},
+	
 	range: function(start, end){
 		return lang.mixin(this.inherited(arguments),{
 			headers: lang.delegate(this.headers,{
