@@ -13,7 +13,10 @@ define([
 				q = q.replace(/^\?/, '');
 				// the RQL engine doesn't understand our sort, start, and count properties,
 				// so we apply those constraints after running the RQL query
-				return this._newResults(arrayEngine.query(q, options));
+				var subCollection = this._createSubCollection({
+					filtered: (this.filtered || []).concat(q)
+				});
+				return this._addQueryer(subCollection, arrayEngine.query(q, options));
 			}
 			return this.inherited(arguments);
 		}
