@@ -1,9 +1,9 @@
 define([
 	'rql/js-array',
 	'dojo/_base/declare',
-	'./SimpleQuery'
-], function (arrayEngine, declare, SimpleQuery) {
-	return declare([SimpleQuery], {
+	'./Memory'
+], function (arrayEngine, declare, Memory) {
+	return declare([Memory], {
 		// summary:
 		// 		This is a mixin or base class that allows us to use RQL for querying/filtering for client stores
 
@@ -16,7 +16,10 @@ define([
 				var subCollection = this._createSubCollection({
 					filtered: (this.filtered || []).concat(q)
 				});
-				return this._addQueryer(subCollection, arrayEngine.query(q, options));
+				this._addQueryer(subCollection, arrayEngine.query(q, options));
+				var data = subCollection.data = subCollection.queryer(this.data);
+				subCollection.total = data.length;
+				return subCollection;
 			}
 			return this.inherited(arguments);
 		}
