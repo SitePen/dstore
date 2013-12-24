@@ -42,7 +42,7 @@ return declare(null, {
 					for(var i = 0; i < data.length; i++){
 						subCachingStore.put(data[i]);
 					}
-					return results.data;
+					return data;
 				});
 				
 			return lang.delegate(this, {

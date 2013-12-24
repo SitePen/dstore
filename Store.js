@@ -35,18 +35,6 @@ return declare(Evented, {
 			return data;
 		});
 	},
-	then: function(callback, errback){
-		// summary:
-		//		Retrieve the collection as an array, passed to the callback, and returning a promise
-		var data = this.data;
-		if(this.data.then){
-			return this.data.then(callback, errback);
-		}else{
-			var deferred = new Deferred();
-			deferred.resolve(this.data);
-			return deferred.then(callback);
-		}
-	},
 	on: function(type, listener){
 		//	summary:
 		//		Listen for data changes
