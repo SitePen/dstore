@@ -186,9 +186,7 @@ Method | Description
 ------ | -----------
 `validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
 `coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
-`is(value)` | This method can be called by a setter to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
-`setter(value)` | By defining this method, you can define your own setter, with custom behavior for handling attempts to change a property.
-`getter()` | By defining this method, you can define customer behavior for retrieving the value of a property.
+`is(value)` | This method can be called by a put() method to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
 
 Here is an example of creating a model using a schema:
 
@@ -210,27 +208,34 @@ We can then define our model as the model to be used for a store:
 
 It is important to note that each store should have its own distinct model class.
 
-### Getters and Setters
+### Computed Property Values
 
-Getters and setters can be defined on the property definition. A getter will be called when a property is accessed, and should return the value that should be returned from the property access. The setter will be called with the value that is has been requested for the new property value, and it can actually set the property value on the parent object by calling `this.is(value)`. Getters and setters may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this.parent`.
+A computed property may be defined on the schema, by using the the `dstore/ComputedProperty` class. With a computed property, we can define a `getValue()` method to compute the value to be returned when a property is accessed. We can also define a `dependsOn` array to specify which properties we depend on. When the property is accessed or any of the dependent property changes, the property's value will be recomputed. The `getValue` is called with the values of the properties defined in the `dependsOn` array.
 
-Here is an example of a schema that employs getters and setters
+With a computed property, we may also want to write a custom put() method if we wish to support assignments to the computed property. A put() method may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this.parent`.
+
+Here is an example of a schema that with a computed property, `fullName`:
 
     schema: {
         firstName: 'string'
         lastName: 'string'
         fullName: {
-            getter: function(){
-                return this.parent.get('firstName') + ' ' +
-                    this.parent.get('lastName');
+            dependsOn: ['firstName', 'lastName'],
+            getValue: function (firstName, lastName) {
+                // compute the full name
+                return firstName + ' ' + lastName;
             },
-            setter: function(value){
+            put: function(value){
+                // support setting this property as well
                 var parts = value.split(' ');
                 this.parent.set('firstName', parts[0]);
                 this.parent.set('lastName', parts[1]);
             }
         }
     }
+
+
+Note, that traditional getters and setters can effectively be defined by creating get() and put() methods on the property definition. However, this is generally eschewed in dstore, since the primary use cases for getters and setters are better served by defining validation or creating a computed property.
 
 # Resource Query Language
 
