@@ -42,6 +42,7 @@ define([
 	var ObservablePartialDataStore = declare([ Store, Observable, SimpleQuery ], (function(){
 		var proto = {
 			constructor: function(kwArgs){
+				delete this.data;
 				this.backingMemoryStore = new MyStore(kwArgs);
 			}
 		};
@@ -66,10 +67,9 @@ define([
 			this.backingMemoryStore = this.backingMemoryStore.track(function(){});
 			return this.inherited(arguments);
 		};
-		// Make backing store events go to both
+		// Make events go to backing store
 		proto.on = function(type, listener){
-			this.backingMemoryStore.on(type, listener);
-			return this.inherited(arguments);
+			return this.backingMemoryStore.on(type, listener);
 		};
 
 		proto.forEach = function(callback, thisObj){
@@ -129,7 +129,9 @@ define([
 			expectedChanges.push({
 				type: "update",
 				target: two,
-				previousIndex: 0
+				info: {
+					previousIndex: 0
+				}
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
 			secondObserverUpdate.remove();
@@ -141,7 +143,9 @@ define([
 			expectedChanges.push({
 				type: "update",
 				target: one,
-				index: 2
+				info: {
+					index: 2
+				}
 			});
 			assert.strictEqual(tracked.data.length, 3);
 			// shouldn't be added
@@ -151,7 +155,8 @@ define([
 
 			expectedChanges.push({
 				type: "add",
-				target: six
+				target: six,
+				info: {}
 				// no index because the addition doesn't have a place in the filtered results
 			});
 
@@ -163,13 +168,17 @@ define([
 			expectedChanges.push({
 				type: "add",
 				target: seven,
-				index: 3
+				info: {
+					index: 3
+				}
 			});
 			store.remove(3);
 			expectedChanges.push({
 				type: "remove",
 				id: 3,
-				previousIndex: 0
+				info: {
+					previousIndex: 0
+				}
 			});
 			assert.strictEqual(tracked.data.length, 3);
 
@@ -264,7 +273,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", target: item.id, info: { } });
+			assertObservationIs({ type: "remove", id: item.id, info: { } });
 
 			// An update sorted to the beginning of a range and the data has a known index
 			bigObserved.range(0, 25).forEach(function(){});
@@ -280,7 +289,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", target: item.id, info: { previousIndex: 0 } });
+			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 0 } });
 
 			// An update sorted to the end of a range has an indeterminate index
 			item = bigStore.get(24);
@@ -295,7 +304,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", target: item.id, info: { } });
+			assertObservationIs({ type: "remove", id: item.id, info: { } });
 
 			// The previous update with an undetermined index resulted in an item dropping from the first range
 			// and the first range being reduced to 0-23 instead of 0-24.
@@ -316,7 +325,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", target: item.id, info: { previousIndex: 24 } });
+			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 24 } });
 
 			// An update sorted to the beginning of a range but adjacent to another range has a known index
 			item = bigStore.get(25);
@@ -331,7 +340,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", target: item.id, info: { previousIndex: 24 } });
+			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 24 } });
 
 			// Request range at end of data
 			bigObserved.range(75, 100).forEach(function(){});

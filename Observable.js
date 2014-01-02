@@ -110,8 +110,8 @@ return declare(null, {
 		};
 
 		var ranges = [];
-		if(observed.data){
-			observed.data = observed.data.slice(0); // make local copy
+		if(this.hasOwnProperty('data')){
+			observed.data = this.data.slice(0); // make local copy
 			// Treat in-memory data as one range to allow a single code path for all stores
 			registerRange(ranges, 0, observed.data.length);
 
@@ -151,7 +151,7 @@ return declare(null, {
 		function notify(type, target, event){
 			revision++;
 			event = lang.delegate(event);
-			when(observed.data || observed.partialData, function(resultsArray){
+			when(observed.hasOwnProperty('data') ? observed.data : observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
 				var i, j, l, range;
@@ -161,6 +161,7 @@ return declare(null, {
 
 				var targetId = type === "remove" ? target : store.getIdentity(target);
 				// TODO: Should we explicitly define undefined `index` and `previousIndex` properties so the API is more apparent when inspecting in the debugger?
+				var info = event.info = {};
 
 				// TODO: `total` should probably be updated when items are added and removed from the data
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
@@ -171,7 +172,7 @@ return declare(null, {
 						for(j = range.start, l = j + range.count; j < l; ++j){
 							var object = resultsArray[j];
 							if(store.getIdentity(object) == targetId){
-								removedFrom = event.previousIndex = j;
+								removedFrom = info.previousIndex = j;
 								removalRangeIndex = i;
 								resultsArray.splice(removedFrom, 1);
 
@@ -249,7 +250,7 @@ return declare(null, {
 					}
 
 					if(insertedInto > -1){
-						event.index = insertedInto;
+						info.index = insertedInto;
 						resultsArray.splice(insertedInto, 0, target);
 
 						// TODO: NOTE: This is broken for a non-zero store.defaultIndex because, when an insertion range is not found, this code assumes insertion at the beginning.
