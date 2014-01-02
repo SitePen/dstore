@@ -21,36 +21,28 @@ define([
 	}
 
 	var hasOwnPropertyInstance;
-	function getTentativePropertyInstance(object, key, createInstanceIfProperty) {
-		// this is a tentative property instance for doing validation and property
-		// setting. It may be feasible to keep this temporary, especially if no
-		// errors need to be set on it.
-		var property = hasOwnPropertyInstance = object.hasOwnProperty('_properties') && object._properties[key];
+
+	function validate(object, key) {
+		// this performs validation, delegating validation, and coercion
+		// handling to the property definitions objects.
+		var hasOwnPropertyInstance,
+			property = hasOwnPropertyInstance = object.hasOwnProperty('_properties') && object._properties[key];
 		if (!property) {
 			// or, if we don't our own property object, we inherit from the schema
 			property = getSchemaProperty(object, key);
-			if (property && createInstanceIfProperty in property) {
+			if (property && property.validate) {
 				property = lang.delegate(property, {
 					parent: object,
 					key: key
 				});
 			}
 		}
-		return property;
-	}
-
-	function validate(object, key) {
-		// this performs validation, delegating validation, and coercion
-		// handling to the property definitions objects.
-		var result, 
-			property = getTentativePropertyInstance(object, key, 'validate'),
-			thisHasOwnPropertyInstance = hasOwnPropertyInstance;
 
 		if (property && property.validate) {
 			return when(property.validate(), function(isValid) {
 				if (!isValid) {
 					// errors, so don't perform set
-					if (!thisHasOwnPropertyInstance) {
+					if (!hasOwnPropertyInstance) {
 						// but we do need to store our property
 						// instance if we don't have our own
 						(object.hasOwnProperty('_properties') ?
@@ -213,11 +205,11 @@ define([
 				property = this.property(key);
 				property.receive(listener, true);
 			}
-			// now we need to see if there is a getter involved, or if we can just
+			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
 			definition = property || this.schema[key];
-			if (definition && definition.getter) {
-				// we do have a getter, need to create at least a temporary property
+			if (definition && definition.get && (definition.get !== simplePropertyGet || definition.hasCustomGet)) {
+				// we have custom get functionality, need to create at least a temporary property
 				// instance
 				property = property || (this.hasOwnProperty('_properties') && this._properties[key]);
 				if (!property) {
@@ -228,7 +220,7 @@ define([
 					});
 				}
 				// let the property instance handle retrieving the value
-				return property.get(listener);
+				return property.get();
 			}
 			// default action of just retrieving the property value
 			return this[key];
@@ -242,38 +234,37 @@ define([
 
 			if (typeof key === 'object') {
 				for (var i in key) {
-					var value = key[i];
+					value = key[i];
 					if (key.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
 						this.set(i, value);
 					}
 				}
 				return;
 			}
-			if (!(key in this.schema) && !this.additionalProperties) {
+			var definition = this.schema[key];
+			if (!definition && !this.additionalProperties) {
 				// TODO: Shouldn't this throw an error instead of just giving a warning?
 				return console.warn('Schema does not contain a definition for', key);
 			}
-			var property = value && typeof value === 'object' ?
-				(hasOwnPropertyInstance = this.property(key)) :
-				getTentativePropertyInstance(this, key, 'setter');
+			var property = this.hasOwnProperty('_properties') && this._properties[key];
+			if (!property &&
+					// we need a real property instance if it is an object or if we have a custom put method
+					((value && typeof value === 'object') ||
+						(definition && definition.put !== simplePropertyPut))) {
+				property = this.property(key);
+			}
 			if (property) {
-				if (property.coerce) {
-					value = property.coerce(value);
-				}
-				if (property.errors) {
-					// first clear the errors
-					property.set('errors', undefined);
-				}
-				if (property.setter) {
-					// use the setter
-					property.setter(value);
-				} else if (hasOwnPropertyInstance) {
-					// if the property instance exists, use this to do the set
-					property.is(value);
-				} else {
-					this[key] = value;
-				}
+				// if the property instance exists, use this to do the set
+				property.put(value);
 			} else {
+				if (definition && definition.coerce) {
+					// if a schema definition exists, and has a coerce method,
+					// we can use without creating a new instance
+					if (definition.coerce) {
+						value = definition.coerce(value);
+					}
+				}
+				// we can shortcut right to just setting the object property
 				this[key] = value;
 			}
 			if (this.validateOnSet){
@@ -399,19 +390,23 @@ define([
 			}
 			var property = this;
 			// add to the listeners
-			var handle = aspect.after(this, 'onchange', function (value) {
-				if (property.getter) {
-					value = property.getter();
-				}
+			var handle = this._addListener(function (value) {
 				var result = listener(value);
 				if (reactive) {
 					reactive.is(result);
 				}
-			}, true);
+			});
 			if (reactive) {
 				reactive.remove = handle.remove;
+				return reactive;
+			} else {
+				return handle;
 			}
-			return reactive;
+		},
+
+		_addListener: function (listener) {
+			// add a listener for the property change event
+			return aspect.after(this, 'onchange', listener, true);
 		},
 
 		get: function (/*string?*/ key, /*function?*/ listener) {
@@ -420,11 +415,8 @@ define([
 				return this.inherited(arguments);
 			}
 			if (key) {
-				// just a listener was provided
+				// a listener was provided
 				this.receive(key, true);
-			}
-			if (this.getter) {
-				return this.getter();
 			}
 			return this._get();
 		},
@@ -436,7 +428,7 @@ define([
 		_has: function () {
 			return this.hasOwnProperty('value');
 		},
-		_set: function (value) {
+		_put: function (value) {
 			this.value = value;
 		},
 
@@ -449,7 +441,7 @@ define([
 			if (oldValue === undefined) {
 				oldValue = this._get();
 			}
-			this._set(value);
+			this._put(value);
 			this.onchange && this.onchange(value, oldValue);
 			// if this was set to an object (or was an object), we need to notify
 			// update all the sub-property objects, so they can possibly notify their
@@ -481,6 +473,14 @@ define([
 		put: function (/*any*/ value) {
 			//	summary:
 			//		Request to change the main value of this reactive object
+			value = this.coerce(value);
+			if (this.errors) {
+				// clear any errors
+				this.set('errors', undefined);
+			}
+			if (this.validateOnSet) {
+				this.validate();
+			}
 			this.is(value);
 		},
 
@@ -490,20 +490,22 @@ define([
 			//		for converting it to the appropriate type for storing on the object.
 
 			var type = this.type;
-			if (type === 'string') {
-				value = '' + value;
-			}
-			else if (type === 'number') {
-				value = +value;
-			}
-			else if (type === 'boolean') {
-				// value && value.length check is because dijit/_FormMixin
-				// returns an array for checkboxes; an array coerces to true,
-				// but an empty array should be set as false
-				value = (value === 'false' || value === '0' || value instanceof Array && !value.length) ? false : !!value;
-			}
-			else if (typeof type === 'function' && !(value instanceof type)) {
+			if (type) {
+				if (type === 'string') {
+					value = '' + value;
+				}
+				else if (type === 'number') {
+					value = +value;
+				}
+				else if (type === 'boolean') {
+					// value && value.length check is because dijit/_FormMixin
+					// returns an array for checkboxes; an array coerces to true,
+					// but an empty array should be set as false
+					value = (value === 'false' || value === '0' || value instanceof Array && !value.length) ? false : !!value;
+				}
+				else if (typeof type === 'function' && !(value instanceof type)) {
 					value = new type(value);
+				}
 			}
 			return value;
 		},
@@ -559,21 +561,17 @@ define([
 			declare.safeMixin(this, options);
 		},
 
-		put: function (value) {
-			// override to set the value on the parent property
-			return this.parent.set(this.name, value);
-		},
-
 		_get: function () {
 			return this.parent[this.name];
 		},
 		_has: function () {
-			return this.getter || (this.name in this.parent);
+			return this.name in this.parent;
 		},
-		_set: function (value) {
+		_put: function (value) {
 			this.parent[this.name] = value;
 		}
-
 	});
+	var simplePropertyGet = Property.prototype.get;
+	var simplePropertyPut = Property.prototype.put;
 	return Model;
 });

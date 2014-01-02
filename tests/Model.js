@@ -5,8 +5,9 @@ define([
 	'dojo/Deferred',
 	'../Model',
 	'../Property',
+	'../ComputedProperty',
 	'../Memory'
-], function (registerSuite, assert, declare, Deferred, Model, Property, Memory) {
+], function (registerSuite, assert, declare, Deferred, Model, Property, ComputedProperty, Memory) {
 	function createPopulatedModel() {
 		var model = new (declare(Model, {
 			schema: {
@@ -15,12 +16,12 @@ define([
 				boolean: 'boolean',
 				object: Object,
 				array: Array,
-				any: null,
+				any: {},
 				accessor: {
-					setter: function (value) {
+					put: function (value) {
 						return this.parent._accessor = value;
 					},
-					getter: function () {
+					get: function () {
 						return this.parent._accessor;
 					}
 				}
@@ -196,7 +197,49 @@ define([
 			assert.isTrue(model.validate());
 			assert.strictEqual(lastReceivedErrors, null);
 		},
-
+		'computed properties': function () {
+			var model = new (declare(Model, {
+				schema: {
+					firstName: 'string',
+					lastName: 'string',
+					name: new ComputedProperty({
+						dependsOn: ['firstName', 'lastName'],
+						getValue: function(firstName, lastName){
+							return firstName + ' ' + lastName;
+						},
+						put: function(value){
+							var parts = value.split(' ');
+							this.parent.set('firstName', parts[0]);
+							this.parent.set('lastName', parts[1]);
+						}
+					})
+				},
+				validateOnSet: false
+			}))({
+				firstName: 'John',
+				lastName: 'Doe'
+			});
+			var updatedName;
+			assert.strictEqual(model.get('name', function (name) {
+				updatedName = name;
+			}), 'John Doe');
+			model.set('firstName', 'Jane');
+			assert.strictEqual(updatedName, 'Jane Doe');
+			var updatedName2;
+			var handle = model.property('name').receive(function(name){
+				updatedName2 = name;
+			});
+			assert.strictEqual(updatedName2, 'Jane Doe');
+			model.set('lastName', 'Smith');
+			assert.strictEqual(updatedName, 'Jane Smith');
+			assert.strictEqual(updatedName2, 'Jane Smith');
+			handle.remove();
+			model.set('name', 'Adam Smith');
+			assert.strictEqual(updatedName, 'Adam Smith');
+			assert.strictEqual(model.get('firstName'), 'Adam');
+			assert.strictEqual(model.get('lastName'), 'Smith');
+			assert.strictEqual(updatedName2, 'Jane Smith');
+		},
 		'#save async': function () {
 			var model = new Model();
 
