@@ -287,6 +287,7 @@ define([
 			var object = this,
 				isValid = true,
 				remaining = 1,
+				errors = [],
 				deferredValidation,
 				fieldMap;
 
@@ -315,16 +316,28 @@ define([
 							// increment remaining
 							remaining++;
 							// wait for the result
-							result.then(finishedValidator, function (error) {
-								// not valid, if there is an error
-								finishedValidator();
-							});
+							(function (key) {
+								result.then(function (isValid){
+									if (!isValid) {
+										notValid(key);
+									}
+									finishedValidator(isValid);
+								}, function (error) {
+									// not valid, if there is an error
+									errors.push(error);
+									finishedValidator();
+								});
+							})(key);
 						}
 					} else {
 						// a falsy value, no longer valid
-						isValid = false;
+						notValid(key);
 					}
 				}
+			}
+			function notValid(key) {
+				isValid = false;
+				errors.push.apply(errors, object.property(key).errors);
 			}
 			function finishedValidator (isThisValid) {
 				// called for completion of each validator, decrements remaining
@@ -333,6 +346,7 @@ define([
 					isValid = false;
 				}
 				if (!remaining) {
+					object.set('errors', isValid ? null : errors);
 					deferredValidation.resolve(isValid);
 				}
 			}
@@ -341,6 +355,7 @@ define([
 				finishedValidator(true);
 				return deferredValidation.promise;
 			}
+			object.set('errors', isValid ? null : errors);
 			// it wasn't async, so we just return the synchronous result
 			return isValid;
 		},
@@ -515,7 +530,7 @@ define([
 			//		This method is responsible for validating this particular
 			//		property instance.
 			var errors = [], value = this.get();
-			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) : 
+			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) :
 				(this.type === typeof value))) {
 				errors.push(value + ' is not a ' + this.type);
 			}
@@ -538,7 +553,7 @@ define([
 	}
 	// An object that will be hidden from JSON serialization
 	var Hidden = function() {
-	}
+	};
 	Hidden.prototype.toJSON = toJSONHidden;
 
 	var Property = Model.Property = declare(Reactive, {
