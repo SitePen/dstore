@@ -234,8 +234,26 @@ Here is an example of a schema that with a computed property, `fullName`:
         }
     }
 
-
 Note, that traditional getters and setters can effectively be defined by creating get() and put() methods on the property definition. However, this is generally eschewed in dstore, since the primary use cases for getters and setters are better served by defining validation or creating a computed property.
+
+### Extensions
+
+#### JSON Schema Based Models
+
+Models can be defined through JSON Schema (v3). A Model based on a JSON Schema can be created with the `dstore/extensions/jsonSchema` module. For example:
+
+    define(['dstore/extensions/jsonSchema', ...], function (jsonSchema, ...) {
+        var myStore = new Memory({
+            model: jsonSchema({
+                properties: {
+                    someProperty: {
+                        type: "number",
+                        minimum: 0,
+                        maximum: 10
+                    },
+                }
+            })
+        })
 
 # Resource Query Language
 
@@ -265,6 +283,10 @@ This store extends the Request store, to add functionality for adding, updating,
 ## Store
 
 This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances.
+
+## Validating
+
+This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation TypeError will be thrown, with an `errors` property that lists any validation errors.
 
 # Adapters
 
