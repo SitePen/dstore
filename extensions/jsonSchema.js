@@ -1,4 +1,5 @@
-define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/validate'], function(Property, Model, declare, jsonSchemaValidator){
+define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/validate'],
+		function(Property, Model, declare, jsonSchemaValidator){
 	// module:
 	//		dstore/extensions/JsonSchema
 	//	summary:
