@@ -2,26 +2,36 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/lang',
+	'dojo/_base/declare',
 	'dstore/Memory',
-	'dstore/extensions/validatingSchema'
-], function(registerSuite, assert, lang, Memory, validatingSchema){
+	'dstore/Validating',
+	'dstore/extensions/jsonSchema'
+], function(registerSuite, assert, lang, declare, Memory, Validating, jsonSchema){
 
-	var validatingMemory = validatingSchema(new Memory(), {
-		properties: {
-			prime: Boolean,
-			even: Boolean,
-			name: {
-				type: 'string',
-				required: true
+	var validatingMemory = (declare([Memory, Validating]))({
+		model: jsonSchema({
+			properties: {
+				prime: {
+					type: 'boolean'
+				},
+				number: {
+					type: 'number',
+					minimum: 1,
+					maximum: 10
+				},
+				name: {
+					type: 'string',
+					required: true
+				}
 			}
-		}
+		})
 	});
 	validatingMemory.setData([
-		{id: 1, name: 'one', prime: false, mappedTo: 'E'},
-		{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
-		{id: 3, name: 'three', prime: true, mappedTo: 'C'},
-		{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
-		{id: 5, name: 'five', prime: true, mappedTo: 'A'}
+		{id: 1, name: 'one', number: 1, prime: false, mappedTo: 'E'},
+		{id: 2, name: 'two', number: 2, prime: true, mappedTo: 'D'},
+		{id: 3, name: 'three', number: 3, prime: true, mappedTo: 'C'},
+		{id: 4, name: 'four', number: 4, even: true, prime: false, mappedTo: null},
+		{id: 5, name: 'five', number: 5, prime: true, mappedTo: 'A'}
 	]);
 
 	registerSuite({
@@ -34,6 +44,7 @@ define([
 		'put update': function(){
 			var four = lang.delegate(validatingMemory.get(4));
 			four.prime = 'not a boolean';
+			four.number = 34;
 			four.name = 33;
 			var validationError;
 			try{
@@ -43,46 +54,20 @@ define([
 			}
 			assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
 				{'property': 'prime', 'message': 'string value found, but a boolean is required'},
+				{'property': 'number', 'message': 'must have a maximum value of 10'},
 				{'property': 'name', 'message': 'number value found, but a string is required'}
 			]));
-		},
-
-		'model rejection': function(){
-			var four = validatingMemory.get(4);
-			var validationErrors = [];
-			try{
-				four.set('prime', 'not a boolean');
-			}catch(e){
-				validationErrors.push(e.errors[0]);
-			}
-			try{
-				four.set('name', 33);
-			}catch(e){
-				validationErrors.push(e.errors[0]);
-			}
-			assert.strictEqual(JSON.stringify(validationErrors), JSON.stringify([
-				{'property': '', 'message': 'string value found, but a boolean is required'},
-				{'property': '', 'message': 'number value found, but a string is required'}
-			]));
-			assert.strictEqual(four.get('prime'), false);
-			assert.strictEqual(four.get('name'), 'four');
 		},
 
 		'model errors': function(){
 			validatingMemory.allowErrors = true;
 			var four = validatingMemory.get(4);
-			four.set('prime', 'not a boolean');
-			four.set('name', 33);
-			assert.strictEqual(JSON.stringify(four.get('primeError')), JSON.stringify([
-				{'property': '', 'message': 'string value found, but a boolean is required'}
+			four.set('number', 33);
+			assert.strictEqual(JSON.stringify(four.property('number').get('errors')), JSON.stringify([
+				{'property': 'number', 'message': 'must have a maximum value of 10'}
 			]));
-			assert.strictEqual(JSON.stringify(four.get('nameError')), JSON.stringify([
-				{'property': '', 'message': 'number value found, but a string is required'}
-			]));
-			four.set('prime', false);
-			four.set('name', 'four');
-			assert.strictEqual(four.get('primeError'), null);
-			assert.strictEqual(four.get('nameError'), null);
+			four.set('number', 3);
+			assert.strictEqual(four.property('number').get('errors'), null);
 		}
 	});
 });

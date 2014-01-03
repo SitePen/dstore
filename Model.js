@@ -75,16 +75,6 @@ define([
 		//		defined in the schema.
 		additionalProperties: true,
 
-		//	validateOnSet: boolean
-		//		Indicates whether or not to perform validation when properties
-		//		are modified.
-		//		This can provided immediate feedback and on the success
-		//		or failure of a property modification. And Invalid property 
-		//		values will be rejected. However, if you are
-		//		using asynchronous validation, invalid property values will still
-		//		be set.
-		validateOnSet: true,
-
 		//	scenario: string
 		//		The scenario that is used to determine which validators should
 		//		apply to this model. There are two standard values for scenario,
@@ -215,7 +205,7 @@ define([
 				if (!property) {
 					// no property instance, so we create a temporary one
 					property = lang.delegate(getSchemaProperty(this, key), {
-						key: key,
+						name: key,
 						parent: this
 					});
 				}
@@ -266,9 +256,10 @@ define([
 				}
 				// we can shortcut right to just setting the object property
 				this[key] = value;
-			}
-			if (this.validateOnSet){
-				validate(this, key);
+				// check to see if we should do validation
+				if (definition && definition.validateOnSet !== false){
+					validate(this, key);
+				}
 			}
 
 			return value;
@@ -336,6 +327,7 @@ define([
 				}
 			}
 			function notValid(key) {
+				// found an error, mark valid state and record the errors
 				isValid = false;
 				errors.push.apply(errors, object.property(key).errors);
 			}
@@ -419,6 +411,16 @@ define([
 			}
 		},
 
+		//	validateOnSet: boolean
+		//		Indicates whether or not to perform validation when properties
+		//		are modified.
+		//		This can provided immediate feedback and on the success
+		//		or failure of a property modification. And Invalid property 
+		//		values will be rejected. However, if you are
+		//		using asynchronous validation, invalid property values will still
+		//		be set.
+		validateOnSet: true,
+
 		_addListener: function (listener) {
 			// add a listener for the property change event
 			return aspect.after(this, 'onchange', listener, true);
@@ -491,12 +493,12 @@ define([
 			value = this.coerce(value);
 			if (this.errors) {
 				// clear any errors
-				this.set('errors', undefined);
+				this.set('errors', null);
 			}
+			this.is(value);
 			if (this.validateOnSet) {
 				this.validate();
 			}
-			this.is(value);
 		},
 
 		coerce: function (value) {

@@ -1,59 +1,43 @@
-define(['dojo/_base/lang', 'dojo/Stateful', 'dojo/_base/declare'], function(lang, Stateful, declare){
+define(['./Store', 'dojo/when', 'dojo/_base/declare'], function(Store, when, declare){
 	// module:
-	//		dstore/validating
+	//		dstore/Validating
 	//	summary:
-	//		This module provides store wrapper that add support for validation of objects
-	//		and property changes
-	function throwValidationError(validation){
-		// create and throw a validation error
-		var validationError = new TypeError("Invalid property");
-		validationError.errors = validation.errors;
-		throw validationError;
-	}	
-	var validating = function(/*Store*/ store, options){
-		var validatingStore = lang.delegate(store);
-		validatingStore.model = declare([(store.model && store.model.get) ? 
-				store.model : // if a model is provided, we extend it, otherwise we default to extending Stateful 
-				Stateful], {
-			set: function(name, value){
-				// create our own set that does property validation
-				var validation = options.validateProperty(name, value);
-				if(!validation || validation.valid){
-					// in a valid state
-					if(validatingStore.allowErrors){
-						// if we are in allowErrors mode, reset the errors property
-						this.inherited(arguments, [name + 'Error', null]);
-					}
-				}else{
-					if(validatingStore.allowErrors){
-						// make the error visible through the errors property 
-						this.inherited(arguments, [name + 'Error', validation.errors]);
-					}else{
-						// not acceptable, will throw
-						throwValidationError(validation);
-					}
+	//		This module provides a store mixin that enforces validation of objects on put and add
+	return declare(Store, {
+		validate: function (object, isNew) {
+			//	summary:
+			//		Validates the given object (by making it an instance of the 
+			//		current model, and calling validate() on it)
+			//	object: Object
+			//		The object to validate
+			//	isNew: Boolean
+			//		Indicates whether or not to assume the object is new or not
+			if (!(object instanceof this.model)) {
+				object = isNew ? new this.model(object) : this.assignPrototype(object);
+			}
+			return when(object.validate(), function (isValid) {
+				if (!isValid) {
+					// create and throw a validation error
+					var validationError = new TypeError('Invalid property');
+					validationError.errors = object.errors;
+					throw validationError;
 				}
-				return this.inherited(arguments);
-			}
-		});
-		// override the put and add to do objectvalidation
-		validatingStore.put = function(object){
-			var validation = options.validate(object);
-			if(validation && !validation.valid){
-				throwValidationError(validation);
-			}
-			// validates, do default action
-			return store.put.apply(validatingStore, arguments);
-		};
-		validatingStore.add = function(object){
-			var validation = options.validate(object);
-			if(validation && !validation.valid){
-				throwValidationError(validation);
-			}
-			// validates, do default action
-			return store.put.apply(validatingStore, arguments);
-		};
-		return validatingStore;
-	};
-	return validating;
+				return object; // return the object since it has had its prototype assigned
+			});
+		},
+		put: function (object, options) {
+			var inheritedPut = this.getInherited(arguments);
+			var store = this;
+			return when(this.validate(object), function (object) {
+				return inheritedPut.call(store, object, options);
+			});
+		},
+		add: function (object, options) {
+			var inheritedAdd = this.getInherited(arguments);
+			var store = this;
+			return when(this.validate(object, true), function (object) {
+				return inheritedAdd.call(store, object, options);
+			});
+		},
+	});
 });
