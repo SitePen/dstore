@@ -204,13 +204,22 @@ define([
 					lastName: 'string',
 					name: new ComputedProperty({
 						dependsOn: ['firstName', 'lastName'],
-						getValue: function(firstName, lastName){
+						getValue: function (firstName, lastName) {
 							return firstName + ' ' + lastName;
 						},
-						put: function(value){
+						put: function (value) {
 							var parts = value.split(' ');
 							this.parent.set('firstName', parts[0]);
 							this.parent.set('lastName', parts[1]);
+						}
+					}),
+					birthDate: new ComputedProperty({
+						dependsOn: ['birthDate'],
+						getValue: function (birthDate) {
+							return new Date(birthDate);
+						},
+						put: function (value) {
+							this.is(value.getTime());
 						}
 					})
 				},
@@ -239,6 +248,15 @@ define([
 			assert.strictEqual(model.get('firstName'), 'Adam');
 			assert.strictEqual(model.get('lastName'), 'Smith');
 			assert.strictEqual(updatedName2, 'Jane Smith');
+			var then = new Date(1000000);
+			model.set('birthDate', then);
+			assert.strictEqual(model.get('birthDate').getTime(), 1000000);
+			var updatedDate, now = new Date();
+			model.get('birthDate', function (newDate) {
+				updatedDate = newDate;
+			});
+			model.set('birthDate', now);
+			assert.strictEqual(updatedDate.getTime(), now.getTime());
 		},
 		'#save async': function () {
 			var model = new Model();

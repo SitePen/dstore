@@ -113,8 +113,9 @@ define([
 				var scenario = object.scenario;
 				// suppress any non-date from serialization output
 				object.prepareForSerialization();
-				return object._store && when(object._store[scenario === 'insert' ? 'add' : 'put'](object), function(returned) {
-					if (typeof returned == 'object') {
+				return object._store && when(object._store[scenario === 'insert' ? 'add' : 'put'](object),
+						function(returned) {
+					if (typeof returned === 'object') {
 						// receive any updates from the server
 						object.set(returned);
 					}

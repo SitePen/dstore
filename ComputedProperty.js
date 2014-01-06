@@ -21,26 +21,34 @@ define([
 			var args = [];
 			var parentObject = this.parent;
 			for (var i = 0; i < dependsOn.length; i++) {
-				args[i] = parentObject.get(dependsOn[i]);
+				if (dependsOn[i] === this.name) {
+					// don't go back through for our own property
+					args[i] = parentObject[this.name];
+				} else {
+					args[i] = parentObject.get(dependsOn[i]);
+				}
 			}
 			return this.value = this.getValue.apply(this, args);
 		},
 		_has: function () {
 			return true;
 		},
-		_put: function () {
-			throw new Error('No put() method defined for changing computed property value');
-		},
 		_addListener: function (listener) {
 			// TODO: do we want to wait on computed properties that return a promise?
 			var property = this;
 			var dependsOn = this.dependsOn;
 			var handles = [];
+			function changeListener() {
+				// recompute the value of this property. we could use when() here to wait on promised results
+				listener(property._get());
+			}
 			for (var i = 0; i < dependsOn.length; i++) {
-				handles.push(this.parent.property(dependsOn[i]).receive(function () {
-					// recompute the value of this property. we could use when() here to wait on promised results
-					listener(property._get());
-				}, true));
+				if (dependsOn[i] === this.name) {
+					// setup the default listener for our own name
+					handles.push(this.inherited(arguments, [changeListener]));
+				} else {
+					handles.push(this.parent.property(dependsOn[i]).receive(changeListener, true));
+				}
 			}
 			return {
 				remove: function() {
