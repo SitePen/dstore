@@ -83,15 +83,15 @@ return declare(null, {
 	},
 	sort: function(property, descending){
 		return this._tryCacheForResults('sort',
-			JSON.stringify(property) + (descending ? '-' : '+'), arguments); 
+			JSON.stringify(property) + (descending ? '-' : '+'), arguments);
 	},
 	filter: function(query){
 		return this._tryCacheForResults('filter',
-			JSON.stringify(query), arguments); 
+			JSON.stringify(query), arguments);
 	},
 	range: function(start, end){
 		return this._tryCacheForResults('range',
-			start + '-' + end, arguments); 
+			start + '-' + end, arguments);
 	},
 	forEach: function(callback, thisObject){
 		var cachingStore = this.cachingStore;
