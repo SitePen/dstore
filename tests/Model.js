@@ -131,9 +131,9 @@ define([
 			assertReceived('1234', function (callback) {
 				model.property('string').receive(callback);
 			});
-			assertReceived(true, function (callback) {
+			assertReceived(false, function (callback) {
 				model.get('boolean', callback);
-				model.set('boolean', true);
+				model.set('boolean', false);
 			});
 			var number = model.property('number');
 			number.put(0);
@@ -151,7 +151,7 @@ define([
 
 			model.prepareForSerialization();
 			assert.strictEqual(JSON.stringify(model), '{"string":"1234","number":5,' +
-				'"boolean":true,"object":{"foo":"foo"},"array":["foo","bar"],"any":"foo","_accessor":"foo"}');
+				'"boolean":false,"object":{"foo":"foo"},"array":["foo","bar"],"any":"foo","_accessor":"foo"}');
 		},
 
 		'property definitions': function () {
@@ -231,6 +231,57 @@ define([
 			});
 			assert.strictEqual(updatedName2, 'Jane Doe');
 			model.set('lastName', 'Smith');
+			assert.strictEqual(updatedName, 'Jane Smith');
+			assert.strictEqual(updatedName2, 'Jane Smith');
+			handle.remove();
+			model.set('name', 'Adam Smith');
+			assert.strictEqual(updatedName, 'Adam Smith');
+			assert.strictEqual(model.get('firstName'), 'Adam');
+			assert.strictEqual(model.get('lastName'), 'Smith');
+			assert.strictEqual(updatedName2, 'Jane Smith');
+		},
+		'#bindTo': function () {
+			var target = new Model();
+			var model = new (declare(Model, {
+				schema: {
+					firstName: 'string',
+					lastName: 'string',
+					name: new ComputedProperty({
+						dependsOn: ['firstName', 'lastName'],
+						getValue: function(firstName, lastName){
+							return firstName + ' ' + lastName;
+						},
+						put: function(value){
+							var parts = value.split(' ');
+							this.parent.set('firstName', parts[0]);
+							this.parent.set('lastName', parts[1]);
+						}
+					})
+				},
+				validateOnSet: false
+			}))({
+				firstName: 'John',
+				lastName: 'Doe'
+			});
+			model.property('firstName').bindTo(target.property('firstName'));
+			model.property('name').bindTo(target.property('name'));
+			assert.strictEqual(target.get('firstName'), 'John');
+			var updatedName;
+			assert.strictEqual(target.get('name', function (name) {
+				updatedName = name;
+			}), 'John Doe');
+			model.set('firstName', 'Jane');
+			assert.strictEqual(target.get('name'), 'Jane Doe');
+			assert.strictEqual(target.get('firstName'), 'Jane');
+			assert.strictEqual(updatedName, 'Jane Doe');
+			var updatedName2;
+			var handle = target.property('name').receive(function(name){
+				updatedName2 = name;
+			});
+			assert.strictEqual(updatedName2, 'Jane Doe');
+			target.property('lastName').bindTo(model.property('lastName'));
+			model.property('lastName').bindTo(target.property('lastName'));
+			target.set('lastName', 'Smith');
 			assert.strictEqual(updatedName, 'Jane Smith');
 			assert.strictEqual(updatedName2, 'Jane Smith');
 			handle.remove();

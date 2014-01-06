@@ -458,6 +458,10 @@ define([
 			if (oldValue === undefined) {
 				oldValue = this._get();
 			}
+			if (oldValue === value) {
+				// we don't need to do anything if nothing has changed
+				return;
+			}
 			this._put(value);
 			this.onchange && this.onchange(value, oldValue);
 			// if this was set to an object (or was an object), we need to notify
@@ -545,8 +549,40 @@ define([
 				return true;
 			}
 			this.set('errors', errors);
-		}
+		},
 
+		bindTo: function (target) {
+			//	summary:
+			//		This method will synchronous any changes to this property to 
+			//		a target reactive/property object. Note that we can only
+			//		bind to one other reactive object, setting this will replace
+			//		any previous target.
+			//	target:
+			//		This is a reactive/property object that will be updated (through a put())
+			//		whenever this property changes
+
+			var hadTarget = this.target;
+			this.target = target;
+			var source = this;
+			if (!hadTarget) {
+				// start listening, to send changes to the target.
+				// in the future we may optimize this so it doesn't have to go through
+				// a listener, but this will require special consideration of subclasses
+				// that lazily compute property values (when a listener is added)
+				source.receive(function (value) {
+					source.target && source.target.put(value);
+				});
+			}
+			return {
+				remove: function () {
+					// make sure we are the current target
+					if (target === source.target) {
+						// null it out
+						source.target = null;
+					}
+				}
+			};
+		}
 	});
 	// a function that returns a function, to stop JSON serialization of an
 	// object
