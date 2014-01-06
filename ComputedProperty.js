@@ -17,7 +17,7 @@ define([
 		// indicate that we have custom get functionality
 		hasCustomGet: true,
 		_get: function () {
-			var dependsOn = this.dependsOn;
+			var dependsOn = this.dependsOn || [this.name];
 			var args = [];
 			var parentObject = this.parent;
 			for (var i = 0; i < dependsOn.length; i++) {
@@ -35,8 +35,9 @@ define([
 		},
 		_addListener: function (listener) {
 			// TODO: do we want to wait on computed properties that return a promise?
+			// TODO: Do we want to queue changes so we don't double compute when multiple dependencies change?
 			var property = this;
-			var dependsOn = this.dependsOn;
+			var dependsOn = this.dependsOn || [this.name];
 			var handles = [];
 			function changeListener() {
 				// recompute the value of this property. we could use when() here to wait on promised results
