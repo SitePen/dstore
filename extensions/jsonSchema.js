@@ -11,7 +11,7 @@ define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/valida
 		var properties = jsonSchema.properties || jsonSchema;
 
 		// the validation function, this can be used for all the properties
-		function validate() {
+		function checkForErrors() {
 			var value = this.get();
 			var key = this.name;
 			// get the current value and test it against the property's definition
@@ -24,15 +24,14 @@ define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/valida
 					errors[i].property = key;
 				}
 			}
-			this.set('errors', validation.valid ? null : errors);
-			return validation.valid;
+			return errors;
 		}
 
 		// iterate through the schema properties, creating property validators
 		for (var i in properties) {
 			var jsDefinition = properties[i];
 			var definition = modelSchema[i] = new Property({
-				validate: validate
+				checkForErrors: checkForErrors
 			});
 			if (typeof jsDefinition.type === 'string') {
 				// copy the type so it can be used for coercion

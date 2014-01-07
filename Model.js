@@ -339,7 +339,7 @@ define([
 					isValid = false;
 				}
 				if (!remaining) {
-					object.set('errors', isValid ? null : errors);
+					object.set('errors', isValid ? undefined : errors);
 					deferredValidation.resolve(isValid);
 				}
 			}
@@ -348,7 +348,7 @@ define([
 				finishedValidator(true);
 				return deferredValidation.promise;
 			}
-			object.set('errors', isValid ? null : errors);
+			object.set('errors', isValid ? undefined : errors);
 			// it wasn't async, so we just return the synchronous result
 			return isValid;
 		},
@@ -494,7 +494,7 @@ define([
 			value = this.coerce(value);
 			if (this.errors) {
 				// clear any errors
-				this.set('errors', null);
+				this.set('errors', undefined);
 			}
 			this.is(value);
 			if (this.validateOnSet) {
@@ -528,11 +528,14 @@ define([
 			return value;
 		},
 
-		validate: function () {
+		checkForErrors: function (value) {
 			//	summary:
-			//		This method is responsible for validating this particular
-			//		property instance.
-			var errors = [], value = this.get();
+			//		This method can be implemented to simplify validation.
+			//		This is called with the value, and this method can return
+			//		an array of any errors that were found.
+			//	value:
+			//		This is the value to validate.
+			var errors = [];
 			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) :
 				(this.type === typeof value))) {
 				errors.push(value + ' is not a ' + this.type);
@@ -541,11 +544,23 @@ define([
 			if(this.required && !(value != null && value !== '')) {
 				errors.push('required, and it was not present');
 			}
-			if (!errors.length) {
-				this.set('errors', null);
-				return true;
-			}
-			this.set('errors', errors);
+			return errors;
+		},
+
+		validate: function () {
+			//	summary:
+			//		This method is responsible for validating this particular
+			//		property instance.
+			var property = this;
+			return when(this.checkForErrors(this.get()), function (errors) {
+				if (!errors || !errors.length) {
+					// no errors, valid value
+					property.set('errors', undefined);
+					return true;
+				}
+				property.set('errors', errors);
+				return false;
+			});
 		}
 
 	});

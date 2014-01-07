@@ -67,7 +67,7 @@ define([
 				{'property': 'number', 'message': 'must have a maximum value of 10'}
 			]));
 			four.set('number', 3);
-			assert.strictEqual(four.property('number').get('errors'), null);
+			assert.strictEqual(four.property('number').get('errors'), undefined);
 		}
 	});
 });

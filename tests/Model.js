@@ -162,13 +162,11 @@ define([
 						required: true
 					}),
 					range: {
-						validate: function() {
+						checkForErrors: function() {
 							var value = this.get();
-							if (value > 10 && value < 20) {
-								this.set('errors', null);
-								return true;
+							if (value < 10 || value > 20) {
+								return ['not in range'];
 							}
-							this.set('errors', ['not in range']);
 						}
 					},
 					hasDefault: {
@@ -195,7 +193,7 @@ define([
 			model.set('requiredString', 'a string');
 			model.set('range', 15);
 			assert.isTrue(model.validate());
-			assert.strictEqual(lastReceivedErrors, null);
+			assert.strictEqual(lastReceivedErrors, undefined);
 		},
 		'computed properties': function () {
 			var model = new (declare(Model, {
@@ -267,15 +265,14 @@ define([
 
 		'#validate async': function () {
 			var asyncStringIsBValidator = {
-				validate: function () {
+				checkForErrors: function () {
 					var dfd = new Deferred();
 					var model = this;
 					setTimeout(function () {
 						if (model.value !== 'b') {
-							model.set('errors', ['it is not b'])
-							dfd.resolve(false);
+							dfd.resolve(['it is not b']);
 						} else {
-							dfd.resolve(true);
+							dfd.resolve();
 						}
 					}, 0);
 
