@@ -5,7 +5,7 @@ define([
 	'../Store'
 ], function(declare, lang, when, Store){
 // module:
-//		An adapter mixin that makes a dstore store object look like a dstore object.
+//		An adapter mixin that makes a legacy Dojo object store look like a dstore object.
 
 	var StoreAdapter = declare(Store, {
 

@@ -4,7 +4,7 @@ define([
 	/*=====, "dstore/api/Store" =====*/
 ], function(declare, lang /*=====, Store =====*/){
 // module:
-//		An adapter mixin that makes a dstore store object look like a dstore object.
+//		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
 	// No base class, but for purposes of documentation, the base class is dstore/api/Store
 	var base = null;
