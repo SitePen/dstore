@@ -83,6 +83,10 @@ define([
 		scenario: 'update',
 
 		constructor: function (options) {
+			this.init(options);
+		},
+
+		init: function (options) {
 			// if we are being constructed, we default to the insert scenario
 			this.scenario = 'insert';
 			// copy in the default values
@@ -532,7 +536,9 @@ define([
 			//	summary:
 			//		This method can be implemented to simplify validation.
 			//		This is called with the value, and this method can return
-			//		an array of any errors that were found.
+			//		an array of any errors that were found. It is recommended
+			//		that you call this.inherited(arguments) to permit any
+			//		other validators to perform validation
 			//	value:
 			//		This is the value to validate.
 			var errors = [];
@@ -562,7 +568,6 @@ define([
 				return false;
 			});
 		}
-
 	});
 	// a function that returns a function, to stop JSON serialization of an
 	// object
@@ -585,7 +590,7 @@ define([
 		//		This represents the value of this property, which can be
 		//		monitored for changes and validated
 
-		constructor: function (options) {
+		init: function (options) {
 			// handle simple definitions
 			if (typeof options === 'string' || typeof options === 'function') {
 				options = {type: options};

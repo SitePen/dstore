@@ -161,14 +161,15 @@ define([
 						type: 'string',
 						required: true
 					}),
-					range: {
-						checkForErrors: function() {
-							var value = this.get();
+					range: new Property({
+						checkForErrors: function(value) {
+							var errors = this.inherited(arguments);
 							if (value < 10 || value > 20) {
-								return ['not in range'];
+								errors.push('not in range');
 							}
+							return errors;
 						}
-					},
+					}),
 					hasDefault: {
 						default: 'beginning value'
 					}
@@ -264,27 +265,24 @@ define([
 		},
 
 		'#validate async': function () {
-			var asyncStringIsBValidator = {
-				checkForErrors: function () {
+			var AsyncStringIsBValidator = declare(Property, {
+				checkForErrors: function (value) {
+					var errors = this.inherited(arguments);
 					var dfd = new Deferred();
-					var model = this;
 					setTimeout(function () {
-						if (model.value !== 'b') {
-							dfd.resolve(['it is not b']);
-						} else {
-							dfd.resolve();
+						if (value !== 'b') {
+							errors.push('it is not b');
 						}
+						dfd.resolve(errors);
 					}, 0);
-
 					return dfd.promise;
 				}
-			};
+			});
 
 			var model = new (declare(Model, {
 				schema: {
-					test: new Property(asyncStringIsBValidator),
-					test2: new Property({
-						validator: asyncStringIsBValidator.validator,
+					test: new AsyncStringIsBValidator(),
+					test2: new AsyncStringIsBValidator({
 						default: 'b'
 					})
 				}
