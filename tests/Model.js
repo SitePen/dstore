@@ -265,7 +265,7 @@ define([
 		},
 
 		'#validate async': function () {
-			var AsyncStringIsBValidator = declare(Property, {
+			var AsyncStringIsBValidator = declare(null, {
 				checkForErrors: function (value) {
 					var errors = this.inherited(arguments);
 					var dfd = new Deferred();
@@ -278,11 +278,13 @@ define([
 					return dfd.promise;
 				}
 			});
+			var PropertyAsyncStringIsBValidator = declare([Property, AsyncStringIsBValidator]);
+
 
 			var model = new (declare(Model, {
 				schema: {
-					test: new AsyncStringIsBValidator(),
-					test2: new AsyncStringIsBValidator({
+					test: new PropertyAsyncStringIsBValidator(),
+					test2: new PropertyAsyncStringIsBValidator({
 						default: 'b'
 					})
 				}
