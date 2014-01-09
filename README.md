@@ -237,6 +237,36 @@ Here is an example of a schema that with a computed property, `fullName`:
 
 Note, that traditional getters and setters can effectively be defined by creating get() and put() methods on the property definition. However, this is generally eschewed in dstore, since the primary use cases for getters and setters are better served by defining validation or creating a computed property.
 
+### Validators
+
+Validators are `Property` subclasses with more advanced validation capabilities. dstore includes several validators, that can be used, extended, or referenced for creating your own custom validators. To use a validator, we use it as the constructor for a property definition. For example, we could use the StringValidator to enforce the size of a string and acceptable characters:
+
+    schema: {
+        username: new StringValidator({
+            // must be at least 4 characters
+            minimumLength: 4,
+            // and max of 20 characters
+            maximumLength: 20,
+            // and only letters or numbers
+            pattern: /^\w+$/
+        })
+    }
+
+dstore include several pre-built validators:
+* StringValidator - Enforces string length and patterns.
+* NumericValidator - Enforces numbers and ranges of numbers.
+* UniqueValidator - Enforces uniqueness of values, testing against a store.
+
+We can also combine validators, using declare to mixin additional validators. For example, if we wanted to use the StringValidator in combination with the UniqueValidator, we could write:
+
+    schema: {
+        username: new (declare([StringValidator, UniqueValidator]))({
+            pattern: /^\w+$/,
+            // the store to do lookups for uniqueness
+            uniqueStore: userStore
+        })
+    }
+
 ### Extensions
 
 #### JSON Schema Based Models
