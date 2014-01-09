@@ -532,6 +532,14 @@ define([
 			return value;
 		},
 
+		addError: function (error) {
+			//	summary:
+			//		Add an error to the current list of validation errors
+			//	error: String
+			//		Error to add
+			this.set('errors', (this.errors || []).concat([error]));
+		},
+
 		checkForErrors: function (value) {
 			//	summary:
 			//		This method can be implemented to simplify validation.
@@ -541,7 +549,7 @@ define([
 			//		other validators to perform validation
 			//	value:
 			//		This is the value to validate.
-			var errors = [];
+			var errors = this.errors = [];
 			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) :
 				(this.type === typeof value))) {
 				errors.push(value + ' is not a ' + this.type);

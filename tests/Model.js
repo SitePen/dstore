@@ -195,6 +195,8 @@ define([
 			model.set('range', 15);
 			assert.isTrue(model.validate());
 			assert.strictEqual(lastReceivedErrors, undefined);
+			model.property('range').addError('manually added error');
+			assert.deepEqual(lastReceivedErrors, ['manually added error']);
 		},
 		'computed properties': function () {
 			var model = new (declare(Model, {

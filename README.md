@@ -145,6 +145,7 @@ Method | Description
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the errors property be set, if any errors were found in the validation process.
+`addError(error)` | This can be called to add an error to the list of validation errors for a property
 
 Property | Description
 ------ | -----------
