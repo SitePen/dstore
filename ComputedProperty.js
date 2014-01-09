@@ -48,7 +48,7 @@ define([
 					// setup the default listener for our own name
 					handles.push(this.inherited(arguments, [changeListener]));
 				} else {
-					handles.push(this._parent.property(dependsOn[i]).receive(changeListener, true));
+					handles.push(this._parent.property(dependsOn[i]).observe(changeListener, true));
 				}
 			}
 			return {

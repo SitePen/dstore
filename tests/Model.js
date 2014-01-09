@@ -110,7 +110,7 @@ define([
 				model.property('string', callback);
 			});
 			assertReceived('foo', function (callback) {
-				model.property('string').receive(callback);
+				model.property('string').observe(callback);
 			});
 			assertReceived('foo', function (callback) {
 				callback(model.property('string').get());
@@ -119,17 +119,17 @@ define([
 				model.property('number', callback);
 			});
 			assertReceived(true, function (callback) {
-				model.property('boolean').receive(callback);
+				model.property('boolean').observe(callback);
 			});
 			// reset the model, so don't have to listeners
 			model = createPopulatedModel();
 			var string = model.property('string');
 			string.put(1234);
 			assertReceived('1234', function (callback) {
-				string.receive(callback);
+				string.observe(callback);
 			});
 			assertReceived('1234', function (callback) {
-				model.property('string').receive(callback);
+				model.property('string').observe(callback);
 			});
 			assertReceived(true, function (callback) {
 				model.get('boolean', callback);
@@ -138,7 +138,7 @@ define([
 			var number = model.property('number');
 			number.put(0);
 			var order = [];
-			number.receive(function (newValue) {
+			number.observe(function (newValue) {
 				order.push(newValue);
 			});
 			number.put(1);
@@ -234,7 +234,7 @@ define([
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
 			var updatedName2;
-			var handle = model.property('name').receive(function(name){
+			var handle = model.property('name').observe(function(name){
 				updatedName2 = name;
 			});
 			assert.strictEqual(updatedName2, 'Jane Doe');
@@ -322,10 +322,10 @@ define([
 				order = [];
 
 			model.set('number', 1);
-			var doubled = model.property('number').receive(function (value) {
+			var doubled = model.property('number').observe(function (value) {
 				return value * 2;
 			});
-			doubled.receive(function (value) {
+			doubled.observe(function (value) {
 				order.push(value);
 			});
 			model.set('number', 2);
@@ -342,7 +342,7 @@ define([
 				number: 1
 			});
 			var number = model.property('object', 'number');
-			number.receive(function (value) {
+			number.observe(function (value) {
 				order.push(value);
 			});
 			model.set('object', {

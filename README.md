@@ -141,7 +141,7 @@ Property objects actually extend the data model class, so the methods listed for
 
 Method | Description
 ------ | -----------
-`receive(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
+`observe(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the errors property be set, if any errors were found in the validation process.
@@ -163,7 +163,7 @@ Once we have the property object, we can access meta-data, watch, and modify thi
 
 
 	nameProperty.required -> is it required?
-	nameProperty.receive(function(newValue){
+	nameProperty.observe(function(newValue){
 		// called with original value and each change
 	});
 	nameProperty.put("Mark");
@@ -212,7 +212,7 @@ It is important to note that each store should have its own distinct model class
 
 A computed property may be defined on the schema, by using the the `dstore/ComputedProperty` class. With a computed property, we can define a `getValue()` method to compute the value to be returned when a property is accessed. We can also define a `dependsOn` array to specify which properties we depend on. When the property is accessed or any of the dependent property changes, the property's value will be recomputed. The `getValue` is called with the values of the properties defined in the `dependsOn` array.
 
-With a computed property, we may also want to write a custom put() method if we wish to support assignments to the computed property. A put() method may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this.parent`.
+With a computed property, we may also want to write a custom put() method if we wish to support assignments to the computed property. A put() method may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this._parent`.
 
 Here is an example of a schema that with a computed property, `fullName`:
 
@@ -228,8 +228,8 @@ Here is an example of a schema that with a computed property, `fullName`:
             put: function(value){
                 // support setting this property as well
                 var parts = value.split(' ');
-                this.parent.set('firstName', parts[0]);
-                this.parent.set('lastName', parts[1]);
+                this._parent.set('firstName', parts[0]);
+                this._parent.set('lastName', parts[1]);
             }
         }
     }

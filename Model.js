@@ -178,7 +178,7 @@ define([
 			if (listener) {
 				if (typeof listener === 'function') {
 					// if we have the second arg, setup the listener
-					return property.receive(listener);
+					return property.observe(listener);
 				} else {
 					// go to the next property, if there are multiple
 					return property.property.apply(property, slice.call(arguments, 1));
@@ -198,7 +198,7 @@ define([
 				// if there is a listener, we need to register it on the actual
 				// property instance object
 				property = this.property(key);
-				property.receive(listener, true);
+				property.observe(listener, true);
 			}
 			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
@@ -381,7 +381,7 @@ define([
 		//	summary:
 		//		A reactive object is a data model that can contain a value,
 		//		and notify listeners of changes to that value, in the future.
-		receive: function (/*function*/ listener, /*boolean?*/ justGetFuture) {
+		observe: function (/*function*/ listener, /*boolean?*/ justGetFuture) {
 			//	summary:
 			//		Registers a listener for any changes in the current value
 			//	listener:
@@ -438,7 +438,7 @@ define([
 			}
 			if (key) {
 				// a listener was provided
-				this.receive(key, true);
+				this.observe(key, true);
 			}
 			return this._get();
 		},
