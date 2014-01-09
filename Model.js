@@ -150,15 +150,13 @@ define([
 			return new Error('Validation error');
 		},
 
-		property: function (/*string+*/ key, /*function?*/ listener) {
+		property: function (/*string+*/ key, nextKey) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
 			//		of the provided property. You can optionally provide a listener, to be notified
 			//		of the value of this property, now and in the future
 			//	key:
 			//		The name of the property to retrieve
-			//	listener:
-			//		
 
 			// create the properties object, if it doesn't exist yet
 			var properties = this.hasOwnProperty('_properties') ? this._properties :
@@ -175,31 +173,21 @@ define([
 				// give it the correct initial value
 				var parent = property._parent = this;
 			}
-			if (listener) {
-				if (typeof listener === 'function') {
-					// if we have the second arg, setup the listener
-					return property.observe(listener);
-				} else {
-					// go to the next property, if there are multiple
-					return property.property.apply(property, slice.call(arguments, 1));
-				}
+			if (nextKey) {
+				// go to the next property, if there are multiple
+				return property.property.apply(property, slice.call(arguments, 1));
 			}
 			return property;
 		},
 
-		get: function (/*string*/ key, /*function?*/ listener) {
+		get: function (/*string*/ key) {
+			// TODO: add listener parameter back in
 			//	summary:
 			//		Standard get() function to retrieve the current value
 			//		of a property, augmented with the ability to listen
 			//		for future changes
 
 			var property, definition = this.schema[key];
-			if (listener) {
-				// if there is a listener, we need to register it on the actual
-				// property instance object
-				property = this.property(key);
-				property.observe(listener, true);
-			}
 			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
 			definition = property || this.schema[key];
