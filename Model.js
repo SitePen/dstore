@@ -12,7 +12,7 @@ define([
 		var definition = object.schema[key];
 		if (definition !== undefined && !(definition instanceof Property)) {
 			definition = new Property(definition);
-			definition.parent = object;
+			definition._parent = object;
 		}
 		if (definition) {
 			definition.name = key;
@@ -32,7 +32,7 @@ define([
 			property = getSchemaProperty(object, key);
 			if (property && property.validate) {
 				property = lang.delegate(property, {
-					parent: object,
+					_parent: object,
 					key: key
 				});
 			}
@@ -173,7 +173,7 @@ define([
 				property = properties[key] = property ? lang.delegate(property) : new Property();
 				property.name = key;
 				// give it the correct initial value
-				var parent = property.parent = this;
+				var parent = property._parent = this;
 			}
 			if (listener) {
 				if (typeof listener === 'function') {
@@ -211,7 +211,7 @@ define([
 					// no property instance, so we create a temporary one
 					property = lang.delegate(getSchemaProperty(this, key), {
 						name: key,
-						parent: this
+						_parent: this
 					});
 				}
 				// let the property instance handle retrieving the value
@@ -600,13 +600,13 @@ define([
 		},
 
 		_get: function () {
-			return this.parent[this.name];
+			return this._parent[this.name];
 		},
 		_has: function () {
-			return this.name in this.parent;
+			return this.name in this._parent;
 		},
 		_put: function (value) {
-			this.parent[this.name] = value;
+			this._parent[this.name] = value;
 		}
 	});
 	var simplePropertyGet = Property.prototype.get;

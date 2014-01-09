@@ -19,10 +19,10 @@ define([
 				any: {},
 				accessor: {
 					put: function (value) {
-						return this.parent._accessor = value;
+						return this._parent._accessor = value;
 					},
 					get: function () {
-						return this.parent._accessor;
+						return this._parent._accessor;
 					}
 				}
 			},
@@ -208,8 +208,8 @@ define([
 						},
 						put: function (value) {
 							var parts = value.split(' ');
-							this.parent.set('firstName', parts[0]);
-							this.parent.set('lastName', parts[1]);
+							this._parent.set('firstName', parts[0]);
+							this._parent.set('lastName', parts[1]);
 						}
 					}),
 					birthDate: new ComputedProperty({
