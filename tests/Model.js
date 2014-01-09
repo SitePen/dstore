@@ -206,10 +206,10 @@ define([
 						getValue: function (firstName, lastName) {
 							return firstName + ' ' + lastName;
 						},
-						put: function (value) {
+						setValue: function (value, parent) {
 							var parts = value.split(' ');
-							this._parent.set('firstName', parts[0]);
-							this._parent.set('lastName', parts[1]);
+							parent.set('firstName', parts[0]);
+							parent.set('lastName', parts[1]);
 						}
 					}),
 					birthDate: new ComputedProperty({
@@ -217,8 +217,8 @@ define([
 						getValue: function (birthDate) {
 							return new Date(birthDate);
 						},
-						put: function (value) {
-							this.is(value.getTime());
+						setValue: function (value, parent) {
+							return parent[this.name] = value.getTime();
 						}
 					})
 				},

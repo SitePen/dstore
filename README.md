@@ -142,7 +142,7 @@ Property objects actually extend the data model class, so the methods listed for
 Method | Description
 ------ | -----------
 `observe(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
-`put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
+`put(value)` | This requests a change in the value of this property. The value may be coerced, and/or validated.
 `get(listener?)` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the errors property be set, if any errors were found in the validation process.
 
@@ -184,9 +184,9 @@ You can also define your own methods, to override the normal validation, access,
 
 Method | Description
 ------ | -----------
-`validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
+`checkForErros()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
 `coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
-`is(value)` | This method can be called by a put() method to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
+`setValue(value, parent)` | This method can be called by a put() method to set the value of the underlying property. This can be overriden to define a custom setter.
 
 Here is an example of creating a model using a schema:
 
@@ -225,11 +225,11 @@ Here is an example of a schema that with a computed property, `fullName`:
                 // compute the full name
                 return firstName + ' ' + lastName;
             },
-            put: function(value){
+            setValue: function(value, parent){
                 // support setting this property as well
                 var parts = value.split(' ');
-                this._parent.set('firstName', parts[0]);
-                this._parent.set('lastName', parts[1]);
+                parent.set('firstName', parts[0]);
+                parent.set('lastName', parts[1]);
             }
         }
     }

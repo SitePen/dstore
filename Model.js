@@ -405,7 +405,9 @@ define([
 			var handle = this._addListener(function (value) {
 				var result = listener(value);
 				if (reactive) {
-					reactive.is(result);
+					// TODO: once we have a real notification API again, call that, instead 
+					// of requesting a change
+					reactive.put(result);
 				}
 			});
 			if (reactive) {
@@ -450,60 +452,67 @@ define([
 		_has: function () {
 			return this.hasOwnProperty('value');
 		},
-		_put: function (value) {
-			this.value = value;
-		},
-
-		is: function (/*any*/ value, oldValue) {
+		setValue: function (value) {
 			//	summary:
-			//		Indicates a new value for this reactive object
-
-			// notify all the listeners of this object, that the value has changed
-			var listeners = this._listeners;
-			if (oldValue === undefined) {
-				oldValue = this._get();
-			}
-			this._put(value);
-			this.onchange && this.onchange(value, oldValue);
-			// if this was set to an object (or was an object), we need to notify
-			// update all the sub-property objects, so they can possibly notify their
-			// listeners
-			var key, property, properties = this._properties,
-				hasOldObject = oldValue && typeof oldValue === 'object',
-				hasNewObject = value && typeof value === 'object';
-			if (hasOldObject ||  hasNewObject) {
-				// we will iterate through the properties recording the changes
-				var changes = {};
-				if (hasOldObject){
-					for (key in oldValue) {
-						changes[key] = {old: oldValue[key]};
-					}
-				}
-				if (hasNewObject){
-					for (key in value) {
-						(changes[key] = changes[key] || {}).value = value[key];
-					}
-				}
-				for(key in changes){
-					// now for each change, we can notify the property object
-					var change = changes[key];
-					this.set(key, change.value, change.old);
-				}
-			}
+			//		This method is responsible for storing the value. This can
+			//		be overriden to define a custom setter
+			//	value: any
+			//		The value to be stored
+			//	parent: Object
+			//		The parent object of this propery
+			this.value = value;
 		},
 
 		put: function (/*any*/ value) {
 			//	summary:
-			//		Request to change the main value of this reactive object
+			//		Indicates a new value for this reactive object
+
+			// notify all the listeners of this object, that the value has changed
+			var oldValue = this._get();
 			value = this.coerce(value);
 			if (this.errors) {
 				// clear any errors
 				this.set('errors', undefined);
 			}
-			this.is(value);
-			if (this.validateOnSet) {
-				this.validate();
-			}
+			var property = this;
+			// call the setter and wait for it
+			return when(this.setValue(value, this._parent), function (result) {
+				if (result !== undefined) {
+					// allow the setter to change the value
+					value = result;
+				}
+				// notify listeners
+				property.onchange && property.onchange(value, oldValue);
+				// if this was set to an object (or was an object), we need to notify
+				// update all the sub-property objects, so they can possibly notify their
+				// listeners
+				var key,
+					hasOldObject = oldValue && typeof oldValue === 'object',
+					hasNewObject = value && typeof value === 'object';
+				if (hasOldObject ||  hasNewObject) {
+					// we will iterate through the properties recording the changes
+					var changes = {};
+					if (hasOldObject){
+						for (key in oldValue) {
+							changes[key] = {old: oldValue[key]};
+						}
+					}
+					if (hasNewObject){
+						for (key in value) {
+							(changes[key] = changes[key] || {}).value = value[key];
+						}
+					}
+					for(key in changes){
+						// now for each change, we can notify the property object
+						var change = changes[key];
+						property.set(key, change.value, change.old);
+					}
+				}
+				if (property.validateOnSet) {
+					property.validate();
+				}
+
+			});
 		},
 
 		coerce: function (value) {
@@ -605,8 +614,8 @@ define([
 		_has: function () {
 			return this.name in this._parent;
 		},
-		_put: function (value) {
-			this._parent[this.name] = value;
+		setValue: function (value, parent) {
+			parent[this.name] = value;
 		}
 	});
 	var simplePropertyGet = Property.prototype.get;
