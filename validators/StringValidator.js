@@ -1,27 +1,23 @@
 define([
 	'dojo/_base/declare',
-	'dojo/when',
-	'../Property',
-], function (declare, when, Property) {
+	'../Property'
+], function (declare, Property) {
 	return declare(Property, {
 		//	summary:
 		//		A validator for enforcing string values
 		checkForErrors: function (value) {
-			var property = this;
-			return when(this.inherited(arguments), function (errors) {
-				if (property.minimumLength >= value.length) {
-					errors.push(property.minimumLengthError);
-				}
-				if (property.maximumLength < value.length) {
-					errors.push(property.maximumLengthError);
-				}
-				if (property.pattern && !property.pattern.test(value)){
-					errors.push(property.patternMatchError);
-				}
-				return errors;
-			});
+			var errors = this.inherited(arguments);
+			if (this.minimumLength >= value.length) {
+				errors.push(this.minimumLengthError);
+			}
+			if (this.maximumLength < value.length) {
+				errors.push(this.maximumLengthError);
+			}
+			if (this.pattern && !this.pattern.test(value)){
+				errors.push(this.patternMatchError);
+			}
+			return errors;
 		},
-		type: 'string',
 		//	minimumLength: Number
 		//		The minimum length of the string
 		minimumLength: 0,

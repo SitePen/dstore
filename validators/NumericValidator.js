@@ -1,27 +1,23 @@
 define([
 	'dojo/_base/declare',
-	'dojo/when',
-	'../Property',
-], function (declare, when, Property) {
+	'../Property'
+], function (declare, Property) {
 	return declare(Property, {
 		//	summary:
 		//		A validator for enforcing numeric values
 		checkForErrors: function (value) {
-			var property = this;
-			return when(this.inherited(arguments), function (errors) {
-				if (isNaN(value)) {
-					errors.push(property.notANumberError);
-				}
-				if (property.minimum >= value) {
-					errors.push(property.minimumError);
-				}
-				if (property.maximum <= value) {
-					errors.push(property.maximumError);
-				}
-				return errors;
-			});
+			var errors = this.inherited(arguments);
+			if (isNaN(value)) {
+				errors.push(this.notANumberError);
+			}
+			if (this.minimum >= value) {
+				errors.push(this.minimumError);
+			}
+			if (this.maximum <= value) {
+				errors.push(this.maximumError);
+			}
+			return errors;
 		},
-		type: 'number',
 		//	minimum: Number
 		//		The minimum value for the value	
 		minimum: -Infinity,

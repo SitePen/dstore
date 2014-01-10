@@ -65,7 +65,7 @@ define([
 		var deferred;
 		var remaining = 1;
 		// start the iterator
-		iterator(function (value, key, callback) {
+		iterator(function (value, callback, key) {
 			if (value && value.then) {
 				// it is a promise, have to wait for it
 				remaining++;
@@ -75,11 +75,11 @@ define([
 				}
 				value.then(function (value){
 					// result received, call callback, and then indicate another item is done
-					doneItem(callback(key, value));
+					doneItem(callback(value, key));
 				}).then(null, deferred.reject);
 			} else {
 				// not a promise, just a direct sync callback
-				callback(key, value);
+				callback(value, key);
 			}
 		});
 		if (deferred) {
@@ -340,11 +340,11 @@ define([
 					// check to see if we are allowed to validate this key
 					if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
 						// run validation
-						whenItem(validate(object, key), key, function (key, isValid){
+						whenItem(validate(object, key), function (isValid, key){
 							if (!isValid) {
 								notValid(key);
 							}
-						});
+						}, key);
 					}
 				}
 			}), function () {
@@ -427,6 +427,10 @@ define([
 		//		using asynchronous validation, invalid property values will still
 		//		be set.
 		validateOnSet: true,
+
+		//	validators: Array
+		//		An array of additional validators to apply to this property
+		validators: null,
 
 		_addListener: function (listener) {
 			// add a listener for the property change event
@@ -568,14 +572,35 @@ define([
 			//		This method is responsible for validating this particular
 			//		property instance.
 			var property = this;
-			return when(this.checkForErrors(this.get()), function (errors) {
-				if (!errors || !errors.length) {
-					// no errors, valid value
-					property.set('errors', undefined);
-					return true;
+			var model = this._parent;
+			var validators = this.validators;
+			var value = this.get();
+			var totalErrors = [];
+
+			return when(whenEach(function (whenItem) {
+				// iterator through any validators (if we have any)
+				if (validators) {
+					for (var i = 0; i < validators.length; i++) {
+						whenItem(validators[i].checkForErrors(value, property, model), addErrors);
+					}
 				}
-				property.set('errors', errors);
-				return false;
+				// check our own validation
+				whenItem(property.checkForErrors(value, property, model), addErrors);
+				function addErrors(errors) {
+					if (errors) {
+						// if we have an array of errors, add it to the total of all errors
+						totalErrors.push.apply(totalErrors, errors);
+					}
+				}
+			}), function () {
+				if (totalErrors.length) {
+					// errors exist
+					property.set('errors', totalErrors);
+					return false;
+				}
+				// no errors, valid value
+				property.set('errors', undefined);
+				return true;
 			});
 		}
 	});
