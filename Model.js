@@ -56,6 +56,46 @@ define([
 		return true;
 	}
 
+	function whenEach(iterator) {
+		// this is responsible for collecting values from an iterator,
+		// and waiting for the results if promises are returned, returning
+		// a new promise represents the eventual completion of all the promises
+		// this will consistently preserve a sync (non-promise) return value if all
+		// sync values are provided
+		var deferred;
+		var remaining = 1;
+		// start the iterator
+		iterator(function (value, key, callback) {
+			if (value && value.then) {
+				// it is a promise, have to wait for it
+				remaining++;
+				if (!deferred) {
+					// make sure we have a deferred
+					deferred = new Deferred();
+				}
+				value.then(function (value){
+					// result received, call callback, and then indicate another item is done
+					doneItem(callback(key, value));
+				}).then(null, deferred.reject);
+			} else {
+				// not a promise, just a direct sync callback
+				callback(key, value);
+			}
+		});
+		if (deferred) {
+			// if we have a deferred, decrement one more time
+			doneItem();
+			return deferred.promise;
+		}
+		function doneItem() {
+			// called for each promise as it is completed
+			remaining--;
+			if (!remaining) {
+				// all done
+				deferred.resolve();
+			}
+		}
+	}
 	var slice = [].slice;
 
 	var Model = declare(null, {
@@ -282,9 +322,7 @@ define([
 
 			var object = this,
 				isValid = true,
-				remaining = 1,
 				errors = [],
-				deferredValidation,
 				fieldMap;
 
 			if (fields) {
@@ -293,68 +331,32 @@ define([
 					fieldMap[i] = true;
 				}
 			}
-			// iterate through the keys in the schema.
-			// note that we will always validate every property, regardless of when it fails,
-			// and we will execute all the validators immediately (async validators will
-			// run in parallel)
-			for (var key in this.schema) {
-				// check to see if we are allowed to validate this key
-				if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
-					// run validation
-					var result = validate(this, key);
-					if (result) {
-						// valid or the result might be a promise
-						if (result.then) {
-							// if we haven't setup the deferred for the entire result, do so
-							if (!deferredValidation) {
-								deferredValidation = new Deferred();
+			return when(whenEach(function (whenItem) {
+				// iterate through the keys in the schema.
+				// note that we will always validate every property, regardless of when it fails,
+				// and we will execute all the validators immediately (async validators will
+				// run in parallel)
+				for (var key in object.schema) {
+					// check to see if we are allowed to validate this key
+					if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
+						// run validation
+						whenItem(validate(object, key), key, function (key, isValid){
+							if (!isValid) {
+								notValid(key);
 							}
-							// increment remaining
-							remaining++;
-							// wait for the result
-							(function (key) {
-								result.then(function (isValid){
-									if (!isValid) {
-										notValid(key);
-									}
-									finishedValidator(isValid);
-								}, function (error) {
-									// not valid, if there is an error
-									errors.push(error);
-									finishedValidator();
-								});
-							})(key);
-						}
-					} else {
-						// a falsy value, no longer valid
-						notValid(key);
+						});
 					}
 				}
-			}
+			}), function () {
+				object.set('errors', isValid ? undefined : errors);
+				// it wasn't async, so we just return the synchronous result
+				return isValid;
+			});
 			function notValid(key) {
 				// found an error, mark valid state and record the errors
 				isValid = false;
 				errors.push.apply(errors, object.property(key).errors);
 			}
-			function finishedValidator (isThisValid) {
-				// called for completion of each validator, decrements remaining
-				remaining--;
-				if (!isThisValid) {
-					isValid = false;
-				}
-				if (!remaining) {
-					object.set('errors', isValid ? undefined : errors);
-					deferredValidation.resolve(isValid);
-				}
-			}
-			if (deferredValidation) {
-				// do the last decrement
-				finishedValidator(true);
-				return deferredValidation.promise;
-			}
-			object.set('errors', isValid ? undefined : errors);
-			// it wasn't async, so we just return the synchronous result
-			return isValid;
 		},
 
 		isValid: function () {
