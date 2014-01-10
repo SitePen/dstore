@@ -122,6 +122,7 @@ Property | Description
 `schema` | The schema is an object that with property definitions that define various metadata about the instance objects' properties.
 `additionalProperties` | This indicates whether or not to allow additional properties outside of those defined by the schema. This defaults to true.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
+`validators` | This is an array of validators that can be applied on validation.
 
 
 Method | Description
@@ -257,7 +258,7 @@ dstore include several pre-built validators:
 * NumericValidator - Enforces numbers and ranges of numbers.
 * UniqueValidator - Enforces uniqueness of values, testing against a store.
 
-We can also combine validators, using declare to mixin additional validators. For example, if we wanted to use the StringValidator in combination with the UniqueValidator, we could write:
+We can also combine validators. We can do this by using declare to mixin additional validators. For example, if we wanted to use the StringValidator in combination with the UniqueValidator, we could write:
 
     schema: {
         username: new (declare([StringValidator, UniqueValidator]))({
@@ -265,6 +266,17 @@ We can also combine validators, using declare to mixin additional validators. Fo
             // the store to do lookups for uniqueness
             uniqueStore: userStore
         })
+    }
+
+Or we can use the validators array to provide a set of validators that should be applied. For example, we could alternately write this:
+
+    schema: {
+        username: {
+            validators: [
+                new StringValidator({pattern: /^\w+$/}),
+                new UniqueValidator({uniqueStore: userStore})
+            ]
+        }
     }
 
 ### Extensions
