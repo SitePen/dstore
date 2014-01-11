@@ -222,10 +222,10 @@ define([
 				console.log(" observed: ", event);
 			});
 			var rangedResults = [
-				bigObserved.range(0,25).forEach(function(){}),
-				bigObserved.range(25,50).forEach(function(){}),
-				bigObserved.range(50,75).forEach(function(){}),
-				bigObserved.range(75,100).forEach(function(){})
+				bigObserved.range(0,25).fetch(),
+				bigObserved.range(25,50).fetch(),
+				bigObserved.range(50,75).fetch(),
+				bigObserved.range(75,100).fetch()
 			];
 
 			bigObserved.fetch();
@@ -279,7 +279,7 @@ define([
 			assertObservationIs({ type: "remove", id: item.id, info: { } });
 
 			// An update sorted to the beginning of a range and the data has a known index
-			bigObserved.range(0, 25).forEach(function(){});
+			bigObserved.range(0, 25).fetch();
 			item = bigStore.get(0);
 			item.order = 0;
 			bigStore.put(item);
@@ -313,7 +313,7 @@ define([
 			// and the first range being reduced to 0-23 instead of 0-24.
 			// Requesting 24-50 instead of 25-50 in order to request a contiguous range.
 			// Observable should treat contiguous requested ranges as a single range.
-			bigObserved.range(24, 50).forEach(function(){});
+			bigObserved.range(24, 50).fetch();
 
 			// An update sorted to the end of a range but adjacent to another range has a known index
 			item = bigStore.get(22);
@@ -346,7 +346,7 @@ define([
 			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 24 } });
 
 			// Request range at end of data
-			bigObserved.range(75, 100).forEach(function(){});
+			bigObserved.range(75, 100).fetch();
 
 			// An update at the end of a range and the data has a known index
 			item = bigStore.get(98);
@@ -397,13 +397,13 @@ define([
 				};
 
 			// Remove all of a range
-			trackedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).forEach(function(){});
+			trackedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).fetch();
 			assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 			trackedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
 			assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 
 			// Split a range
-			trackedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).forEach(function(){});
+			trackedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).fetch();
 			assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
 			trackedStore.releaseRange(splittingRange.start, splittingRange.end);
 			assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
@@ -411,14 +411,14 @@ define([
 			assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
 
 			// Remove from range head
-			trackedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).forEach(function(){});
+			trackedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).fetch();
 			assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
 			trackedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
 
 			// Remove from range tail
-			trackedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).forEach(function(){});
+			trackedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).fetch();
 			assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
 			trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
 			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
