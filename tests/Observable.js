@@ -72,10 +72,13 @@ define([
 			return this.backingMemoryStore.on(type, listener);
 		};
 
-		proto.forEach = function(callback, thisObj){
-			this.backingMemoryStore.forEach(function(){});
+		proto.fetch = function(){
+			return when(this.backingMemoryStore.fetch());
+		};
 
-			this.data = when(this.backingMemoryStore.data).then(function(data){
+		proto.forEach = function(callback, thisObj){
+			// TODO: Change all tests that rely unnecessarily `forEach` with a no-op to use `fetch` instead
+			this.data = when(this.backingMemoryStore.fetch()).then(function(data){
 				array.forEach(data, callback, thisObj);
 				return data;
 			});
@@ -420,6 +423,19 @@ define([
 			trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
 			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
 			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
+		},
+
+		'sorting clears store.partialData': function(){
+			var itemCount = 10,
+				store = createBigStore(itemCount, ObservablePartialDataStore);
+
+			var trackedStore = store.track();
+			return trackedStore.range(0, itemCount).fetch().then(function(){
+				assert.property(trackedStore, 'partialData');
+				return trackedStore.sort('name').fetch();
+			}).then(function(){
+				assert.notProperty(trackedStore, 'partialData');
+			});
 		},
 
 		'type': function(){
