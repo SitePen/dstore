@@ -267,7 +267,6 @@ define([
 		},
 
 		'composition with SimpleQuery': function(){
-			debugger;
 			var RestWithSimpleQuery = declare([ Rest, SimpleQuery ], {
 				target: '/mockRequest/'
 			});
