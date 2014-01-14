@@ -27,13 +27,6 @@ return declare(SimpleQuery, {
 	//		An index of data indices into the data array by id
 	index: null,
 
-	// TODO: Migrated from SimpleQuery. Does this belong in the base Store?
-	// parse: Function
-	//		One can provide a parsing function that will permit the parsing of the data. By
-	//		default we assume the provide data is a simple JavaScript array that requires
-	//		no parsing
-	parse: null,
-
 	get: function(id){
 		// summary:
 		//		Retrieves an object by its identity

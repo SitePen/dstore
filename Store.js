@@ -60,6 +60,12 @@ return declare(Evented, {
 		return this.inherited(arguments);
 	},
 
+	// parse: Function
+	//		One can provide a parsing function that will permit the parsing of the data. By
+	//		default we assume the provide data is a simple JavaScript array that requires
+	//		no parsing
+	parse: null,
+
 	// model: Function
 	//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 	//		used as the prototype for all objects returned from this store. One can set this
