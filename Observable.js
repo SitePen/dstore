@@ -4,9 +4,10 @@ define([
 	"dojo/aspect",
 	"dojo/when",
 	"dojo/promise/all",
-	"dojo/_base/array"
+	"dojo/_base/array",
+	"dojo/on",
 	/*=====, "./api/Store" =====*/
-], function(lang, declare, aspect, when, whenAll, arrayUtil /*=====, Store =====*/){
+], function(lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/){
 
 // module:
 //		dstore/Observable
@@ -104,10 +105,12 @@ return declare(null, {
 		var originalOn = this.on;
 		// now setup our own event scope, for tracked events
 		observed.on = function(type, listener){
-			return type in eventTypes ?
-				aspect.after(observed, 'ontracked' + type, listener, true) :
-				originalOn.call(observed, type, listener);
-		};
+				return on.parse(observed, type, listener, function(target, type){
+				return type in eventTypes ?
+					aspect.after(observed, 'ontracked' + type, listener, true) :
+					originalOn.call(observed, type, listener);
+			});
+	};
 
 		var ranges = [];
 		if(this.hasOwnProperty('data')){
