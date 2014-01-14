@@ -1,5 +1,13 @@
-define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare', './Model', 'dojo/Evented'
-], function(lang, has, when, Deferred, declare, Model, Evented){
+define([
+	'dojo/_base/lang',
+	'dojo/aspect',
+	'dojo/has',
+	'dojo/when',
+	'dojo/Deferred',
+	'dojo/_base/declare',
+	'./Model',
+	'dojo/Evented'
+], function(lang, aspect, has, when, Deferred, declare, Model, Evented){
 
 // module:
 //		dstore/Store
@@ -17,6 +25,10 @@ return declare(Evented, {
 		}
 		// give a reference back to the store for saving, etc.
 		this.model.prototype._store = this;
+
+		aspect.after(this, 'sort', function(){
+			this.emit('refresh');
+		}, true);
 	},
 	map: function(callback, thisObject){
 		var results = [];
