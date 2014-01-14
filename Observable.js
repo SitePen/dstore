@@ -129,7 +129,7 @@ return declare(null, {
 				// Wait for total in addition to data so updated objects sorted to
 				// the end of the list have a known index
 				whenAll({
-					data: rangeCollection.data,
+					data: rangeCollection,
 					total: rangeCollection.total
 				}).then(function(result){
 					partialData.length = result.total;
