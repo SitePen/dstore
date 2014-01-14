@@ -20,8 +20,8 @@ define([
 
 	function runCollectionTest(collection, expected){
 		var expectedResults = [
-			{ id: 1, name: "one" },
-			{ id: 2, name: "two" }
+			{ id: 1, name: 'one' },
+			{ id: 2, name: 'two' }
 		];
 		mockRequest.setResponseText(collection.stringify(expectedResults));
 		return collection.forEach(function(){}).then(function(results){
@@ -92,7 +92,7 @@ define([
 			mockRequest.setResponseText(treeTestRootData);
 
 			var first = true;
-			return store.filter("data/treeTestRoot").forEach(function(object){
+			return store.filter('data/treeTestRoot').forEach(function(object){
 				if(first){
 					first = false;
 					assert.strictEqual(object.name, 'node1');
@@ -152,7 +152,7 @@ define([
 			var objectWithoutId = { name: 'one' };
 			mockRequest.setResponseText(store.stringify(objectWithoutId));
 			return store.put(objectWithoutId).then(function(){
-				mockRequest.assertHttpMethod("POST");
+				mockRequest.assertHttpMethod('POST');
 			});
 		},
 
@@ -160,12 +160,12 @@ define([
 			var objectWithId = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(objectWithId));
 			return store.put(objectWithId).then(function(){
-				mockRequest.assertHttpMethod("PUT");
+				mockRequest.assertHttpMethod('PUT');
 			});
 		},
 
 		'get and save': function(){
-			var expectedObject = { id: 1, name: "one" };
+			var expectedObject = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(expectedObject));
 			return store.get('anything').then(function(object){
 				expectedObject.saved = true;
@@ -177,23 +177,23 @@ define([
 		},
 
 		'filter': function(){
-			var filter = { prop1: "Prop1Value", prop2: "Prop2Value" };
+			var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
 			return runCollectionTest(store.filter(filter), { queryParams: filter });
 		},
 
 		'sort': function(){
 			var sortedCollection = store.sort({
-				property: "prop1", 
+				property: 'prop1', 
 				descending: true
 			}, {
-				property: "prop2"
+				property: 'prop2'
 			}, {
-				property: "prop3", 
+				property: 'prop3', 
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
-					"sort(-prop1,+prop2,-prop3)": ""
+					'sort(-prop1,+prop2,-prop3)': ''
 				}
 			});
 		},
@@ -202,37 +202,37 @@ define([
 			store.sortParam = 'sort-param';
 
 			var sortedCollection = store.sort({
-				property: "prop1", 
+				property: 'prop1', 
 				descending: true
 			}, {
-				property: "prop2"
+				property: 'prop2'
 			}, {
-				property: "prop3", 
+				property: 'prop3', 
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
-					"sort-param": "-prop1,+prop2,-prop3"
+					'sort-param': '-prop1,+prop2,-prop3'
 				}
 			});
 		},
 
 		'sort with different prefixes': function(){
-			store.descendingPrefix = "--";
-			store.ascendingPrefix = "++";
+			store.descendingPrefix = '--';
+			store.ascendingPrefix = '++';
 
 			var sortedCollection = store.sort({
-				property: "prop1", 
+				property: 'prop1', 
 				descending: true
 			}, {
-				property: "prop2"
+				property: 'prop2'
 			}, {
-				property: "prop3", 
+				property: 'prop3', 
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
 				queryParams: {
-					"sort(--prop1,++prop2,--prop3)": ""
+					'sort(--prop1,++prop2,--prop3)': ''
 				}
 			});
 		},
@@ -241,7 +241,7 @@ define([
 			var rangeCollection = store.range(15, 25);
 			return runCollectionTest(rangeCollection, {
 				headers: {
-					Range: "items=15-24"
+					Range: 'items=15-24'
 				}
 			});
 		},
@@ -250,32 +250,33 @@ define([
 			var rangeCollection = store.range(15);
 			return runCollectionTest(rangeCollection, {
 				headers: {
-					Range: "items=15-"
+					Range: 'items=15-'
 				}
 			});
 		},
 
 		'filter+sort+range': function(){
-			var filter = { prop1: "Prop1Value", prop2: "Prop2Value" };
-			var collection = store.filter(filter).sort("prop1").range(15, 25);
+			var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
+			var collection = store.filter(filter).sort('prop1').range(15, 25);
 			return runCollectionTest(collection, {
 				headers: {
-					Range: "items=15-24"
+					Range: 'items=15-24'
 				},
-				queryParams: lang.mixin({}, filter, { "sort(+prop1)": "" })
+				queryParams: lang.mixin({}, filter, { 'sort(+prop1)': '' })
 			});
 		},
 
 		'composition with SimpleQuery': function(){
+			debugger;
 			var RestWithSimpleQuery = declare([ Rest, SimpleQuery ], {
-				target: "/mockRequest/"
+				target: '/mockRequest/'
 			});
 
 			var store = new RestWithSimpleQuery(),
 				expectedResults = [
-					{ id: 1, name: "one", odd: true },
-					{ id: 2, name: "two", odd: false },
-					{ id: 3, name: "three", odd: true },
+					{ id: 1, name: 'one', odd: true },
+					{ id: 2, name: 'two', odd: false },
+					{ id: 3, name: 'three', odd: true }
 				];
 			mockRequest.setResponseText(store.stringify(expectedResults));
 			var filter = { odd: true },
@@ -293,10 +294,10 @@ define([
 				assert.deepEqual(filteredResults[0], expectedResults[0]);
 				assert.deepEqual(filteredResults[1], expectedResults[2]);
 
-				sortedCollection = filteredCollection.sort("id", true);
+				sortedCollection = filteredCollection.sort('id', true);
 				return sortedCollection.forEach(function(){});
 			}).then(function(results){
-				mockRequest.assertQueryParams({ "sort(-id)": "" });
+				mockRequest.assertQueryParams({ 'sort(-id)': '' });
 				assert.strictEqual(results.length, expectedResults.length);
 
 				var sortedFilteredResults = sortedCollection.queryer(expectedResults);
@@ -307,7 +308,7 @@ define([
 				rangeCollection = sortedCollection.range(15, 25);
 				return rangeCollection.forEach(function(){});
 			}).then(function(results){
-				mockRequest.assertRequestHeaders({ Range: "items=15-24" });
+				mockRequest.assertRequestHeaders({ Range: 'items=15-24' });
 				assert.strictEqual(results.length, expectedResults.length);
 			});
 		}

@@ -36,6 +36,7 @@ Property | Description
 `sorted` | If the collection has been sorted, this is an object that indicates the property that it was sorted on and if it was descending.
 `filtered` | If the collection has been filtered, this is an object that indicates the query that was used to filter it.
 `ranged` | If the collection has been subsetted with range, this is an object that indicates the start and end of the range.
+`store` | This is reference to the base store from which all queries collections were derived. You should use the store to make any changes to data (using the store's `put()`, `add()`, and `remove()` methods).
 
 ### Method Summary
 
@@ -122,6 +123,7 @@ Property | Description
 `schema` | The schema is an object that with property definitions that define various metadata about the instance objects' properties.
 `additionalProperties` | This indicates whether or not to allow additional properties outside of those defined by the schema. This defaults to true.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
+`validators` | This is an array of validators that can be applied on validation.
 
 
 Method | Description
@@ -236,6 +238,47 @@ Here is an example of a schema that with a computed property, `fullName`:
     }
 
 Note, that traditional getters and setters can effectively be defined by creating get() and put() methods on the property definition. However, this is generally eschewed in dstore, since the primary use cases for getters and setters are better served by defining validation or creating a computed property.
+
+### Validators
+
+Validators are `Property` subclasses with more advanced validation capabilities. dstore includes several validators, that can be used, extended, or referenced for creating your own custom validators. To use a validator, we use it as the constructor for a property definition. For example, we could use the StringValidator to enforce the size of a string and acceptable characters:
+
+    schema: {
+        username: new StringValidator({
+            // must be at least 4 characters
+            minimumLength: 4,
+            // and max of 20 characters
+            maximumLength: 20,
+            // and only letters or numbers
+            pattern: /^\w+$/
+        })
+    }
+
+dstore include several pre-built validators:
+* StringValidator - Enforces string length and patterns.
+* NumericValidator - Enforces numbers and ranges of numbers.
+* UniqueValidator - Enforces uniqueness of values, testing against a store.
+
+We can also combine validators. We can do this by using declare to mixin additional validators. For example, if we wanted to use the StringValidator in combination with the UniqueValidator, we could write:
+
+    schema: {
+        username: new (declare([StringValidator, UniqueValidator]))({
+            pattern: /^\w+$/,
+            // the store to do lookups for uniqueness
+            uniqueStore: userStore
+        })
+    }
+
+Or we can use the validators array to provide a set of validators that should be applied. For example, we could alternately write this:
+
+    schema: {
+        username: {
+            validators: [
+                new StringValidator({pattern: /^\w+$/}),
+                new UniqueValidator({uniqueStore: userStore})
+            ]
+        }
+    }
 
 ### Extensions
 

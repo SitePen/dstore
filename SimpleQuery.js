@@ -55,7 +55,7 @@ return declare(Store, {
 		var store = this;
 		return this._addQueryer(this.inherited(arguments), function(data){
 			var sorted = store.sorted;
-			data.sort(typeof property == "function" ? property : function(a, b){
+			data.sort(typeof property == 'function' ? property : function(a, b){
 				for(var i = 0; i < sorted.length; i++){
 					var property = sorted[i].property;
 					var descending = sorted[i].descending;

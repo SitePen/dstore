@@ -37,9 +37,9 @@ define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/valida
 				// copy the type so it can be used for coercion
 				definition.type = jsDefinition.type;
 			}
-			if (typeof jsDefinition.default === 'string') {
+			if (typeof jsDefinition['default'] === 'string') {
 				// and copy the default
-				definition.default = jsDefinition.default;
+				definition['default'] = jsDefinition['default'];
 			}
 		}
 		return declare(Model, {

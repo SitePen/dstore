@@ -110,6 +110,7 @@ define([
 				id: 10,
 				name: 'ten'
 			});
+			// due to a bug in geezer's type assertions, this will fail in IE
 			assert.isNotObject(store.get(10));
 			newObject.save();
 			assert.isObject(store.get(10));

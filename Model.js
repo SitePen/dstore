@@ -56,6 +56,46 @@ define([
 		return true;
 	}
 
+	function whenEach(iterator) {
+		// this is responsible for collecting values from an iterator,
+		// and waiting for the results if promises are returned, returning
+		// a new promise represents the eventual completion of all the promises
+		// this will consistently preserve a sync (non-promise) return value if all
+		// sync values are provided
+		var deferred;
+		var remaining = 1;
+		// start the iterator
+		iterator(function (value, callback, key) {
+			if (value && value.then) {
+				// it is a promise, have to wait for it
+				remaining++;
+				if (!deferred) {
+					// make sure we have a deferred
+					deferred = new Deferred();
+				}
+				value.then(function (value){
+					// result received, call callback, and then indicate another item is done
+					doneItem(callback(value, key));
+				}).then(null, deferred.reject);
+			} else {
+				// not a promise, just a direct sync callback
+				callback(value, key);
+			}
+		});
+		if (deferred) {
+			// if we have a deferred, decrement one more time
+			doneItem();
+			return deferred.promise;
+		}
+		function doneItem() {
+			// called for each promise as it is completed
+			remaining--;
+			if (!remaining) {
+				// all done
+				deferred.resolve();
+			}
+		}
+	}
 	var slice = [].slice;
 
 	var Model = declare(null, {
@@ -94,7 +134,7 @@ define([
 			for (var key in this.schema) {
 				var definition = this.schema[key];
 				if (definition && typeof definition === 'object' && 'default' in definition) {
-					this[key] = definition.default;
+					this[key] = definition['default'];
 				}
 			}
 		},
@@ -270,9 +310,7 @@ define([
 
 			var object = this,
 				isValid = true,
-				remaining = 1,
 				errors = [],
-				deferredValidation,
 				fieldMap;
 
 			if (fields) {
@@ -281,68 +319,32 @@ define([
 					fieldMap[i] = true;
 				}
 			}
-			// iterate through the keys in the schema.
-			// note that we will always validate every property, regardless of when it fails,
-			// and we will execute all the validators immediately (async validators will
-			// run in parallel)
-			for (var key in this.schema) {
-				// check to see if we are allowed to validate this key
-				if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
-					// run validation
-					var result = validate(this, key);
-					if (result) {
-						// valid or the result might be a promise
-						if (result.then) {
-							// if we haven't setup the deferred for the entire result, do so
-							if (!deferredValidation) {
-								deferredValidation = new Deferred();
+			return when(whenEach(function (whenItem) {
+				// iterate through the keys in the schema.
+				// note that we will always validate every property, regardless of when it fails,
+				// and we will execute all the validators immediately (async validators will
+				// run in parallel)
+				for (var key in object.schema) {
+					// check to see if we are allowed to validate this key
+					if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
+						// run validation
+						whenItem(validate(object, key), function (isValid, key){
+							if (!isValid) {
+								notValid(key);
 							}
-							// increment remaining
-							remaining++;
-							// wait for the result
-							(function (key) {
-								result.then(function (isValid){
-									if (!isValid) {
-										notValid(key);
-									}
-									finishedValidator(isValid);
-								}, function (error) {
-									// not valid, if there is an error
-									errors.push(error);
-									finishedValidator();
-								});
-							})(key);
-						}
-					} else {
-						// a falsy value, no longer valid
-						notValid(key);
+						}, key);
 					}
 				}
-			}
+			}), function () {
+				object.set('errors', isValid ? undefined : errors);
+				// it wasn't async, so we just return the synchronous result
+				return isValid;
+			});
 			function notValid(key) {
 				// found an error, mark valid state and record the errors
 				isValid = false;
 				errors.push.apply(errors, object.property(key).errors);
 			}
-			function finishedValidator (isThisValid) {
-				// called for completion of each validator, decrements remaining
-				remaining--;
-				if (!isThisValid) {
-					isValid = false;
-				}
-				if (!remaining) {
-					object.set('errors', isValid ? undefined : errors);
-					deferredValidation.resolve(isValid);
-				}
-			}
-			if (deferredValidation) {
-				// do the last decrement
-				finishedValidator(true);
-				return deferredValidation.promise;
-			}
-			object.set('errors', isValid ? undefined : errors);
-			// it wasn't async, so we just return the synchronous result
-			return isValid;
 		},
 
 		isValid: function () {
@@ -388,7 +390,6 @@ define([
 					reactive.value = listener(this.get());
 				}
 			}
-			var property = this;
 			// add to the listeners
 			var handle = this._addListener(function (value) {
 				var result = listener(value);
@@ -413,6 +414,10 @@ define([
 		//		using asynchronous validation, invalid property values will still
 		//		be set.
 		validateOnSet: true,
+
+		//	validators: Array
+		//		An array of additional validators to apply to this property
+		validators: null,
 
 		_addListener: function (listener) {
 			// add a listener for the property change event
@@ -554,14 +559,35 @@ define([
 			//		This method is responsible for validating this particular
 			//		property instance.
 			var property = this;
-			return when(this.checkForErrors(this.get()), function (errors) {
-				if (!errors || !errors.length) {
-					// no errors, valid value
-					property.set('errors', undefined);
-					return true;
+			var model = this._parent;
+			var validators = this.validators;
+			var value = this.get();
+			var totalErrors = [];
+
+			return when(whenEach(function (whenItem) {
+				// iterator through any validators (if we have any)
+				if (validators) {
+					for (var i = 0; i < validators.length; i++) {
+						whenItem(validators[i].checkForErrors(value, property, model), addErrors);
+					}
 				}
-				property.set('errors', errors);
-				return false;
+				// check our own validation
+				whenItem(property.checkForErrors(value, property, model), addErrors);
+				function addErrors(errors) {
+					if (errors) {
+						// if we have an array of errors, add it to the total of all errors
+						totalErrors.push.apply(totalErrors, errors);
+					}
+				}
+			}), function () {
+				if (totalErrors.length) {
+					// errors exist
+					property.set('errors', totalErrors);
+					return false;
+				}
+				// no errors, valid value
+				property.set('errors', undefined);
+				return true;
 			});
 		}
 	});

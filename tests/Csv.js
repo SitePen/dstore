@@ -5,7 +5,8 @@ define([
 	'dojo/promise/all',
 	'dojo/_base/declare',
 	'dstore/Csv',
-	'dstore/Memory'],
+	'dstore/Memory'
+],
 	function(registerSuite, assert, request, all, declare, Csv, Memory){
 		var CsvMemory = declare([Memory, Csv]);
 		var xhrBase = require.toUrl('dstore/tests/data');
