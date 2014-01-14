@@ -127,7 +127,7 @@ return declare(SimpleQuery, {
 			data = data.items;
 		}
 		this._reindex(data);
-		this.emit('refresh', {target: data});
+		this.emit('refresh');
 	},
 
 	_reindex: function(data){
@@ -160,7 +160,6 @@ return declare(SimpleQuery, {
 	sort: function(sort){
 		this.inherited(arguments);
 		this.data = this.queryer(this.data);
-		this.emit('refresh', {target: this.data});
 		return this;
 	},
 	range: function(start, end){

@@ -56,6 +56,7 @@ return declare(Evented, {
 		return this.inherited(arguments);
 	},
 	emit: function(type, event){
+		event = event || {};
 		event.type = type;
 		return this.inherited(arguments);
 	},
