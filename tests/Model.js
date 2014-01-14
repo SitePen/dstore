@@ -21,7 +21,7 @@ define([
 					put: function (value) {
 						return this._parent._accessor = value;
 					},
-					get: function () {
+					valueOf: function () {
 						return this._parent._accessor;
 					}
 				}
@@ -113,7 +113,7 @@ define([
 				model.property('string').observe(callback);
 			});
 			assertReceived('foo', function (callback) {
-				callback(model.property('string').get());
+				callback(model.property('string').valueOf());
 			});
 			assertReceived(1234, function (callback) {
 				model.property('number').observe(callback);
@@ -121,6 +121,8 @@ define([
 			assertReceived(true, function (callback) {
 				model.property('boolean').observe(callback);
 			});
+			// make sure coercion works
+			assert.strictEqual(model.property('number') + 1234, 2468);
 			// reset the model, so don't have to listeners
 			model = createPopulatedModel();
 			var string = model.property('string');
@@ -234,7 +236,7 @@ define([
 			nameProperty.observe(function (name) {
 				updatedName = name;
 			});
-			assert.strictEqual(nameProperty.get(), 'John Doe');
+			assert.strictEqual(nameProperty.valueOf(), 'John Doe');
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
 			var updatedName2;

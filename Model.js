@@ -231,7 +231,7 @@ define([
 			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
 			definition = property || this.schema[key];
-			if (definition && definition.get && (definition.get !== simplePropertyGet || definition.hasCustomGet)) {
+			if (definition && definition.valueOf && (definition.valueOf !== simplePropertyValueOf || definition.hasCustomGet)) {
 				// we have custom get functionality, need to create at least a temporary property
 				// instance
 				property = property || (this.hasOwnProperty('_properties') && this._properties[key]);
@@ -243,7 +243,7 @@ define([
 					});
 				}
 				// let the property instance handle retrieving the value
-				return property.get();
+				return property.valueOf();
 			}
 			// default action of just retrieving the property value
 			return this[key];
@@ -387,7 +387,7 @@ define([
 				var reactive = new Reactive();
 				if (this._has()) {
 					// we need to notify of the value of the present (as well as future)
-					reactive.value = listener(this.get());
+					reactive.value = listener(this.valueOf());
 				}
 			}
 			// add to the listeners
@@ -424,15 +424,7 @@ define([
 			return aspect.after(this, 'onchange', listener, true);
 		},
 
-		get: function (/*string?*/ key, /*function?*/ listener) {
-			if (typeof key === 'string') {
-				// use standard model get to retrieve object by name
-				return this.inherited(arguments);
-			}
-			if (key) {
-				// a listener was provided
-				this.observe(key, true);
-			}
+		valueOf: function () {
 			return this._get();
 		},
 
@@ -561,7 +553,7 @@ define([
 			var property = this;
 			var model = this._parent;
 			var validators = this.validators;
-			var value = this.get();
+			var value = this.valueOf();
 			var totalErrors = [];
 
 			return when(whenEach(function (whenItem) {
@@ -631,7 +623,7 @@ define([
 			this._parent[this.name] = value;
 		}
 	});
-	var simplePropertyGet = Property.prototype.get;
+	var simplePropertyValueOf = Property.prototype.valueOf;
 	var simplePropertyPut = Property.prototype.put;
 	return Model;
 });
