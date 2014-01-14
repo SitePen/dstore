@@ -6,7 +6,7 @@ define([
 	"dojo/promise/all",
 	"dojo/_base/array"
 	/*=====, "./api/Store" =====*/
-], function(lang, declare, aspect, when, whenAll, array /*=====, Store =====*/){
+], function(lang, declare, aspect, when, whenAll, arrayUtil /*=====, Store =====*/){
 
 // module:
 //		dstore/Observable
@@ -119,8 +119,8 @@ return declare(null, {
 		}else{
 			var originalRange = observed.range;
 			observed.range = function(start, end){
-				// TODO: Should there be a method other than forEach that triggers a request
-				var rangeCollection = originalRange.apply(this, arguments).forEach(function(){}),
+				// trigger a request
+				var rangeCollection = originalRange.apply(this, arguments).fetch(),
 					partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
 
 				// Wait for total in addition to data so updated objects sorted to
@@ -211,7 +211,7 @@ return declare(null, {
 									sampleArray.push(target);
 								}
 
-								sortedIndex = queryExecutor(sampleArray).indexOf(target);
+								sortedIndex = arrayUtil.indexOf(queryExecutor(sampleArray), target);
 								// TODO: Is there a better name than adjustedIndex?
 								adjustedIndex = range.start + sortedIndex;
 

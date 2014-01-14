@@ -171,7 +171,7 @@ define([
 						}
 					}),
 					hasDefault: {
-						default: 'beginning value'
+						'default': 'beginning value'
 					}
 				},
 				validateOnSet: false
@@ -287,7 +287,7 @@ define([
 				schema: {
 					test: new PropertyAsyncStringIsBValidator(),
 					test2: new PropertyAsyncStringIsBValidator({
-						default: 'b'
+						'default': 'b'
 					})
 				}
 			}))();
@@ -373,7 +373,7 @@ define([
 			assert.strictEqual(myObject.get('num'), 1);
 			myObject.set('num', 5);
 			myObject.set('str', '');
-			assert.throw(function () {
+			assert['throw'](function () {
 				return myObject.save();
 			}, Error);
 			assert.isFalse(myObject.isValid());

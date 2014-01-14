@@ -53,13 +53,13 @@ define([
 	mockRequest.assertRequestHeaders = function(expectedHeaders){
 		for(var name in expectedHeaders){
 			var lowerCaseName = name.toLowerCase();
-			assert.property(latestRequestHeaders, lowerCaseName);
+			assert.isTrue(lowerCaseName in latestRequestHeaders);
 			assert.strictEqual(latestRequestHeaders[lowerCaseName], expectedHeaders[name]);
 		}
 	};
 	mockRequest.assertQueryParams = function(expectedParams){
 		for(var name in expectedParams){
-			assert.property(latestQuery, name);
+			assert.isTrue(name in latestQuery);
 			assert.equal(expectedParams[name].toString(), latestQuery[name]);
 		}
 	};

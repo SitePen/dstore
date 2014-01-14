@@ -121,15 +121,15 @@ define([
 							{id: 4, name: 'four', even: true, prime: false},
 							{id: 5, name: 'five', prime: true}
 						];
-						data.forEach(callback);
+						for (var i = 0; i < data.length; i++){
+							callback(data[i], i);
+						}
 						def.resolve(data);
 					}, 20);
 					return def;
 				}
 			});
 			var store = new (declare([MasterCollection, Cache]))();
-			var cachingStore = store.cachingStore;
-			var options = {};
 			store.forEach(function(){}); // should result in everything being cached
 			forEachCalled = false;
 			var testDef = new Deferred();
@@ -139,7 +139,7 @@ define([
 			}).then(function(){
 				assert.strictEqual(count, 3);
 				assert.isFalse(forEachCalled);
-				testDef.resolve(true);				
+				testDef.resolve(true);
 			});
 			return testDef;
 		}

@@ -134,7 +134,7 @@ define([
 			for (var key in this.schema) {
 				var definition = this.schema[key];
 				if (definition && typeof definition === 'object' && 'default' in definition) {
-					this[key] = definition.default;
+					this[key] = definition['default'];
 				}
 			}
 		},
@@ -402,7 +402,6 @@ define([
 					reactive.value = listener(this.get());
 				}
 			}
-			var property = this;
 			// add to the listeners
 			var handle = this._addListener(function (value) {
 				var result = listener(value);
