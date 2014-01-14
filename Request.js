@@ -119,7 +119,7 @@ return declare(Store, {
 
 	// accepts: String
 	//		Defines the Accept header to use on HTTP requests
-	accepts: "application/javascript, application/json",
+	accepts: "application/json",
 
 	getIdentity: function(object){
 		// summary:
