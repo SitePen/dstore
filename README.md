@@ -36,6 +36,7 @@ Property | Description
 `sorted` | If the collection has been sorted, this is an object that indicates the property that it was sorted on and if it was descending.
 `filtered` | If the collection has been filtered, this is an object that indicates the query that was used to filter it.
 `ranged` | If the collection has been subsetted with range, this is an object that indicates the start and end of the range.
+`store` | This is reference to the base store from which all queries collections were derived. You should use the store to make any changes to data (using the store's `put()`, `add()`, and `remove()` methods).
 
 ### Method Summary
 
