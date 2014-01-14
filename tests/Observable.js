@@ -72,18 +72,10 @@ define([
 			return this.backingMemoryStore.on(type, listener);
 		};
 
-		proto.fetch = function(){
-			return when(this.backingMemoryStore.fetch());
-		};
-
-		proto.forEach = function(callback, thisObj){
-			// TODO: Change all tests that rely unnecessarily `forEach` with a no-op to use `fetch` instead
-			this.data = when(this.backingMemoryStore.fetch()).then(function(data){
-				array.forEach(data, callback, thisObj);
-				return data;
-			});
-			this.total = when(this.backingMemoryStore.store.total);
-			return this;
+		proto.fetch = function(callback, thisObj){
+			this.data = when(this.backingMemoryStore.fetch());
+			this.total = when(this.backingMemoryStore.total);
+			return this.data;
 		};
 
 		return proto;
@@ -132,9 +124,8 @@ define([
 			expectedChanges.push({
 				type: "update",
 				target: two,
-				info: {
-					previousIndex: 0
-				}
+				index: undefined,
+				previousIndex: 0
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
 			secondObserverUpdate.remove();
@@ -146,9 +137,8 @@ define([
 			expectedChanges.push({
 				type: "update",
 				target: one,
-				info: {
-					index: 2
-				}
+				index: 2,
+				previousIndex: undefined
 			});
 			assert.strictEqual(tracked.data.length, 3);
 			// shouldn't be added
@@ -159,7 +149,7 @@ define([
 			expectedChanges.push({
 				type: "add",
 				target: six,
-				info: {}
+				index: undefined
 				// no index because the addition doesn't have a place in the filtered results
 			});
 
@@ -171,17 +161,13 @@ define([
 			expectedChanges.push({
 				type: "add",
 				target: seven,
-				info: {
-					index: 3
-				}
+				index: 3
 			});
 			store.remove(3);
 			expectedChanges.push({
 				type: "remove",
 				id: 3,
-				info: {
-					previousIndex: 0
-				}
+				previousIndex: 0
 			});
 			assert.strictEqual(tracked.data.length, 3);
 
@@ -250,6 +236,16 @@ define([
 				backingData = bigObserved.backingMemoryStore.data,
 				item,
 				assertObservationIs = function(expectedObservation){
+					expectedObservation = lang.delegate(expectedObservation);
+					if(expectedObservation.type in { add: 1, update: 1 }
+						&& !('index' in expectedObservation)){
+						expectedObservation.index = undefined;
+					}
+					if(expectedObservation.type in { update: 1, remove: 1 }
+						&& !('previousIndex' in expectedObservation)){
+						expectedObservation.previousIndex = undefined;
+					}
+
 					assert.deepEqual(latestObservation, expectedObservation);
 				};
 			bigObserved.on('update', function(event){
@@ -267,47 +263,47 @@ define([
 			item = bigStore.get(0);
 			item.order = 1.25;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { } });
+			assertObservationIs({ type: "update", target: item });
 
 			// An addition outside of requested ranges has an indeterminate index
 			item = { id: 1.5, name: 'item 1.5', order: 1.5 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { } });
+			assertObservationIs({ type: "add", target: item });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", id: item.id, info: { } });
+			assertObservationIs({ type: "remove", id: item.id });
 
 			// An update sorted to the beginning of a range and the data has a known index
 			bigObserved.range(0, 25).fetch();
 			item = bigStore.get(0);
 			item.order = 0;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { index: 0, previousIndex: 1 } });
+			assertObservationIs({ type: "update", target: item, index: 0, previousIndex: 1 });
 
 			// An addition sorted to the beginning of a range and the data has a known index
 			item = { id: -1, name: 'item -1', order: -1 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { index: 0 } });
+			assertObservationIs({ type: "add", target: item, index: 0 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 0 } });
+			assertObservationIs({ type: "remove", id: item.id, previousIndex: 0 });
 
 			// An update sorted to the end of a range has an indeterminate index
 			item = bigStore.get(24);
 			item.name = "item 24 updated";
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { previousIndex: 24 } });
+			assertObservationIs({ type: "update", target: item, previousIndex: 24 });
 
 			// An addition sorted to the end of a range has an indeterminate index
 			item = { id: 24.1, name: 'item 24.1', order: 24.1 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { } });
+			assertObservationIs({ type: "add", target: item });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", id: item.id, info: { } });
+			assertObservationIs({ type: "remove", id: item.id });
 
 			// The previous update with an undetermined index resulted in an item dropping from the first range
 			// and the first range being reduced to 0-23 instead of 0-24.
@@ -319,31 +315,31 @@ define([
 			item = bigStore.get(22);
 			item.order = 23.1;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { index: 23, previousIndex: 22 } });
+			assertObservationIs({ type: "update", target: item, index: 23, previousIndex: 22 });
 
 			// An addition sorted to the end of a range but adjacent to another range has a known index
 			item = { id: 23.2, name: 'item 23.2', order: 23.2 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { index: 24 } });
+			assertObservationIs({ type: "add", target: item, index: 24 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 24 } });
+			assertObservationIs({ type: "remove", id: item.id, previousIndex: 24 });
 
 			// An update sorted to the beginning of a range but adjacent to another range has a known index
 			item = bigStore.get(25);
 			item.order = 23.9;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { index: 24, previousIndex: 25 } });
+			assertObservationIs({ type: "update", target: item, index: 24, previousIndex: 25 });
 
 			// An addition sorted to the beginning of a range but adjacent to another range has a known index
 			item = { id: 23.8, name: 'item 23.8', order: 23.8 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { index: 24 } });
+			assertObservationIs({ type: "add", target: item, index: 24 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: "remove", id: item.id, info: { previousIndex: 24 } });
+			assertObservationIs({ type: "remove", id: item.id, previousIndex: 24 });
 
 			// Request range at end of data
 			bigObserved.range(75, 100).fetch();
@@ -352,23 +348,23 @@ define([
 			item = bigStore.get(98);
 			item.order = 99.1;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { index: 99, previousIndex: 98 } });
+			assertObservationIs({ type: "update", target: item, index: 99, previousIndex: 98 });
 
 			// An addition at the end of a range and the data has a known index
 			item = { id: 99.2, name: 'item 99.2', order: 99.2 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { index: 100 } });
+			assertObservationIs({ type: "add", target: item, index: 100 });
 
 			// An update at the beginning of a range has an indeterminate index
 			item = bigStore.get(76);
 			item.order = 74.9;
 			bigStore.put(item);
-			assertObservationIs({ type: "update", target: item, info: { previousIndex: 76 } });
+			assertObservationIs({ type: "update", target: item, previousIndex: 76 });
 
 			// An addition at the beginning of a range has an indeterminate index
 			item = { id: 74.8, name: 'item 74.8', order: 74.8 };
 			bigStore.add(item);
-			assertObservationIs({ type: "add", target: item, info: { } });
+			assertObservationIs({ type: "add", target: item });
 		},
 
 		'paging releaseRange with store.partialData': function(){

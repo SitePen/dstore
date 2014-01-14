@@ -159,7 +159,7 @@ return declare(null, {
 
 		function notify(type, target, event){
 			revision++;
-			event = lang.delegate(event, { index: undef, previousIndex: undef });
+			event = lang.delegate(event);
 			when(observed.hasOwnProperty('data') ? observed.data : observed.partialData, function(resultsArray){
 				var queryExecutor = observed.queryer;
 				var atEnd = false;//resultsArray.length != options.count;
@@ -171,6 +171,8 @@ return declare(null, {
 				var targetId = type === "remove" ? target : store.getIdentity(target);
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
 				if(type === "remove" || type === "update"){
+					event.previousIndex = undef;
+
 					// remove the old one
 					for(i = 0; removedFrom === -1 && i < ranges.length; ++i){
 						range = ranges[i];
@@ -193,6 +195,8 @@ return declare(null, {
 				}
 
 				if(type === "add" || type === "update"){
+					event.index = undef;
+
 					if(queryExecutor){
 						// with a queryExecutor, we can determine the correct sorted index for the change
 
