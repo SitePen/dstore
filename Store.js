@@ -109,7 +109,11 @@ return declare(Evented, {
 	},
 
 	sort: function(property, descending){
-		if(typeof property === 'object'){
+		if(typeof property === 'function'){
+			this.sorted = property;
+		}else if(lang.isArray(property)){
+			this.sorted = property.slice(0);
+		}else if(typeof property === 'object'){
 			this.sorted = [].slice.call(arguments, 0);
 		}else{
 			this.sorted = [{
