@@ -107,7 +107,7 @@ return declare(null, {
 		observed.on = function(type, listener){
 				return on.parse(observed, type, listener, function(target, type){
 				return type in eventTypes ?
-					aspect.after(observed, 'ontracked' + type, listener, true) :
+					aspect.after(observed, 'on_tracked' + type, listener, true) :
 					originalOn.call(observed, type, listener);
 			});
 	};
@@ -270,7 +270,7 @@ return declare(null, {
 				// TODO: Eventually we will want to aggregate all the listener events
 				// in an event turn, but we will wait until we have a reliable, performant queueing
 				// mechanism for this (besides setTimeout)
-				type = 'ontracked' + type;
+				type = 'on_tracked' + type;
 				observed[type] && observed[type](event);
 			});
 		}
