@@ -9,7 +9,7 @@ define([
 	'dstore/Store',
 	'dstore/Observable',
 	'dstore/SimpleQuery'
-], function(registerSuite, assert, array, declare, lang, when, Memory, Store, Observable, SimpleQuery){
+], function(registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, SimpleQuery){
 
 	var MyStore = declare([Memory, Observable], {
 		get: function(){
@@ -47,13 +47,13 @@ define([
 			}
 		};
 
-		array.forEach(["getIdentity", "get", "add", "put", "remove"], function(method){
+		arrayUtil.forEach(["getIdentity", "get", "add", "put", "remove"], function(method){
 			proto[method] = function(){
 				return this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 			};
 		});
 
-		array.forEach(["filter", "sort", "range"], function(method){
+		arrayUtil.forEach(["filter", "sort", "range"], function(method){
 			proto[method] = function(){
 				var newBackingStore = this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 				return lang.mixin(this.inherited(arguments), {
