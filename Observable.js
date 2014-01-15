@@ -123,13 +123,13 @@ return declare(null, {
 			var originalRange = observed.range;
 			observed.range = function(start, end){
 				// trigger a request
-				var rangeCollection = originalRange.apply(this, arguments).fetch(),
+				var rangeCollection = originalRange.apply(this, arguments),
 					partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
 
 				// Wait for total in addition to data so updated objects sorted to
 				// the end of the list have a known index
 				whenAll({
-					data: rangeCollection,
+					data: rangeCollection.fetch(),
 					total: rangeCollection.total
 				}).then(function(result){
 					partialData.length = result.total;
