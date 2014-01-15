@@ -3,9 +3,10 @@ define([
 	'intern/chai!assert',
 	'dojo/Deferred',
 	'dojo/_base/declare',
+	'dstore/Store',
 	'dstore/Memory',
 	'dstore/Cache'
-], function(registerSuite, assert, Deferred, declare, Memory, Cache){
+], function(registerSuite, assert, Deferred, declare, Store, Memory, Cache){
 
 	var cachingStore = new Memory();
 	var masterFilterCalled;
@@ -15,7 +16,7 @@ define([
 			return this.inherited(arguments);
 		}
 	});
-	var store = declare([MasterStore, Cache])({
+	var store = new declare([MasterStore, Cache])({
 		cachingStore: cachingStore,
 		data: [
 			{id: 1, name: 'one', prime: false},
@@ -101,44 +102,41 @@ define([
 		},
 
 		'cached filter': function(){
-			store.forEach(function(){}); // should result in everything being cached
+			store.fetch(); // should result in everything being cached
 			masterFilterCalled = false;
 			assert.strictEqual(store.filter({prime: true}).fetch().length, 4);
 			assert.isFalse(masterFilterCalled);
 		},
 
 		'delayed cached filter': function(){
-			var forEachCalled;
-			var MasterCollection = declare(null, {
-				forEach: function(callback){
-					forEachCalled = true;
+			var fetchCalled;
+			var MasterCollection = declare(Store, {
+				fetch: function(callback){
+					fetchCalled = true;
 					var def = new Deferred();
 					setTimeout(function(){
-						var data = [
+						def.resolve([
 							{id: 1, name: 'one', prime: false},
 							{id: 2, name: 'two', even: true, prime: true},
 							{id: 3, name: 'three', prime: true},
 							{id: 4, name: 'four', even: true, prime: false},
 							{id: 5, name: 'five', prime: true}
-						];
-						for (var i = 0; i < data.length; i++){
-							callback(data[i], i);
-						}
-						def.resolve(data);
+						]);
 					}, 20);
 					return def;
 				}
 			});
 			var store = new (declare([MasterCollection, Cache]))();
-			store.forEach(function(){}); // should result in everything being cached
-			forEachCalled = false;
+			store.fetch(); // should result in everything being cached
+			assert.isTrue(fetchCalled);
+			fetchCalled = false;
 			var testDef = new Deferred();
 			var count = 0;
 			store.filter({prime: true}).forEach(function(results){
 				count++;
 			}).then(function(){
 				assert.strictEqual(count, 3);
-				assert.isFalse(forEachCalled);
+				assert.isFalse(fetchCalled);
 				testDef.resolve(true);
 			});
 			return testDef;
