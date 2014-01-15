@@ -70,43 +70,12 @@ return declare(Store, {
 	//		The prefix to apply to sort property names that are ascending
 	descendingPrefix: "-",
 
-	// TODO: Can this be removed now that we are building the URL from this.filtered?
-	query: '',
-
-	_renderUrl: function(){
-		var filterParamString = this.filtered && array.map(this.filtered, function(filter){
-			return typeof filter === "object" ? ioQuery.objectToQuery(filter) : filter;
-		}).join("&");
-
-		var sortString = this.sorted && array.map(this.sorted, function(sortOption){
-			var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-			return prefix + encodeURIComponent(sortOption.property);
-		}, this).join(",");
-
-		var query = "";
-		if(filterParamString || sortString){
-			query += "?";
-
-			if(filterParamString){
-				query += filterParamString;
-			}
-			if(sortString){
-				query += (filterParamString ? "&" : "") + (this.sortParam
-					? encodeURIComponent(this.sortParam) + "=" + sortString
-					: "sort(" + sortString + ")"
-				);
-			}
-		}
-
-		return this.target + query;
-	},
-
 	sort: function(){
 		// clear the old data
 		delete this.data;
 		return this.inherited(arguments);
 	},
-	
+
 	range: function(start, end){
 		return lang.mixin(this.inherited(arguments),{
 			headers: lang.delegate(this.headers,{
@@ -129,6 +98,7 @@ return declare(Store, {
 		// returns: Number
 		return object[this.idProperty];
 	},
+
 	fetch: function(){
 		if(!this.hasOwnProperty('data')){
 			// perform the actual query
@@ -151,7 +121,60 @@ return declare(Store, {
 			});
 		}
 		return this.data;
-	}
+	},
+
+	_renderFilterParams: function(){
+		// summary:
+		//		Constructs filter-related params to be inserted into the query string
+		// returns: String
+		//		Filter-related params to be inserted in the query string
+		return this.filtered && array.map(this.filtered, function(filter){
+			return typeof filter === "object" ? ioQuery.objectToQuery(filter) : filter;
+		}).join("&");
+	},
+
+	_renderSortParams: function(){
+		// summary:
+		//		Constructs sort-related params to be inserted in the query string
+		// returns: String
+		//		Sort-related params to be inserted in the query string
+		var sortString = "";
+
+		if(this.sorted){
+			sortString = array.map(this.sorted, function(sortOption){
+				var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+				return prefix + encodeURIComponent(sortOption.property);
+			}, this).join(",");
+		}
+
+		return sortString && (this.sortParam
+			? encodeURIComponent(this.sortParam) + "=" + sortString
+			: "sort(" + sortString + ")"
+		);
+	},
+
+	_renderUrl: function(){
+		// summary:
+		//		Constructs the URL used to fetch the data.
+		// returns: String
+		//		The URL of the data
+		var filterParamString = this._renderFilterParams(),
+			sortParamString = this._renderSortParams();
+
+		var query = "";
+		if(filterParamString || sortParamString){
+			query += "?";
+
+			if(filterParamString){
+				query += filterParamString;
+			}
+			if(sortParamString){
+				query += (filterParamString ? "&" : "") + sortParamString;
+			}
+		}
+
+		return this.target + query;
+	},
 });
 
 });
