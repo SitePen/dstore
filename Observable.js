@@ -241,9 +241,7 @@ return declare(null, {
 							insertedInto = removedFrom;
 							insertionRangeIndex = removalRangeIndex;
 						}else{
-							// TODO: Should there be a default index for a new object of undetermined index?
-							//		It seems like sending "add" notification with no index might be more appropriate.
-							//		On the other hand, when adding to an unsorted list, I would expect the new element to be appended.
+							// TODO: A way to specify at-the-end would be useful. Possibly defaultIndex === Infinity
 							// a new object
 							insertedInto = store.defaultIndex || 0;
 
@@ -257,14 +255,12 @@ return declare(null, {
 						}
 					}
 
-					if(insertedInto > -1){
+					// an item only truly has a known index if it is in a known range
+					if(insertedInto > -1 && insertionRangeIndex > -1){
 						event.index = insertedInto;
 						resultsArray.splice(insertedInto, 0, target);
 
-						// TODO: NOTE: This is broken for a non-zero store.defaultIndex because, when an insertion range is not found, this code assumes insertion at the beginning.
-						if(insertionRangeIndex > -1){
-							ranges[insertionRangeIndex].count++;
-						}
+						ranges[insertionRangeIndex].count++;
 						for(i = insertionRangeIndex + 1; i < ranges.length; ++i){
 							ranges[i].start++;
 						}

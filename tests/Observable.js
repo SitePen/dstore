@@ -434,6 +434,37 @@ define([
 			});
 		},
 
+		'new item with default index': function(){
+			var store = createBigStore(100, ObservablePartialDataStore),
+				trackedStore = store.track();
+
+			return trackedStore.range(0, 25).fetch().then(function(){
+				var addEvent = null;
+				trackedStore.on('add', function(event){
+					addEvent = event;
+				});
+
+				// a new item with a default index within a known range has a known index
+				var expectedNewItem = { id: 200, name: 'item-200', order: Infinity };
+				store.add(expectedNewItem);
+				assert.isDefined(addEvent);
+				assert.deepEqual(addEvent.target, expectedNewItem);
+				assert.propertyVal(addEvent, 'index', 0);
+
+				// choose a defaultIndex outside requested, known range
+				store.defaultIndex = 50;
+				addEvent = null
+				expectedNewItem = { id: 201, name: 'item-201', order: Infinity };
+
+				// a new item with a default index outside a known range is treated as if it has no known index
+				store.add(expectedNewItem);
+				assert.isNotNull(addEvent);
+				assert.deepEqual(addEvent.target, expectedNewItem);
+				assert.isTrue('index' in addEvent);
+				assert.isUndefined(addEvent.index);
+			});
+		},
+
 		'type': function(){
 			assert.isFalse(store === store.track(function(){}));
 		}
