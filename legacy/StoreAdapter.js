@@ -83,22 +83,14 @@ define([
 			});
 		},
 
-		forEach: function(callback, thisObj){
+		fetch: function(){
 			// summary:
-			//		Iterates over the query results, based on
-			//		https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/forEach.
-			//		Note that this may executed asynchronously. The callback may be called
-			//		after this function returns.
-			// callback:
-			//		Function that is called for each object in the query results
-			// thisObject:
-			//		The object to use as |this| in the callback.
-			var self = this;
+			//		Fetches the query results. Note that the fetch may occur asynchronously
+			// returns: Array|Promise
+			//		The results or a promise for the results
 			var results = this.query(this._query, this._queryOptions);
 			if(results){
-				results.forEach(function(obj){
-					callback.call(thisObj, self.assignPrototype(obj));
-				}, thisObj);
+				results.forEach(this.assignPrototype, this);
 			}
 			return results;
 		}
