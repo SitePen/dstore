@@ -1,9 +1,10 @@
 define([
 	"dojo/_base/lang",
+	"dojo/_base/array",
 	"dojo/when",
 	"dojo/_base/declare",
 	"./Memory"],
-function(lang, when, declare, Memory){
+function(lang, arrayUtil, when, declare, Memory){
 
 // module:
 //		dstore/Cache
@@ -44,7 +45,7 @@ return declare(null, {
 					}
 					return data;
 				});
-				
+
 			return lang.delegate(this, {
 				allLoaded: data,
 				data: data,
@@ -93,30 +94,32 @@ return declare(null, {
 		return this._tryCacheForResults('range',
 			start + '-' + end, arguments);
 	},
-	forEach: function(callback, thisObject){
+	fetch: function(){
 		var cachingStore = this.cachingStore;
 		var store = this;
 		if(this.allLoaded){
 			// everything has been loaded, use the caching store
 			return when(this.allLoaded, function(){
-				return store.cachingStore.forEach(callback, thisObject);
+				return store.cachingStore.fetch();
 			});
 		}
-		return this.allLoaded = this.inherited(arguments, [function(object){
-			// store each object before calling the callback
-			if(!store.isLoaded || store.isLoaded(object)){
-				cachingStore.put(object);
-			}
-			callback.call(thisObject, object);
-		}, thisObject]) || true;
+		return this.allLoaded = when(this.inherited(arguments), function(results){
+			arrayUtil.forEach(results, function(object){
+				// store each object before calling the callback
+				if(!store.isLoaded || store.isLoaded(object)){
+					cachingStore.put(object);
+				}
+			});
+			return results;
+		});
 	},
 	/*canCacheQuery: function(method, args){
 		// summary:
-		//		this function can be overriden to provide more specific functionality for 
+		//		this function can be overriden to provide more specific functionality for
 		// 		determining if a query should go to the master store or the caching store
 		return true;
 	},*/
-	
+
 	allLoaded: false,
 	get: function(id, directives){
 		var cachingStore = this.cachingStore;

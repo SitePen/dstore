@@ -25,22 +25,22 @@ define([
 		},
 
 		'sort': function(){
-			var expectedSort1 = { attribute: "prop1", descending: true },
-				expectedSort2 = { attribute: "prop2", descending: false },
-				expectedSort3 = { attribute: "prop2" },
+			var sortObject = { property: "prop1", descending: true },
+				sortObjectArray = [ sortObject, { property: "prop2", descending: false } ],
+				comparator = function comparator(){},
 				sortedCollection;
 
-			sortedCollection = store.sort(expectedSort1.attribute, expectedSort1.descending);
-			assert.deepEqual(sortedCollection.sorted, [ expectedSort1 ]);
+			sortedCollection = store.sort(sortObject.property, sortObject.descending);
+			assert.deepEqual(sortedCollection.sorted, [ sortObject ]);
 
-			sortedCollection = sortedCollection.sort(expectedSort2.attribute, expectedSort2.descending);
-			assert.deepEqual(sortedCollection.sorted, [ expectedSort1, expectedSort2 ]);
+			sortedCollection = store.sort(sortObject);
+			assert.deepEqual(sortedCollection.sorted, [ sortObject ]);
 
-			sortedCollection = sortedCollection.sort(expectedSort3.attribute);
-			assert.deepEqual(
-				sortedCollection.sorted,
-				[ expectedSort1, expectedSort2, { attribute: expectedSort3.attribute, descending: false } ]
-			);
+			sortedCollection = sortedCollection.sort(sortObjectArray);
+			assert.deepEqual(sortedCollection.sorted, sortObjectArray);
+
+			sortedCollection = sortedCollection.sort(comparator);
+			assert.deepEqual(sortedCollection.sorted, comparator);
 		},
 
 		'range': function(){
@@ -56,5 +56,6 @@ define([
 		}
 
 		// TODO: Add map test and tests for other Store features
+		// TODO: Add tests for add, update, remove, and refresh events, including refresh being emitted on sort.
 	});
 });

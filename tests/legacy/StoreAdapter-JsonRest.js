@@ -4,9 +4,10 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
+	'dojo/when',
 	'dojo/store/JsonRest',
 	'dstore/legacy/StoreAdapter'
-], function(require, registerSuite, assert, declare, lang, JsonRest, StoreAdapter){
+], function(require, registerSuite, assert, declare, lang, when, JsonRest, StoreAdapter){
 
 	var TestModel = declare(null, {
 		describe: function(){
@@ -28,7 +29,7 @@ define([
 	adaptedStore.model.prototype.describe = function(){
 		return 'name is ' + this.name;
 	};
-	
+
 
 	var	store  = new (declare([JsonRest, StoreAdapter]))({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
@@ -58,13 +59,11 @@ define([
 
 		'query': function(){
 			var first = true;
-			return store.filter('data/treeTestRoot').forEach(function(object){
-				if(first){
-					first = false;
-					assert.strictEqual(object.name, 'node1');
-					assert.strictEqual(object.describe(), 'name is node1');
-					assert.strictEqual(object.someProperty, 'somePropertyA');
-				}
+			return when(store.filter('data/treeTestRoot').fetch()).then(function(results){
+				var object = results[0];
+				assert.strictEqual(object.name, 'node1');
+				assert.strictEqual(object.describe(), 'name is node1');
+				assert.strictEqual(object.someProperty, 'somePropertyA');
 			});
 		},
 
@@ -93,13 +92,11 @@ define([
 
 		'query': function(){
 			var first = true;
-			return adaptedStore.filter('data/treeTestRoot').forEach(function(object){
-				if(first){
-					first = false;
-					assert.strictEqual(object.name, 'node1');
-					assert.strictEqual(object.describe(), 'name is node1');
-					assert.strictEqual(object.someProperty, 'somePropertyA');
-				}
+			return when(adaptedStore.filter('data/treeTestRoot').fetch()).then(function(results){
+				var object = results[0];
+				assert.strictEqual(object.name, 'node1');
+				assert.strictEqual(object.describe(), 'name is node1');
+				assert.strictEqual(object.someProperty, 'somePropertyA');
 			});
 		},
 

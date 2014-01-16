@@ -1,5 +1,13 @@
-define(['dojo/_base/lang', 'dojo/has', 'dojo/when', 'dojo/Deferred', 'dojo/_base/declare', './Model', 'dojo/Evented'
-], function(lang, has, when, Deferred, declare, Model, Evented){
+define([
+	'dojo/_base/lang',
+	'dojo/aspect',
+	'dojo/has',
+	'dojo/when',
+	'dojo/Deferred',
+	'dojo/_base/declare',
+	'./Model',
+	'dojo/Evented'
+], function(lang, aspect, has, when, Deferred, declare, Model, Evented){
 
 // module:
 //		dstore/Store
@@ -17,6 +25,10 @@ return declare(Evented, {
 		}
 		// give a reference back to the store for saving, etc.
 		this.model.prototype._store = this;
+
+		aspect.after(this, 'sort', function(){
+			this.emit('refresh');
+		}, true);
 	},
 	map: function(callback, thisObject){
 		var results = [];
@@ -44,9 +56,16 @@ return declare(Evented, {
 		return this.inherited(arguments);
 	},
 	emit: function(type, event){
+		event = event || {};
 		event.type = type;
 		return this.inherited(arguments);
 	},
+
+	// parse: Function
+	//		One can provide a parsing function that will permit the parsing of the data. By
+	//		default we assume the provide data is a simple JavaScript array that requires
+	//		no parsing
+	parse: null,
 
 	// model: Function
 	//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
@@ -90,7 +109,11 @@ return declare(Evented, {
 	},
 
 	sort: function(property, descending){
-		if(typeof property === 'object'){
+		if(typeof property === 'function'){
+			this.sorted = property;
+		}else if(lang.isArray(property)){
+			this.sorted = property.slice(0);
+		}else if(typeof property === 'object'){
 			this.sorted = [].slice.call(arguments, 0);
 		}else{
 			this.sorted = [{

@@ -62,7 +62,7 @@ define([
 		name: 'dstore RqlRest',
 
 		'filter': function(){
-			rqlRest.filter({prime: true, even: true}).forEach(function(){});
+			rqlRest.filter({prime: true, even: true}).fetch();
 			assert.strictEqual(lastMockRequest, 'http://test.com/?eq(prime,true)&eq(even,true)');
 		}
 	});

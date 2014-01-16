@@ -4,9 +4,10 @@ define([
 	"dojo/aspect",
 	"dojo/when",
 	"dojo/promise/all",
-	"dojo/_base/array"
+	"dojo/_base/array",
+	"dojo/on",
 	/*=====, "./api/Store" =====*/
-], function(lang, declare, aspect, when, whenAll, arrayUtil /*=====, Store =====*/){
+], function(lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/){
 
 // module:
 //		dstore/Observable
@@ -104,10 +105,12 @@ return declare(null, {
 		var originalOn = this.on;
 		// now setup our own event scope, for tracked events
 		observed.on = function(type, listener){
-			return type in eventTypes ?
-				aspect.after(observed, 'ontracked' + type, listener, true) :
-				originalOn.call(observed, type, listener);
-		};
+				return on.parse(observed, type, listener, function(target, type){
+				return type in eventTypes ?
+					aspect.after(observed, 'on_tracked' + type, listener, true) :
+					originalOn.call(observed, type, listener);
+			});
+	};
 
 		var ranges = [];
 		if(this.hasOwnProperty('data')){
@@ -120,18 +123,17 @@ return declare(null, {
 			var originalRange = observed.range;
 			observed.range = function(start, end){
 				// trigger a request
-				var rangeCollection = originalRange.apply(this, arguments).fetch(),
+				var rangeCollection = originalRange.apply(this, arguments),
 					partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
 
 				// Wait for total in addition to data so updated objects sorted to
 				// the end of the list have a known index
 				whenAll({
-					data: rangeCollection.data,
+					data: rangeCollection.fetch(),
 					total: rangeCollection.total
 				}).then(function(result){
 					partialData.length = result.total;
 
-					// TODO: If the range overlaps an existing range, existing objects will be refreshed. Should there be an update notification?
 					// copy the new ranged data into the parent partial data set
 					var spliceArgs = [ start, end - start ].concat(result.data);
 					partialData.splice.apply(partialData, spliceArgs);
@@ -145,6 +147,13 @@ return declare(null, {
 				for(var i = start; i < end; ++i){
 					delete this.partialData[i];
 				}
+			};
+
+			// Clear partialData because the item order is unknown after sort
+			var originalSort = observed.sort;
+			observed.sort = function(){
+				delete this.partialData;
+				return originalSort.apply(this, arguments);
 			};
 		}
 
@@ -160,19 +169,17 @@ return declare(null, {
 				}*/
 
 				var targetId = type === "remove" ? target : store.getIdentity(target);
-				// TODO: Should we explicitly define undefined `index` and `previousIndex` properties so the API is more apparent when inspecting in the debugger?
-				var info = event.info = {};
-
-				// TODO: `total` should probably be updated when items are added and removed from the data
 				var removedObject, removedFrom = -1, removalRangeIndex = -1, insertedInto = -1, insertionRangeIndex = -1;
 				if(type === "remove" || type === "update"){
+					event.previousIndex = undef;
+
 					// remove the old one
 					for(i = 0; removedFrom === -1 && i < ranges.length; ++i){
 						range = ranges[i];
 						for(j = range.start, l = j + range.count; j < l; ++j){
 							var object = resultsArray[j];
 							if(store.getIdentity(object) == targetId){
-								removedFrom = info.previousIndex = j;
+								removedFrom = event.previousIndex = j;
 								removalRangeIndex = i;
 								resultsArray.splice(removedFrom, 1);
 
@@ -188,6 +195,8 @@ return declare(null, {
 				}
 
 				if(type === "add" || type === "update"){
+					event.index = undef;
+
 					if(queryExecutor){
 						// with a queryExecutor, we can determine the correct sorted index for the change
 
@@ -212,7 +221,6 @@ return declare(null, {
 								}
 
 								sortedIndex = arrayUtil.indexOf(queryExecutor(sampleArray), target);
-								// TODO: Is there a better name than adjustedIndex?
 								adjustedIndex = range.start + sortedIndex;
 
 								if(sortedIndex === 0 && range.start !== 0){
@@ -233,9 +241,7 @@ return declare(null, {
 							insertedInto = removedFrom;
 							insertionRangeIndex = removalRangeIndex;
 						}else{
-							// TODO: Should there be a default index for a new object of undetermined index?
-							//		It seems like sending "add" notification with no index might be more appropriate.
-							//		On the other hand, when adding to an unsorted list, I would expect the new element to be appended.
+							// TODO: A way to specify at-the-end would be useful. Possibly defaultIndex === Infinity
 							// a new object
 							insertedInto = store.defaultIndex || 0;
 
@@ -249,14 +255,12 @@ return declare(null, {
 						}
 					}
 
-					if(insertedInto > -1){
-						info.index = insertedInto;
+					// an item only truly has a known index if it is in a known range
+					if(insertedInto > -1 && insertionRangeIndex > -1){
+						event.index = insertedInto;
 						resultsArray.splice(insertedInto, 0, target);
 
-						// TODO: NOTE: This is broken for a non-zero store.defaultIndex because, when an insertion range is not found, this code assumes insertion at the beginning.
-						if(insertionRangeIndex > -1){
-							ranges[insertionRangeIndex].count++;
-						}
+						ranges[insertionRangeIndex].count++;
 						for(i = insertionRangeIndex + 1; i < ranges.length; ++i){
 							ranges[i].start++;
 						}
@@ -266,7 +270,7 @@ return declare(null, {
 				// TODO: Eventually we will want to aggregate all the listener events
 				// in an event turn, but we will wait until we have a reliable, performant queueing
 				// mechanism for this (besides setTimeout)
-				type = 'ontracked' + type;
+				type = 'on_tracked' + type;
 				observed[type] && observed[type](event);
 			});
 		}

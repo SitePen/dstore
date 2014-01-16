@@ -164,6 +164,7 @@ define([
 						object.set(returned);
 					}
 					object.scenario = 'update';
+					return object;
 				});
 			});
 		},

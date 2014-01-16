@@ -97,7 +97,7 @@ var Collection = declare(null, {
 		//		- previousIndex - The previousIndex parameter indicates the index in the result array where
 		//		the object used to be. If the value is -1, then the object is an addition to
 		//		this result set (due to a new object being created, or changed such that it
-		//		is a part of the result set). 
+		//		is a part of the result set).
 		//		- index - The inex parameter indicates the index in the result array where
 		//		the object should be now. If the value is -1, then the object is a removal
 		//		from this result set (due to an object being deleted, or changed such that it
@@ -110,17 +110,19 @@ var Collection = declare(null, {
 	//		to the prototype property of the model, such that objects from this store should
 	//		be return true from `object instanceof store.model`.
 	model: Function,
-	
+
 	// total: Number|Promise?
 	//		This property should be included in if the query options included the "count"
 	//		property limiting the result set. This property indicates the total number of objects
 	//		matching the query (as if "start" and "count" weren't present). This may be
 	//		a promise if the query is asynchronous.
 	total: 0,
-	// sorted: Object
-	//		If the collection has been sorted, this is an object that indicates the property that it was
-	//		sorted on and if it was descending
-	sorted: {},
+	// sorted: dstore/api/Store.SortInformation[]|Function
+	//		If the collection has been sorted, this is an array of sort objects or a comparator function.
+	//		If sorted by one or more properties, `sorted` is an array of objects where each contains a property name
+	//		and an optional flag indicating whether it should be sorted descending. If sorted using a custom
+	//		comparator, `sorted` is the comparator function.
+	sorted: [],
 	// filtered: String|Object|Function|Array
 	//		If the collection has been filtered, this is an object that indicates the query that
 	//		was used to filter it.
@@ -263,9 +265,9 @@ Store.PutDirectives = declare(null, {
 
 Store.SortInformation = declare(null, {
 	// summary:
-	//		An object describing what attribute to sort on, and the direction of the sort.
-	// attribute: String
-	//		The name of the attribute to sort on.
+	//		An object describing what property to sort on, and the direction of the sort.
+	// property: String
+	//		The name of the property to sort on.
 	// descending: Boolean
 	//		The direction of the sort.  Default is false.
 });

@@ -77,6 +77,7 @@ return declare(Request, {
 			}).then(function(response){
 				var result = store.assignPrototype(parse(response));
 				store.emit(options.overwrite === false ? 'add' : 'update', {target: result || object});
+				return result;
 			});
 	},
 

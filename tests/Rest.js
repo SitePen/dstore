@@ -4,13 +4,14 @@ define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'dojo/request/registry',
+	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Rest',
 	'dstore/SimpleQuery',
 	'./mockRequest',
 	'dojo/text!./data/node1.1',
 	'dojo/text!./data/treeTestRoot'
-], function(registerSuite, assert, declare, lang, request, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
+], function(registerSuite, assert, declare, lang, request, when, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
 	function runHeaderTest(method, args){
 		return store[method].apply(store, args).then(function(result){
 			mockRequest.assertRequestHeaders(requestHeaders);
@@ -24,7 +25,7 @@ define([
 			{ id: 2, name: 'two' }
 		];
 		mockRequest.setResponseText(collection.stringify(expectedResults));
-		return collection.forEach(function(){}).then(function(results){
+		return when(collection.fetch()).then(function(results){
 			expected.headers && mockRequest.assertRequestHeaders(expected.headers);
 			expected.queryParams && mockRequest.assertQueryParams(expected.queryParams);
 
@@ -92,13 +93,11 @@ define([
 			mockRequest.setResponseText(treeTestRootData);
 
 			var first = true;
-			return store.filter('data/treeTestRoot').forEach(function(object){
-				if(first){
-					first = false;
-					assert.strictEqual(object.name, 'node1');
-					assert.strictEqual(object.describe(), 'name is node1');
-					assert.strictEqual(object.someProperty, 'somePropertyA');
-				}
+			return when(store.filter('data/treeTestRoot').fetch()).then(function(results){
+				var object = results[0];
+				assert.strictEqual(object.name, 'node1');
+				assert.strictEqual(object.describe(), 'name is node1');
+				assert.strictEqual(object.someProperty, 'somePropertyA');
 			});
 		},
 
@@ -168,9 +167,10 @@ define([
 			var expectedObject = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(expectedObject));
 			return store.get('anything').then(function(object){
+				expectedObject.scenario = 'update';
 				expectedObject.saved = true;
 				mockRequest.setResponseText(store.stringify(expectedObject));
-				object.save().then(function(result){
+				return object.save().then(function(result){
 					assert.deepEqual(store.stringify(result), store.stringify(expectedObject));
 				});
 			});
@@ -183,12 +183,12 @@ define([
 
 		'sort': function(){
 			var sortedCollection = store.sort({
-				property: 'prop1', 
+				property: 'prop1',
 				descending: true
 			}, {
 				property: 'prop2'
 			}, {
-				property: 'prop3', 
+				property: 'prop3',
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
@@ -202,12 +202,12 @@ define([
 			store.sortParam = 'sort-param';
 
 			var sortedCollection = store.sort({
-				property: 'prop1', 
+				property: 'prop1',
 				descending: true
 			}, {
 				property: 'prop2'
 			}, {
-				property: 'prop3', 
+				property: 'prop3',
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
@@ -222,12 +222,12 @@ define([
 			store.ascendingPrefix = '++';
 
 			var sortedCollection = store.sort({
-				property: 'prop1', 
+				property: 'prop1',
 				descending: true
 			}, {
 				property: 'prop2'
 			}, {
-				property: 'prop3', 
+				property: 'prop3',
 				descending: true
 			});
 			return runCollectionTest(sortedCollection, {
@@ -282,7 +282,7 @@ define([
 				filteredCollection = store.filter(filter),
 				sortedCollection,
 				rangeCollection;
-			return filteredCollection.forEach(function(){}).then(function(results){;
+			return when(filteredCollection.fetch()).then(function(results){
 				mockRequest.assertQueryParams(filter);
 				assert.strictEqual(results.length, expectedResults.length);
 
@@ -294,7 +294,7 @@ define([
 				assert.deepEqual(filteredResults[1], expectedResults[2]);
 
 				sortedCollection = filteredCollection.sort('id', true);
-				return sortedCollection.forEach(function(){});
+				return sortedCollection.fetch();
 			}).then(function(results){
 				mockRequest.assertQueryParams({ 'sort(-id)': '' });
 				assert.strictEqual(results.length, expectedResults.length);
@@ -305,7 +305,7 @@ define([
 				assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
 
 				rangeCollection = sortedCollection.range(15, 25);
-				return rangeCollection.forEach(function(){});
+				return rangeCollection.fetch();
 			}).then(function(results){
 				mockRequest.assertQueryParams({
 					'sort(-id)': '',
