@@ -12,7 +12,7 @@ define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/valida
 
 		// the validation function, this can be used for all the properties
 		function checkForErrors() {
-			var value = this.get();
+			var value = this.valueOf();
 			var key = this.name;
 			// get the current value and test it against the property's definition
 			var validation = jsonSchemaValidator.validate(value, properties[key]);

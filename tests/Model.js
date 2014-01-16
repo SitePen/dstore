@@ -21,7 +21,7 @@ define([
 					put: function (value) {
 						return this._parent._accessor = value;
 					},
-					get: function () {
+					valueOf: function () {
 						return this._parent._accessor;
 					}
 				}
@@ -107,20 +107,22 @@ define([
 				assert.strictEqual(receivedCount, 1);
 			}
 			assertReceived('foo', function (callback) {
-				model.property('string', callback);
+				model.property('string').observe(callback);
 			});
 			assertReceived('foo', function (callback) {
 				model.property('string').observe(callback);
 			});
 			assertReceived('foo', function (callback) {
-				callback(model.property('string').get());
+				callback(model.property('string').valueOf());
 			});
 			assertReceived(1234, function (callback) {
-				model.property('number', callback);
+				model.property('number').observe(callback);
 			});
 			assertReceived(true, function (callback) {
 				model.property('boolean').observe(callback);
 			});
+			// make sure coercion works
+			assert.strictEqual(model.property('number') + 1234, 2468);
 			// reset the model, so don't have to listeners
 			model = createPopulatedModel();
 			var string = model.property('string');
@@ -132,7 +134,7 @@ define([
 				model.property('string').observe(callback);
 			});
 			assertReceived(true, function (callback) {
-				model.get('boolean', callback);
+				model.property('boolean').observe(callback, true);
 				model.set('boolean', true);
 			});
 			var number = model.property('number');
@@ -181,7 +183,7 @@ define([
 			model.set('range', 15);
 			assert.isTrue(model.validate());
 			var lastReceivedErrors;
-			model.property('range').property('errors', function(errors){
+			model.property('range').property('errors').observe(function(errors){
 				lastReceivedErrors = errors;
 			});
 			model.set('requiredString', '');
@@ -230,9 +232,11 @@ define([
 				lastName: 'Doe'
 			});
 			var updatedName;
-			assert.strictEqual(model.get('name', function (name) {
+			var nameProperty = model.property('name');
+			nameProperty.observe(function (name) {
 				updatedName = name;
-			}), 'John Doe');
+			});
+			assert.strictEqual(nameProperty.valueOf(), 'John Doe');
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
 			var updatedName2;
@@ -253,7 +257,7 @@ define([
 			model.set('birthDate', then);
 			assert.strictEqual(model.get('birthDate').getTime(), 1000000);
 			var updatedDate, now = new Date();
-			model.get('birthDate', function (newDate) {
+			model.property('birthDate').observe(function (newDate) {
 				updatedDate = newDate;
 			});
 			model.set('birthDate', now);
