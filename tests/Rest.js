@@ -240,8 +240,8 @@ define([
 		'range': function(){
 			var rangeCollection = store.range(15, 25);
 			return runCollectionTest(rangeCollection, {
-				headers: {
-					Range: 'items=15-24'
+				queryParams: {
+					'range(15,25)': ''
 				}
 			});
 		},
@@ -249,8 +249,8 @@ define([
 		'range without end': function(){
 			var rangeCollection = store.range(15);
 			return runCollectionTest(rangeCollection, {
-				headers: {
-					Range: 'items=15-'
+				queryParams: {
+					'range(15)': ''
 				}
 			});
 		},
@@ -259,10 +259,10 @@ define([
 			var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
 			var collection = store.filter(filter).sort('prop1').range(15, 25);
 			return runCollectionTest(collection, {
-				headers: {
-					Range: 'items=15-24'
-				},
-				queryParams: lang.mixin({}, filter, { 'sort(+prop1)': '' })
+				queryParams: lang.mixin({}, filter, {
+					'range(15,25)': '',
+					'sort(+prop1)': ''
+				})
 			});
 		},
 
@@ -307,7 +307,10 @@ define([
 				rangeCollection = sortedCollection.range(15, 25);
 				return rangeCollection.forEach(function(){});
 			}).then(function(results){
-				mockRequest.assertRequestHeaders({ Range: 'items=15-24' });
+				mockRequest.assertQueryParams({
+					'sort(-id)': '',
+					'range(15,25)': ''
+				});
 				assert.strictEqual(results.length, expectedResults.length);
 			});
 		}

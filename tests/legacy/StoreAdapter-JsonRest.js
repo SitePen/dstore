@@ -83,7 +83,7 @@ define([
 
 		'get': function(){
 			var d = this.async();
-			adaptedStore.get('data/node1.1').then(d.callback(function(object){
+			return adaptedStore.get('data/node1.1').then(d.callback(function(object){
 				assert.strictEqual(object.name, 'node1.1');
 				assert.strictEqual(object.describe(), 'name is node1.1');
 				assert.strictEqual(object.someProperty, 'somePropertyA1');

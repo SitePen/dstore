@@ -83,18 +83,27 @@ return declare(Store, {
 			return prefix + encodeURIComponent(sortOption.property);
 		}, this).join(",");
 
-		var query = "";
-		if(filterParamString || sortString){
+		var paramsAdded, query = "";
+		if(filterParamString || sortString || this.ranged){
 			query += "?";
 
 			if(filterParamString){
 				query += filterParamString;
+				paramsAdded = true;
 			}
 			if(sortString){
-				query += (filterParamString ? "&" : "") + (this.sortParam
-					? encodeURIComponent(this.sortParam) + "=" + sortString
+				query += (paramsAdded ? "&" : "") + (this.sortParam
+					? this.sortParam + "=" + sortString
 					: "sort(" + sortString + ")"
 				);
+				paramsAdded = true;
+			}
+			if(this.ranged){
+				var start = this.ranged.start;
+				var end = this.ranged.end;
+				query += (paramsAdded ? "&" : "") + (this.rangeParam
+					? this.rangeParam + "=" + start + "-" + (end || "")
+					: "range(" + start + (end ? ("," + end) : "") + ")");
 			}
 		}
 
@@ -105,16 +114,6 @@ return declare(Store, {
 		// clear the old data
 		delete this.data;
 		return this.inherited(arguments);
-	},
-	
-	range: function(start, end){
-		return lang.mixin(this.inherited(arguments),{
-			headers: lang.delegate(this.headers,{
-				Range: "items=" + (start || '0') + '-' +
-					((end > -1 && end != Infinity) ?
-						(end - 1) : '')
-			})
-		});
 	},
 
 	// accepts: String
