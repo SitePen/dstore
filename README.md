@@ -144,7 +144,7 @@ Property objects actually extend the data model class, so the methods listed for
 Method | Description
 ------ | -----------
 `observe(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
-`put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
+`put(value)` | This requests a change in the value of this property. This may be coerced before being stored, and/or validated.
 `valueOf()` | This returns the current value of the property object.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property be set, if any errors were found in the validation process.
 `addError(error)` | This can be called to add an error to the list of validation errors for a property.
@@ -154,8 +154,8 @@ Property | Description
 `type` | This indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This indicates whether a (non-empty) value is required for this property.
 `errors` | This is an array of errors from the last validation of this property. This may be null to indicate no errors.
-`parent` | This is the parent object for the property
-`name` | This is the name of the property
+`parent` | This is the parent object for the property.
+`name` | This is the name of the property.
 
 To get a property object from an data object, we simply call the property method:
 
@@ -236,6 +236,8 @@ Here is an example of a schema that with a computed property, `fullName`:
             }
         }
     }
+
+The items in the `dependsOn' on array can be property names, or they can be other property objects. If other property objects are used, the computed property can be used as a standalone entity (it can be observed and values directly retrieved from it), without having to be attached to another parent object. The items in this array can be mixed, and include the property's own value as well (using its own name).
 
 Note, that traditional getters and setters can effectively be defined by creating `valueOf()` and `put()` methods on the property definition. However, this is generally eschewed in dstore, since the primary use cases for getters and setters are better served by defining validation or creating a computed property.
 
