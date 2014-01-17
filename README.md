@@ -187,9 +187,9 @@ You can also define your own methods, to override the normal validation, access,
 
 Method | Description
 ------ | -----------
-`validate()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
+`checkForErros()` | This method can be overriden to provide custom validation functionality. This method is responsible for setting the errors property to a falsy value for valid values or an array of errors if validation failed. It is also responsible for returning a boolean indicating if validation succeeed (or a promise to a boolean).
 `coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
-`is(value)` | This method can be called by a put() method to set the value of the underlying property and notify any listeners of the change. This generally does not need to be overriden.
+`setValue(value, parent)` | This method can be called by a put() method to set the value of the underlying property. This can be overriden to define a custom setter.
 
 Here is an example of creating a model using a schema:
 
@@ -228,11 +228,11 @@ Here is an example of a schema that with a computed property, `fullName`:
                 // compute the full name
                 return firstName + ' ' + lastName;
             },
-            put: function(value){
+            setValue: function(value, parent){
                 // support setting this property as well
                 var parts = value.split(' ');
-                this._parent.set('firstName', parts[0]);
-                this._parent.set('lastName', parts[1]);
+                parent.set('firstName', parts[0]);
+                parent.set('lastName', parts[1]);
             }
         }
     }
