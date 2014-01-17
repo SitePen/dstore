@@ -244,10 +244,12 @@ define([
 				updatedName2 = name;
 			});
 			assert.strictEqual(updatedName2, 'Jane Doe');
+
 			model.set('lastName', 'Smith');
 			assert.strictEqual(updatedName, 'Jane Smith');
 			assert.strictEqual(updatedName2, 'Jane Smith');
 			handle.remove();
+
 			model.set('name', 'Adam Smith');
 			assert.strictEqual(updatedName, 'Adam Smith');
 			assert.strictEqual(model.get('firstName'), 'Adam');
@@ -262,6 +264,26 @@ define([
 			});
 			model.set('birthDate', now);
 			assert.strictEqual(updatedDate.getTime(), now.getTime());
+
+			var standaloneComputed = new ComputedProperty({
+				dependsOn: [nameProperty, model.property('birthDate')],
+				getValue: function (name, birthDate) {
+					return name + ' is ' + ((now - birthDate > 315360000000) ? 'older' : 'younger') +
+						' than ten years old';
+				}
+			});
+			var updatedComputed;
+			standaloneComputed.observe(function (newValue) {
+				updatedComputed = newValue;
+			});
+			assert.strictEqual(standaloneComputed.valueOf(), 'Adam Smith is younger than ten years old');
+			assert.strictEqual(updatedComputed, 'Adam Smith is younger than ten years old');
+			model.set('birthDate', then);
+			assert.strictEqual(standaloneComputed.valueOf(), 'Adam Smith is older than ten years old');
+			assert.strictEqual(updatedComputed, 'Adam Smith is older than ten years old');
+			model.set('firstName', 'John');
+			assert.strictEqual(standaloneComputed.valueOf(), 'John Smith is older than ten years old');
+			assert.strictEqual(updatedComputed, 'John Smith is older than ten years old');
 		},
 		'#save async': function () {
 			var model = new Model();

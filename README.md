@@ -120,7 +120,7 @@ By default, all objects returned from a store (whether it be from iterating over
 
 Property | Description
 -------- | -----------
-`schema` | The schema is an object that with property definitions that define various metadata about the instance objects' properties.
+`schema` | The schema is an object with property definitions that define various metadata about the instance objects' properties.
 `additionalProperties` | This indicates whether or not to allow additional properties outside of those defined by the schema. This defaults to true.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
 `validators` | This is an array of validators that can be applied on validation.
@@ -145,9 +145,9 @@ Method | Description
 ------ | -----------
 `observe(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
 `put(value)` | This requests a change in the value of this property. This may be coerced, and/or validated.
-`valueOf()` | This returns the current value of the property. If a listener is provided, it will be called with any future changes to the property value.
-`validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the errors property be set, if any errors were found in the validation process.
-`addError(error)` | This can be called to add an error to the list of validation errors for a property
+`valueOf()` | This returns the current value of the property object.
+`validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property be set, if any errors were found in the validation process.
+`addError(error)` | This can be called to add an error to the list of validation errors for a property.
 
 Property | Description
 ------ | -----------
@@ -215,7 +215,7 @@ It is important to note that each store should have its own distinct model class
 
 A computed property may be defined on the schema, by using the the `dstore/ComputedProperty` class. With a computed property, we can define a `getValue()` method to compute the value to be returned when a property is accessed. We can also define a `dependsOn` array to specify which properties we depend on. When the property is accessed or any of the dependent property changes, the property's value will be recomputed. The `getValue` is called with the values of the properties defined in the `dependsOn` array.
 
-With a computed property, we may also want to write a custom put() method if we wish to support assignments to the computed property. A put() method may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this._parent`.
+With a computed property, we may also want to write a custom `put()` method if we wish to support assignments to the computed property. A `put()` method may often need to interact with the parent object to compute values and determine behavior. They can access the parent object from `this._parent`.
 
 Here is an example of a schema that with a computed property, `fullName`:
 

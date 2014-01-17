@@ -21,12 +21,16 @@ define([
 			var args = [];
 			var parentObject = this._parent;
 			for (var i = 0; i < dependsOn.length; i++) {
-				if (dependsOn[i] === this.name) {
-					// don't go back through for our own property
-					args[i] = parentObject[this.name];
-				} else {
-					args[i] = parentObject.get(dependsOn[i]);
-				}
+				var dependency = dependsOn[i];
+				args[i] = typeof dependency === 'object' ?
+					// the dependency is another reactive object
+					dependency.valueOf() :
+					// otherwise, treat it as a propery
+					dependency === this.name ?
+						// don't recursively go through getters on our own property
+						parentObject[this.name] :
+						// another property
+						parentObject.get(dependency);
 			}
 			return this.value = this.getValue.apply(this, args);
 		},
@@ -44,12 +48,17 @@ define([
 				listener(property._get());
 			}
 			for (var i = 0; i < dependsOn.length; i++) {
-				if (dependsOn[i] === this.name) {
-					// setup the default listener for our own name
-					handles.push(this.inherited(arguments, [changeListener]));
-				} else {
-					handles.push(this._parent.property(dependsOn[i]).observe(changeListener, true));
-				}
+				// listen to each dependency
+				var dependency = dependsOn[i];
+				handles.push(typeof dependency === 'object' ?
+					// it is another reactive object
+					dependency.observe(changeListener, true) :
+					// otherwise treat as property
+					dependency === this.name ?
+						// setup the default listener for our own name
+						this.inherited(arguments, [changeListener]) :
+						// otherwise get the other property and listen
+						this._parent.property(dependsOn[i]).observe(changeListener, true));
 			}
 			return {
 				remove: function() {
