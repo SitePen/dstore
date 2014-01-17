@@ -19,13 +19,21 @@ The dstore package includes several store implementations that can be used for t
 * Observable - This a mixin store that adds will track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
 * RqlServer, RqlClient - Mixins for adding RQL querying capabilities to stores.
 
-# Store API
-
-This is a description of the `dstore/api/Store` API.
-
 ## Store.Collection
 
-This is an abstract API that for a collection of items, which can be filtered, sorted, and sliced to create new collections Every method and property is optional, and is only needed if the functionality it provides is required. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for query() which already defines an async return value). Note that the objects in the collection may not be immediately retrieved from the underlying data storage until they are actually accessed through forEach() or then().
+This is an abstract API that for a collection of items, which can be filtered, sorted, and sliced to create new collections Every method and property is optional, and is only needed if the functionality it provides is required. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for query() which already defines an async return value). Note that the objects in the collection may not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `map()`, or `fetch()`.
+
+## Querying
+
+Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify define which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `range()` method can be called if you want to retrieve an index-based subset, rather than the entire result set. A typical query from a store would look like:
+
+    store.filter({priority: 'high'}).sort('dueDate').range(0, 10).forEach(function (object) {
+            // called for each item in the final result set
+        });
+
+# Store API
+
+The following properties and methods are available on dstore stores:
 
 ### Property Summary
 
@@ -42,15 +50,15 @@ Property | Description
 
 #### `filter(query)`
 
-Filters the collection, returning a new subset collection
+Filters the collection, returning a new subset collection. The query can be an object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities may accept a function for filtering as well.
 
 #### `sort(property, [descending])`
 
 Sorts the current collection, modifying the array in place.
 
-#### `sort(highestSortOrder, nextSortOrder...)`
+#### `sort([highestSortOrder, nextSortOrder...])`
 
-This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort({property:'lastName'}, {property: 'firstName'})` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
+This can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a collection sorted by lastName, with firstName used to sort identical lastName values.
 
 #### `range(start, [end])`
 
