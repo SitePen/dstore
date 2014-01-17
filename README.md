@@ -256,10 +256,23 @@ Validators are `Property` subclasses with more advanced validation capabilities.
         })
     }
 
-dstore include several pre-built validators:
+dstore include several pre-built validators. These are the available validators, and their properties:
 * StringValidator - Enforces string length and patterns.
+** minimumLength - Minimum length of the string
+** maximumLength - Maximum length of the string
+** pattern - Regular expression to test against the string
+** minimumLengthError - Error message when minimum length fails
+** maximumLengthError - Error message when maximum length fails
+** patternMatchError - The error when a pattern does not match
 * NumericValidator - Enforces numbers and ranges of numbers.
+** minimum - The minimum value for the value 
+** maximum - The maximum value for the value
+** minimumError - The error message for values that are too low
+** maximumError - The error message for values that are too high
+** notANumberError - The error message for values that are not a number
 * UniqueValidator - Enforces uniqueness of values, testing against a store.
+** uniqueStore - The store that will be accessed to determine if a value is unique
+** uniqueError - The error message for when the value is not unique
 
 We can also combine validators. We can do this by using declare to mixin additional validators. For example, if we wanted to use the StringValidator in combination with the UniqueValidator, we could write:
 
