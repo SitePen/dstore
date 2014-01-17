@@ -64,7 +64,7 @@ return declare(Request, {
 		var hasId = typeof id != "undefined";
 		var model = this.model;
 		var parse = this.parse;
-		var store = this;
+		var store = this.store || this;
 		return request(hasId ? this.target + id : this.target, {
 				method: hasId && !options.incremental ? "PUT" : "POST",
 				data: this.stringify(object),
@@ -103,7 +103,7 @@ return declare(Request, {
 		// options: __HeaderOptions?
 		//		HTTP headers.
 		options = options || {};
-		var store = this;
+		var store = this.store || this;
 		return request(this.target + id, {
 			method: "DELETE",
 			headers: lang.mixin({}, this.headers, options.headers)

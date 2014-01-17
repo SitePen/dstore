@@ -67,6 +67,7 @@ return declare(SimpleQuery, {
 				object = lang.delegate(prototype, object);
 			}
 		}
+		var store = this.store || this;
 		if(id in index){
 			// object exists
 			if(options && options.overwrite === false){
@@ -74,11 +75,11 @@ return declare(SimpleQuery, {
 			}
 			// replace the entry in data
 			data[index[id]] = object;
-			this.emit('update', {target: object});
+			store.emit('update', {target: object});
 		}else{
 			// add the new object
 			index[id] = data.push(object) - 1;
-			this.emit('add', {target: object});
+			store.emit('add', {target: object});
 		}
 		return object;
 	},
@@ -107,8 +108,9 @@ return declare(SimpleQuery, {
 		if(id in index){
 			data.splice(index[id], 1);
 			// now we have to reindex
-			this._reindex(data);
-			this.emit('remove', {id: id});
+			var store = this.store || this;
+			store._reindex(data);
+			store.emit('remove', {id: id});
 			return true;
 		}
 	},
@@ -126,8 +128,9 @@ return declare(SimpleQuery, {
 			this.idProperty = data.identifier || this.idProperty;
 			data = data.items;
 		}
-		this._reindex(data);
-		this.emit('refresh');
+		var store = this.store || this;
+		store._reindex(data);
+		store.emit('refresh');
 	},
 
 	_reindex: function(data){
