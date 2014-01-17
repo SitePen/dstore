@@ -31,6 +31,8 @@ Several methods are available for querying collections. These methods allow you 
             // called for each item in the final result set
         });
 
+In addition, the `track()` method may be used to track store changes, ensuring notifications include index information about object changes, and keeping result sets up-to-date after a query. The `fetch()` method is alternative way to retrieve results, providing an array, and the `map()` is another iterative alternative to `forEach()` for accessing query results. The API below describes each of these methods.
+
 # Store API
 
 The following properties and methods are available on dstore stores:
