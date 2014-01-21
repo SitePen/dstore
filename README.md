@@ -340,21 +340,62 @@ All the stores can be instantiated with an options argument to the constructor, 
 
 The Memory store is a basic client-side in-memory object store, that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor, or by calling `store.setData(data)`.
 
+For example:
+
+    myStore = new Memory({
+        data: [{
+            id: 1,
+            aProperty: ...,
+            ...
+        }]
+    });
+
+All the methods on `Memory` store return synchronously.
+
 ## Request
 
-This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be define with the `target` property.
+This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property.
 
 ## Rest
 
-This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications trigger HTTP requests to the server, using the corresponding RESTful HTTP methods.
+This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications, trigger HTTP requests to the server, using the corresponding RESTful HTTP methods.
+
+For example:
+
+    myStore = new Memory({
+        target: '/PathToData/'
+    });
+
+All modification or retrieval methods (except `getIdentity()`) on `Request` and `Rest` execute asynchronously, returning a promise.
 
 ## Store
 
-This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances.
+This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances. This (or any of the other classes above) can be extended for creating custom stores.
 
 ## Validating
 
 This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation TypeError will be thrown, with an `errors` property that lists any validation errors.
+
+## SimplyQuery
+
+This base/mixin store provides client-side querying functionality. This provides the querying functionality for the Memory store, and can be used as a mixin with the Rest store for performing client-side queries in combination with server-side queries.
+
+To combine the `SimpleQuery` with the `Rest` store, we could create a new store:
+
+    // define a store based on Rest with SimpleQuery as a mixin
+    var RestWithClientQuerying = declare([Rest, SimplyQuery]);
+    // create a store instance
+    var myStore = new RestWithClientQuerying({
+        target: '/PathToData/'
+    });
+    // define a query
+    var importantItems = myStore.filter({priority: 'high'});
+    // request the data, this will trigger the server-side query
+    importantItems.fetch().then(function(){
+        // once this is complete, we can now query, and it will
+        // be performed on the client side
+        var firstItems = importantItems.range(0, 10);
+    });
 
 # Adapters
 
