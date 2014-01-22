@@ -73,12 +73,27 @@ return declare(SimpleQuery, {
 			if(options && options.overwrite === false){
 				throw new Error("Object already exists");
 			}
+		}
+		if(id in index){
 			// replace the entry in data
-			data[index[id]] = object;
+			if(options && options.before){
+				// ordering is defined
+				data.splice(data[index[id]], 1);
+				data.splice(arrayUtil.indexOf(data, options.before), 0, object);
+				store._reindex(data);
+			}else{
+				data[index[id]] = object;
+			}
 			store.emit('update', {target: object});
 		}else{
 			// add the new object
-			index[id] = data.push(object) - 1;
+			if(options && options.before){
+				// ordering is defined
+				data.splice(arrayUtil.indexOf(data, options.before), 0, object);
+				store._reindex(data);
+			}else{
+				index[id] = data.push(object) - 1;
+			}
 			store.emit('add', {target: object});
 		}
 		return object;
