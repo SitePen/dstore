@@ -5,7 +5,7 @@ define([
 	"dojo/when",
 	"dojo/promise/all",
 	"dojo/_base/array",
-	"dojo/on",
+	"dojo/on"
 	/*=====, "./api/Store" =====*/
 ], function(lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/){
 
