@@ -372,17 +372,17 @@ define([
 		//	summary:
 		//		A reactive object is a data model that can contain a value,
 		//		and notify listeners of changes to that value, in the future.
-		observe: function (/*function*/ listener, /*boolean?*/ justGetFuture) {
+		observe: function (/*function*/ listener, /*object*/ options) {
 			//	summary:
 			//		Registers a listener for any changes in the current value
 			//	listener:
 			//		Function to be called for each change
-			//	justGetFuture:
+			//	options.onlyFutureUpdates
 			//		If this is true, it won't call the listener for the current value,
 			//		just future updates. If this is true, it also won't return
 			//		a new reactive object
 			
-			if (!justGetFuture) {
+			if (!options || !options.onlyFutureUpdates) {
 				// create a new reactive to contain the results of the execution
 				// of the provided function
 				var reactive = new Reactive();
