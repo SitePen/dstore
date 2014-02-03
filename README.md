@@ -151,7 +151,7 @@ Property objects actually extend the data model class, so the methods listed for
 
 Method | Description
 ------ | -----------
-`observe(listener)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes.
+`observe(listener, options)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes. The optional `options` object argument may include a `onlyFutureUpdates` set to true if the callback should not be called for the current value (only future updates).
 `put(value)` | This requests a change in the value of this property. This may be coerced before being stored, and/or validated.
 `valueOf()` | This returns the current value of the property object.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property being set, if any errors were found in the validation process.

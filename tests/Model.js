@@ -134,7 +134,7 @@ define([
 				model.property('string').observe(callback);
 			});
 			assertReceived(true, function (callback) {
-				model.property('boolean').observe(callback, true);
+				model.property('boolean').observe(callback, {onlyFutureUpdates: true});
 				model.set('boolean', true);
 			});
 			var number = model.property('number');
