@@ -110,6 +110,7 @@ return declare(SimpleQuery, {
 			// now we have to reindex
 			var store = this.store || this;
 			store._reindex(data);
+			// TODO: The id property makes it seem like an event id. Maybe targetId would be better.
 			store.emit('remove', {id: id});
 			return true;
 		}
@@ -175,8 +176,7 @@ return declare(SimpleQuery, {
 			this.data = this.queryer(this.data);
 		}
 		return this.data;
-	},
-
+	}
 });
 
 });

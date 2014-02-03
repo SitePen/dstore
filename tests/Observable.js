@@ -467,6 +467,27 @@ define([
 
 		'type': function(){
 			assert.isFalse(store === store.track(function(){}));
+		},
+
+		'track and collection.tracking.remove': function(){
+			var store = createBigStore(10, declare([ Memory, Observable ])),
+				trackedCollection = store.track();
+
+			assert.property(trackedCollection, 'tracking');
+
+			var lastEvent = null;
+			trackedCollection.on('add, update', function(event){
+				lastEvent = event;
+			});
+
+			store.put({ id: 11, name: 'item-11', order: 11 });
+			assert.isNotNull(lastEvent);
+			assert.isDefined(lastEvent.index);
+
+			trackedCollection.tracking.remove();
+			lastEvent = null;
+			store.put({ id: 12, name: 'item-12', order: 12 });
+			assert.isNull(lastEvent);
 		}
 	});
 });

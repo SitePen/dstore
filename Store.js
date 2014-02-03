@@ -98,7 +98,7 @@ return declare(Evented, {
 	_createSubCollection: function(kwArgs){
 		return lang.delegate(this, lang.mixin({
 			store: this.store || this,
-			parent: this,
+			parent: this
 		}, kwArgs));
 	},
 

@@ -5,7 +5,7 @@ define([
 	"dojo/when",
 	"dojo/promise/all",
 	"dojo/_base/array",
-	"dojo/on",
+	"dojo/on"
 	/*=====, "./api/Store" =====*/
 ], function(lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/){
 
@@ -84,33 +84,37 @@ return declare(null, {
 		var eventTypes = {add: 1, update: 1, remove: 1};
 		// register to listen for updates
 		for(var type in eventTypes){
-			this.on(type, (function(type){
-				return function(event){
-					notify(type, event.target || event.id, event);
-				};
-			})(type));
+			handles.push(
+				this.on(type, (function(type){
+					return function(event){
+						notify(type, event.target || event.id, event);
+					};
+				})(type))
+			);
 		}
 
 		var observed = lang.delegate(this, {
 			store: store,
-			remove: function(){
-				while(handles.length > 0){
-					handles.pop().remove();
-				}
+			tracking: {
+				remove: function(){
+					while(handles.length > 0){
+						handles.pop().remove();
+					}
 
-				this.remove = function(){};
+					this.remove = function(){};
+				}
 			}
 		});
 
 		var originalOn = this.on;
 		// now setup our own event scope, for tracked events
 		observed.on = function(type, listener){
-				return on.parse(observed, type, listener, function(target, type){
+			return on.parse(observed, type, listener, function(target, type){
 				return type in eventTypes ?
 					aspect.after(observed, 'on_tracked' + type, listener, true) :
 					originalOn.call(observed, type, listener);
 			});
-	};
+		};
 
 		var ranges = [];
 		if(this.hasOwnProperty('data')){
@@ -277,6 +281,7 @@ return declare(null, {
 
 		return observed;
 	},
+	// TODO: Remove this and document event structures to use with `emit` instead of `notify`
 	// a Comet driven store could directly call notify to notify observers when data has
 	// changed on the backend
 	// create a new instance
