@@ -33,8 +33,8 @@ return declare(Evented, {
 	map: function(callback, thisObject){
 		var results = [];
 		// like forEach, except we collect results
-		return when(this.forEach(function(object){
-			results.push(callback.call(thisObject, object));
+		return when(this.forEach(function(object, i){
+			results.push(callback.call(thisObject, object, i));
 		}, thisObject), function(){
 			return results;
 		});
@@ -42,7 +42,7 @@ return declare(Evented, {
 	forEach: function(callback, thisObject){
 		return when(this.fetch(), function(data){
 			for(var i = 0, l = data.length; i < l; i++){
-				callback.call(thisObject, data[i]);
+				callback.call(thisObject, data[i], i);
 			}
 			return data;
 		});
