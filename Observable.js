@@ -152,13 +152,6 @@ return declare(null, {
 					delete this.partialData[i];
 				}
 			};
-
-			// Clear partialData because the item order is unknown after sort
-			var originalSort = observed.sort;
-			observed.sort = function(){
-				delete this.partialData;
-				return originalSort.apply(this, arguments);
-			};
 		}
 
 		function notify(type, target, event){

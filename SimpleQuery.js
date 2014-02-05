@@ -52,9 +52,9 @@ return declare(Store, {
 	},
 
 	sort: function(property, descending){
-		var store = this;
-		return this._addQueryer(this.inherited(arguments), function(data){
-			var sorted = store.sorted;
+		var newCollection = this.inherited(arguments);
+		return this._addQueryer(newCollection, function(data){
+			var sorted = newCollection.sorted;
 			data.sort(typeof property == 'function' ? property : function(a, b){
 				for(var i = 0; i < sorted.length; i++){
 					var property = sorted[i].property;
@@ -62,7 +62,7 @@ return declare(Store, {
 					var aValue = a[property];
 					var bValue = b[property];
 					if (aValue != bValue){
-						return !!descending == (aValue == null || aValue > bValue) ? -1 : 1;
+						return !!descending === (aValue === null || aValue > bValue) ? -1 : 1;
 					}
 				}
 				return 0;

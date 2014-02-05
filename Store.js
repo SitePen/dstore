@@ -1,5 +1,6 @@
 define([
 	'dojo/_base/lang',
+	'dojo/_base/array',
 	'dojo/aspect',
 	'dojo/has',
 	'dojo/when',
@@ -7,7 +8,7 @@ define([
 	'dojo/_base/declare',
 	'./Model',
 	'dojo/Evented'
-], function(lang, aspect, has, when, Deferred, declare, Model, Evented){
+], function(lang, arrayUtil, aspect, has, when, Deferred, declare, Model, Evented){
 
 // module:
 //		dstore/Store
@@ -25,10 +26,6 @@ return declare(Evented, {
 		}
 		// give a reference back to the store for saving, etc.
 		this.model.prototype._store = this;
-
-		aspect.after(this, 'sort', function(){
-			this.emit('refresh');
-		}, true);
 	},
 	map: function(callback, thisObject){
 		var results = [];
@@ -96,10 +93,17 @@ return declare(Evented, {
 	},
 
 	_createSubCollection: function(kwArgs){
-		return lang.delegate(this, lang.mixin({
-			store: this.store || this,
-			parent: this
-		}, kwArgs));
+		var store = this.store || this,
+			copiedProperties = {};
+
+		return lang.delegate(
+			store.constructor.prototype,
+			lang.mixin(
+				{ store: store },
+				this._getExistingPropertyValues([ "model", "filtered", "sorted", "ranged" ]),
+				kwArgs
+			)
+		);
 	},
 
 	filter: function(filter){
@@ -109,25 +113,38 @@ return declare(Evented, {
 	},
 
 	sort: function(property, descending){
+		var sorted;
+
 		if(typeof property === 'function'){
-			this.sorted = property;
+			sorted = property;
 		}else if(lang.isArray(property)){
-			this.sorted = property.slice(0);
+			sorted = property.slice(0);
 		}else if(typeof property === 'object'){
-			this.sorted = [].slice.call(arguments, 0);
+			sorted = [].slice.call(arguments, 0);
 		}else{
-			this.sorted = [{
+			sorted = [{
 				property: property,
 				descending: !!descending
 			}];
 		}
-		return this;
+
+		return this._createSubCollection({ sorted: sorted });
 	},
 
 	range: function(start, end){
 		return this._createSubCollection({
 			ranged: { start: start, end: end }
 		});
+	},
+
+	// TODO: What is a better name for this method?
+	// TODO: We should probably copy property values rather than just references
+	_getExistingPropertyValues: function(propertyNames){
+		var result = {};
+		arrayUtil.forEach(propertyNames, function(key){
+			key in this && (result[key] = this[key]);
+		}, this);
+		return result;
 	}
 });
 });

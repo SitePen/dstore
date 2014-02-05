@@ -162,9 +162,9 @@ return declare(SimpleQuery, {
 		return newCollection;
 	},
 	sort: function(sort){
-		this.inherited(arguments);
-		this.data = this.queryer(this.data);
-		return this;
+		var newCollection = this.inherited(arguments);
+		newCollection.data = newCollection.queryer(this.data);
+		return newCollection;
 	},
 	range: function(start, end){
 		var newCollection = this.inherited(arguments);
@@ -176,6 +176,11 @@ return declare(SimpleQuery, {
 			this.data = this.queryer(this.data);
 		}
 		return this.data;
+	},
+
+	_createSubCollection: function(kwArgs){
+		kwArgs = lang.mixin(this._getExistingPropertyValues([ "total" ]), kwArgs);
+		return this.inherited(arguments);
 	}
 });
 
