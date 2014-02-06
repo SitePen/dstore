@@ -3,8 +3,9 @@ define([
 	"dojo/_base/array",
 	"dojo/when",
 	"dojo/_base/declare",
+	"./Store",
 	"./Memory"],
-function(lang, arrayUtil, when, declare, Memory){
+function(lang, arrayUtil, when, declare, Store, Memory){
 
 // module:
 //		dstore/Cache
@@ -16,7 +17,7 @@ function isEmpty(object){
 	}
 	return true;
 }
-return declare(null, {
+return declare(Store, {
 	cachingStore: null,
 	constructor: function(options){
 		for(var i in options){
@@ -46,7 +47,7 @@ return declare(null, {
 					return data;
 				});
 
-			return lang.delegate(this, {
+			return this._createSubCollection({
 				allLoaded: data,
 				data: data,
 				cachingStore: subCachingStore
@@ -125,12 +126,15 @@ return declare(null, {
 		var cachingStore = this.cachingStore;
 		var masterGet = this.getInherited(arguments);
 		var masterStore = this;
-		return when(cachingStore.get(id), function(result){
-			return result || when(masterGet.call(masterStore, id, directives), function(result){
-				if(result){
-					cachingStore.put(result, {id: id});
-				}
-				return result;
+		// if everything is being loaded, we always wait for that to finish
+		return when(this.allLoaded, function(){
+			return when(cachingStore.get(id), function(result){
+				return result || when(masterGet.call(masterStore, id, directives), function(result){
+					if(result){
+						cachingStore.put(result, {id: id});
+					}
+					return result;
+				});
 			});
 		});
 	},
