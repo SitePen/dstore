@@ -26,18 +26,7 @@ See the [Stores section](./docs/Stores.md) for more information these stores.
 
 A Collection is the interface for a collection of items, which can be filtered, sorted, and sliced to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `map()`, or `fetch()`.
 
-### Querying
-
-Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify define which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `range()` method can be called if you want to retrieve an index-based subset, rather than the entire result set. A typical query from a store would look like:
-
-    store.filter({priority: 'high'}).sort('dueDate').range(0, 10).forEach(function (object) {
-            // called for each item in the final result set
-        });
-
-In addition, the `track()` method may be used to track store changes, ensuring notifications include index information about object changes, and keeping result sets up-to-date after a query. The `fetch()` method is alternative way to retrieve results, providing an array, and the `map()` is another iterative alternative to `forEach()` for accessing query results. The section below describes each of these methods.
-
 For more details on the Collection API and how to query, see the [Collection section](./docs/Collection.md)
-
 
 ## [Store](./docs/Store.md)
 
