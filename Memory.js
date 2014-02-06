@@ -34,7 +34,7 @@ return declare(SimpleQuery, {
 		//		The identity to use to lookup the object
 		// returns: Object
 		//		The object in the store that matches the given id.
-		return this.fullData[this.index[id]];
+		return this.fullData[(this.store || this).index[id]];
 	},
 	getIdentity: function(object){
 		// summary:
@@ -53,8 +53,9 @@ return declare(SimpleQuery, {
 		//		Additional metadata for storing the data.  Includes an "id"
 		//		property if a specific id is to be used.
 		// returns: Number
-		var data = this.fullData,
-			index = this.index,
+		var store = this.store || this,
+			data = this.fullData,
+			index = store.index,
 			idProperty = this.idProperty;
 		var id = object[idProperty] = (options && "id" in options) ? options.id : idProperty in object ? object[idProperty] : Math.random();
 		var prototype = this.model.prototype;
@@ -67,7 +68,6 @@ return declare(SimpleQuery, {
 				object = lang.delegate(prototype, object);
 			}
 		}
-		var store = this.store || this;
 		if(id in index){
 			// object exists
 			if(options && options.overwrite === false){
@@ -103,12 +103,12 @@ return declare(SimpleQuery, {
 		//		The identity to use to delete the object
 		// returns: Boolean
 		//		Returns true if an object was removed, falsy (undefined) if no object matched the id
-		var index = this.index;
+		var store = this.store || this;
+		var index = store.index;
 		var data = this.fullData;
 		if(id in index){
 			data.splice(index[id], 1);
 			// now we have to reindex
-			var store = this.store || this;
 			store._reindex(data);
 			// TODO: The id property makes it seem like an event id. Maybe targetId would be better.
 			store.emit('remove', {id: id});
