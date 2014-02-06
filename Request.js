@@ -177,13 +177,6 @@ return declare(Store, {
 		}
 
 		return this.target + query;
-	},
-
-	_createSubCollection: function(kwArgs){
-		kwArgs = lang.mixin(this._getExistingPropertyValues([
-			"target", "headers", "sortParam", "ascendingPrefix", "descendingPrefix"
-		]), kwArgs);
-		return this.inherited(arguments);
 	}
 });
 

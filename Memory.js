@@ -163,12 +163,14 @@ return declare(SimpleQuery, {
 	},
 	sort: function(sort){
 		var newCollection = this.inherited(arguments);
-		newCollection.data = newCollection.queryer(this.data);
+		var data = newCollection.data = newCollection.queryer(this.data);
+		newCollection.total = data.length;
 		return newCollection;
 	},
 	range: function(start, end){
 		var newCollection = this.inherited(arguments);
-		newCollection.data = this.data.slice(start || 0, end || Infinity);
+		var data = newCollection.data = this.data.slice(start || 0, end || Infinity);
+		newCollection.total = this.data.length;
 		return newCollection;
 	},
 	fetch: function(){
@@ -176,11 +178,6 @@ return declare(SimpleQuery, {
 			this.data = this.queryer(this.data);
 		}
 		return this.data;
-	},
-
-	_createSubCollection: function(kwArgs){
-		kwArgs = lang.mixin(this._getExistingPropertyValues([ "total" ]), kwArgs);
-		return this.inherited(arguments);
 	}
 });
 

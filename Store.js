@@ -94,16 +94,12 @@ return declare(Evented, {
 
 	_createSubCollection: function(kwArgs){
 		var store = this.store || this,
-			copiedProperties = {};
+			newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }, this));
 
-		return lang.delegate(
-			store.constructor.prototype,
-			lang.mixin(
-				{ store: store },
-				this._getExistingPropertyValues([ "model", "filtered", "sorted", "ranged" ]),
-				kwArgs
-			)
-		);
+		delete newCollection.data;
+		delete newCollection.total;
+
+		return lang.mixin(newCollection, kwArgs);
 	},
 
 	filter: function(filter){
@@ -135,16 +131,6 @@ return declare(Evented, {
 		return this._createSubCollection({
 			ranged: { start: start, end: end }
 		});
-	},
-
-	// TODO: What is a better name for this method?
-	// TODO: We should probably copy property values rather than just references
-	_getExistingPropertyValues: function(propertyNames){
-		var result = {};
-		arrayUtil.forEach(propertyNames, function(key){
-			key in this && (result[key] = this[key]);
-		}, this);
-		return result;
 	}
 });
 });

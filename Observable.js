@@ -76,6 +76,7 @@ var undef, revision = 0;
 
 return declare(null, {
 	currentRange: [],
+
 	track: function(){
 		var store = this.store || this;
 
@@ -93,8 +94,10 @@ return declare(null, {
 			);
 		}
 
-		var observed = lang.delegate(this, {
-			store: store,
+		var observed = this._createSubCollection({
+			// Any sub-collections created from the tracked collection should be based on this parent collection instead
+			_createSubCollection: lang.hitch(this, '_createSubCollection'),
+
 			tracking: {
 				remove: function(){
 					while(handles.length > 0){
