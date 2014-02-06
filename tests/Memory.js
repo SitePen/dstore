@@ -81,6 +81,29 @@ define([
 			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
 		},
 
+		'query with inheritance': function(){
+			var store = new Memory({
+				data: [
+					{id: 1, name: 'one', prime: false},
+					{id: 2, name: 'two', even: true, prime: true}
+				],
+				getIdentity: function(){
+					return 'id-' + this.inherited(arguments);
+				},
+				newMethod: function(){
+					return 'hello';
+				}
+			});
+			var filtered = store.filter({even: true}).sort('name');
+			var one = filtered.get(1);
+			one.changed = true;
+			filtered.put(one);
+			assert.strictEqual(filtered.getIdentity(one), 'id-1');
+			assert.strictEqual(filtered.newMethod(), 'hello');
+			store.remove(1);
+			assert.strictEqual(filtered.get(1), undefined);
+		},
+
 		'put update': function(){
 			var four = store.get(4);
 			four.square = true;

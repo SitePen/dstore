@@ -421,19 +421,6 @@ define([
 			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
-		'sorting clears store.partialData': function(){
-			var itemCount = 10,
-				store = createBigStore(itemCount, ObservablePartialDataStore);
-
-			var trackedStore = store.track();
-			return trackedStore.range(0, itemCount).fetch().then(function(){
-				assert.property(trackedStore, 'partialData');
-				return trackedStore.sort('name').fetch();
-			}).then(function(){
-				assert.notProperty(trackedStore, 'partialData');
-			});
-		},
-
 		'new item with default index': function(){
 			var store = createBigStore(100, ObservablePartialDataStore),
 				trackedStore = store.track();

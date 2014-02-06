@@ -29,7 +29,6 @@ return declare(Store, {
 		// options: dstore/JsonRest
 		//		This provides any configuration information that will be mixed into the store
 		this.headers || (this.headers = {});
-		this._sort = [];
 	},
 
 	// headers: Object
@@ -69,12 +68,6 @@ return declare(Store, {
 	// descendingPrefix: String
 	//		The prefix to apply to sort property names that are ascending
 	descendingPrefix: "-",
-
-	sort: function(){
-		// clear the old data
-		delete this.data;
-		return this.inherited(arguments);
-	},
 
 	// accepts: String
 	//		Defines the Accept header to use on HTTP requests
@@ -176,7 +169,7 @@ return declare(Store, {
 			}
 			if(sortParamString){
 				query += (paramsAdded ? "&" : "") + sortParamString;
-				paramsAdded = true;	
+				paramsAdded = true;
 			}
 			if(rangeParamString){
 				query += (paramsAdded ? "&" : "") + rangeParamString;
@@ -184,7 +177,7 @@ return declare(Store, {
 		}
 
 		return this.target + query;
-	},
+	}
 });
 
 });

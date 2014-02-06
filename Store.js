@@ -25,10 +25,6 @@ return declare(Evented, {
 		}
 		// give a reference back to the store for saving, etc.
 		this.model.prototype._store = this;
-
-		aspect.after(this, 'sort', function(){
-			this.emit('refresh');
-		}, true);
 	},
 	map: function(callback, thisObject){
 		var results = [];
@@ -74,6 +70,15 @@ return declare(Evented, {
 	//		objects (this can improve performance by avoiding prototype setting)
 	model: Model,
 
+	// excludePropertiesOnCopy: Object
+	//		This contains a hash of objects that should be excluded when properties are copied to new
+	//		sub collections.
+	excludePropertiesOnCopy: {
+		data: true,
+		index: true,
+		total: true
+	},
+
 	assignPrototype: function(object){
 		// Set the object's prototype
 		var model = this.model;
@@ -96,10 +101,17 @@ return declare(Evented, {
 	},
 
 	_createSubCollection: function(kwArgs){
-		return lang.delegate(this, lang.mixin({
-			store: this.store || this,
-			parent: this
-		}, kwArgs));
+		var store = this.store || this,
+			excluded = this.excludePropertiesOnCopy,
+			newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }));
+
+		for(var i in this){
+			if(this.hasOwnProperty(i) && !excluded.hasOwnProperty(i)){
+				newCollection[i] = this[i];
+			}
+		}
+
+		return lang.mixin(newCollection, kwArgs);
 	},
 
 	filter: function(filter){
@@ -109,19 +121,22 @@ return declare(Evented, {
 	},
 
 	sort: function(property, descending){
+		var sorted;
+
 		if(typeof property === 'function'){
-			this.sorted = property;
+			sorted = property;
 		}else if(lang.isArray(property)){
-			this.sorted = property.slice(0);
+			sorted = property.slice(0);
 		}else if(typeof property === 'object'){
-			this.sorted = [].slice.call(arguments, 0);
+			sorted = [].slice.call(arguments, 0);
 		}else{
-			this.sorted = [{
+			sorted = [{
 				property: property,
 				descending: !!descending
 			}];
 		}
-		return this;
+
+		return this._createSubCollection({ sorted: sorted });
 	},
 
 	range: function(start, end){
