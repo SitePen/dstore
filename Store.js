@@ -1,6 +1,5 @@
 define([
 	'dojo/_base/lang',
-	'dojo/_base/array',
 	'dojo/aspect',
 	'dojo/has',
 	'dojo/when',
@@ -8,7 +7,7 @@ define([
 	'dojo/_base/declare',
 	'./Model',
 	'dojo/Evented'
-], function(lang, arrayUtil, aspect, has, when, Deferred, declare, Model, Evented){
+], function(lang, aspect, has, when, Deferred, declare, Model, Evented){
 
 // module:
 //		dstore/Store
@@ -71,6 +70,15 @@ return declare(Evented, {
 	//		objects (this can improve performance by avoiding prototype setting)
 	model: Model,
 
+	// excludePropertiesOnCopy: Object
+	//		This contains a hash of objects that should be excluded when properties are copied to new
+	//		sub collections.
+	excludePropertiesOnCopy: {
+		data: true,
+		index: true,
+		total: true
+	},
+
 	assignPrototype: function(object){
 		// Set the object's prototype
 		var model = this.model;
@@ -94,10 +102,14 @@ return declare(Evented, {
 
 	_createSubCollection: function(kwArgs){
 		var store = this.store || this,
-			newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }, this));
+			excluded = this.excludePropertiesOnCopy,
+			newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }));
 
-		delete newCollection.data;
-		delete newCollection.total;
+		for(var i in this){
+			if(this.hasOwnProperty(i) && !excluded.hasOwnProperty(i)){
+				newCollection[i] = this[i];
+			}
+		}
 
 		return lang.mixin(newCollection, kwArgs);
 	},
