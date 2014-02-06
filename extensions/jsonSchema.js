@@ -1,11 +1,11 @@
 define(['../Property', '../Model', 'dojo/_base/declare', 'json-schema/lib/validate'],
-		function(Property, Model, declare, jsonSchemaValidator){
+		function (Property, Model, declare, jsonSchemaValidator) {
 	// module:
 	//		dstore/extensions/JsonSchema
 	//	summary:
 	//		This module generates a dstore schema from a JSON Schema to enabled validation of objects
 	//		and property changes with JSON Schema
-	return function(jsonSchema){
+	return function (jsonSchema) {
 		// create the schema that can be used by dstore/Model
 		var modelSchema = {};
 		var properties = jsonSchema.properties || jsonSchema;

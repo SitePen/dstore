@@ -11,9 +11,23 @@ define([
 	'./mockRequest',
 	'dojo/text!./data/node1.1',
 	'dojo/text!./data/treeTestRoot'
-], function(registerSuite, assert, declare, lang, request, when, whenAll, Rest, SimpleQuery, mockRequest, nodeData_1_1, treeTestRootData){
+], function(
+	registerSuite,
+	assert,
+	declare,
+	lang,
+	request,
+	when,
+	whenAll,
+	Rest,
+	SimpleQuery,
+	mockRequest,
+	nodeData_1_1,
+	treeTestRootData
+){
+
 	function runHeaderTest(method, args){
-		return store[method].apply(store, args).then(function(result){
+		return store[method].apply(store, args).then(function(){
 			mockRequest.assertRequestHeaders(requestHeaders);
 			mockRequest.assertRequestHeaders(globalHeaders);
 		});
@@ -92,7 +106,6 @@ define([
 		'query': function(){
 			mockRequest.setResponseText(treeTestRootData);
 
-			var first = true;
 			return when(store.filter('data/treeTestRoot').fetch()).then(function(results){
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');
@@ -133,7 +146,8 @@ define([
 				{},
 				{
 					id: 'mockRequest/4',
-					headers: requestHeaders }
+					headers: requestHeaders
+				}
 			]);
 		},
 

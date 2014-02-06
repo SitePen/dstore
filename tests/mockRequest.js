@@ -9,11 +9,12 @@ define([
 		latestQuery,
 		latestRequestHeaders,
 		responseHeaders,
+		latestOptions,
 		responseText;
 
 	function mockRequest(url, options){
 		latestUrl = url;
-		latestQuery = ioQuery.queryToObject(url.match(/[^?]*(?:\?([^#]*))?/)[1] || "");
+		latestQuery = ioQuery.queryToObject(url.match(/[^?]*(?:\?([^#]*))?/)[1] || '');
 		latestOptions = options;
 		latestRequestHeaders = {};
 
@@ -48,7 +49,7 @@ define([
 	};
 
 	mockRequest.assertHttpMethod = function(expectedMethod){
-		assert.strictEqual(latestOptions.method || "GET", expectedMethod);
+		assert.strictEqual(latestOptions.method || 'GET', expectedMethod);
 	};
 	mockRequest.assertRequestHeaders = function(expectedHeaders){
 		for(var name in expectedHeaders){

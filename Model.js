@@ -20,13 +20,14 @@ define([
 		return definition;
 	}
 
-	var hasOwnPropertyInstance;
-
 	function validate(object, key) {
 		// this performs validation, delegating validation, and coercion
 		// handling to the property definitions objects.
 		var hasOwnPropertyInstance,
-			property = hasOwnPropertyInstance = object.hasOwnProperty('_properties') && object._properties[key];
+			property = object.hasOwnProperty('_properties') && object._properties[key];
+		
+		hasOwnPropertyInstance = property;
+
 		if (!property) {
 			// or, if we don't our own property object, we inherit from the schema
 			property = getSchemaProperty(object, key);
@@ -212,7 +213,7 @@ define([
 				property = properties[key] = property ? lang.delegate(property) : new Property();
 				property.name = key;
 				// give it the correct initial value
-				var parent = property._parent = this;
+				property._parent = this;
 			}
 			if (nextKey) {
 				// go to the next property, if there are multiple

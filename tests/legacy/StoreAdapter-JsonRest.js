@@ -9,15 +9,9 @@ define([
 	'dstore/legacy/StoreAdapter'
 ], function(require, registerSuite, assert, declare, lang, when, JsonRest, StoreAdapter){
 
-	var TestModel = declare(null, {
-		describe: function(){
-			return 'name is ' + this.name;
-		}
-	});
-
 	var legacyStore = new JsonRest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		remove: function(id){
+		remove: function(){
 			var result = this.inherited(arguments);
 			return result.then(function(response){
 				return response && JSON.parse(response);
@@ -33,7 +27,7 @@ define([
 
 	var	store  = new (declare([JsonRest, StoreAdapter]))({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		remove: function(id){
+		remove: function(){
 			var result = this.inherited(arguments);
 			return result.then(function(response){
 				return response && JSON.parse(response);
@@ -58,7 +52,6 @@ define([
 		},
 
 		'query': function(){
-			var first = true;
 			return when(store.filter('data/treeTestRoot').fetch()).then(function(results){
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');
@@ -91,7 +84,6 @@ define([
 		},
 
 		'query': function(){
-			var first = true;
 			return when(adaptedStore.filter('data/treeTestRoot').fetch()).then(function(results){
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');

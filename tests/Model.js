@@ -61,16 +61,22 @@ define([
 			assert.strictEqual(model.get('accessor'), 'foo', 'accessors and mutators should work normally');
 
 			model.set('number', 'not-a-number');
-			assert.typeOf(model.get('number'), 'number', 'number schema properties should still be numbers even if passed a non-number value');
-			assert.isTrue(isNaN(model.get('number')), 'number schema properties should still be set even if passed a non-number value');
+			assert.typeOf(model.get('number'), 'number',
+				'number schema properties should still be numbers even if passed a non-number value');
+			assert.isTrue(isNaN(model.get('number')),
+				'number schema properties should still be set even if passed a non-number value');
 
 			model.set('string', 1234);
-			assert.typeOf(model.get('string'), 'string', 'string schema properties should still be strings even if passed a non-string value');
-			assert.strictEqual(model.get('string'), '1234', 'string schema properties should still be set even if passed a non-string value');
+			assert.typeOf(model.get('string'), 'string',
+				'string schema properties should still be strings even if passed a non-string value');
+			assert.strictEqual(model.get('string'), '1234',
+				'string schema properties should still be set even if passed a non-string value');
 
 			model.set('boolean', 'foo');
-			assert.typeOf(model.get('boolean'), 'boolean', 'boolean schema properties should still be booleans even if passed a non-boolean value');
-			assert.strictEqual(model.get('boolean'), true, 'boolean schema properties should still be set even if passed a non-boolean value');
+			assert.typeOf(model.get('boolean'), 'boolean',
+				'boolean schema properties should still be booleans even if passed a non-boolean value');
+			assert.strictEqual(model.get('boolean'), true,
+				'boolean schema properties should still be set even if passed a non-boolean value');
 
 			model.set('boolean', 'false');
 			assert.strictEqual(model.get('boolean'), false, 'setting "false" string to boolean property should set it to false');
@@ -82,8 +88,10 @@ define([
 			assert.strictEqual(model.get('boolean'), false, 'setting an empty array to boolean property should set it to false');
 
 			model.set('object', 'foo');
-			assert.instanceOf(model.get('object'), Object, 'Object schema properties should still be Objects even if passed a non-Object value');
-			assert.deepEqual(model.get('object'), { 0: 'f', 1: 'o', 2: 'o' }, 'Object schema properties should still be set even if passed a non-Object value');
+			assert.instanceOf(model.get('object'), Object,
+				'Object schema properties should still be Objects even if passed a non-Object value');
+			assert.deepEqual(model.get('object'), { 0: 'f', 1: 'o', 2: 'o' },
+				'Object schema properties should still be set even if passed a non-Object value');
 
 			model.set('array', 'foo');
 			assert.instanceOf(model.get('array'), Array, 'Array schema properties should still be Arrays even if passed a non-Array value');

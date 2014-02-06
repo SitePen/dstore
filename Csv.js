@@ -1,8 +1,7 @@
 define([
-	"dojo/_base/lang",
-	"dojo/_base/declare",
-	"dstore/Memory"
-], function(lang, declare, Memory) {
+	'dojo/_base/lang',
+	'dojo/_base/declare'
+], function(lang, declare) {
 	// originally from https://github.com/kfranqueiro/dojo-smore/blob/master/Csv.js
 	var quoteRx = /^\s*"([\S\s]*)"\s*$/,
 		doubleQuoteRx = /""/g,
@@ -33,12 +32,12 @@ define([
 		
 		// delimiter: String
 		//		Delimiter between fields; default is a comma.
-		delimiter: ",",
+		delimiter: ',',
 		
 		// newline: String
 		//		Character sequence to consider a newline.
-		//		Defaults to "\r\n" (CRLF) as per RFC 4180.
-		newline: "\r\n",
+		//		Defaults to '\r\n' (CRLF) as per RFC 4180.
+		newline: '\r\n',
 		
 		// trim: Boolean
 		//		If true, leading/trailing space will be trimmed from any unquoted values.
@@ -55,8 +54,8 @@ define([
 				fieldNames = this.fieldNames,
 				numquotes = 0, // tracks number of " characters encountered
 				values = [], // records values in the current record
-				value = "",
-				prefix = "", // used to re-add delimiters and newlines to a spanning value
+				value = '',
+				prefix = '', // used to re-add delimiters and newlines to a spanning value
 				parts, part, numlines, numparts, match,
 				i, j, k;
 			
@@ -75,7 +74,7 @@ define([
 					
 					// Apply any leftovers in prefix before the next part, then clear it.
 					value += prefix + part;
-					prefix = "";
+					prefix = '';
 					
 					// Count number of quotes in part to see whether we have a matching set.
 					while ((k = part.indexOf('"', k + 1)) >= 0) { numquotes++; }
@@ -91,9 +90,9 @@ define([
 								// If the completed value didn't match the RegExp, it's invalid
 								// (e.g. quotes were inside the value but not surrounding it).
 								// Jump out of the outer loop and start fresh on the next line.
-								console.warn("Csv: discarding row with invalid value: " + value);
+								console.warn('Csv: discarding row with invalid value: ' + value);
 								values = [];
-								value = "";
+								value = '';
 								numquotes = 0;
 								continue lineloop;
 							}
@@ -102,7 +101,7 @@ define([
 							// (If this is the header row, trim regardless of setting.)
 							values.push(this.trim || !fieldNames ? lang.trim(value) : value);
 						}
-						value = "";
+						value = '';
 						numquotes = 0;
 					} else {
 						// Open quoted value: add delimiter to current value on next run.
@@ -153,7 +152,7 @@ define([
 				fieldNames = this.fieldNames,
 				delimiter = this.delimiter,
 				newline = this.newline,
-				output = "",
+				output = '',
 				i, j, value, needsQuotes;
 			
 			// Process header row first (-1 case), then all data rows.
@@ -163,7 +162,7 @@ define([
 					value = i < 0 ? fieldNames[j] : data[i][fieldNames[j]];
 					needsQuotes = alwaysQuote ||
 						value.indexOf('"') >= 0 || value.indexOf(delimiter) >= 0;
-					output += (j > 0 ? delimiter : "") +
+					output += (j > 0 ? delimiter : '') +
 						(needsQuotes ? '"' + value.replace(singleQuoteRx, '""') + '"' : value);
 				}
 			}

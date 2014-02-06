@@ -7,7 +7,7 @@ define([
 ], function(declare, registerSuite, assert, Memory, StoreAdapter){
 
 	var AdaptedStore = declare([Memory, StoreAdapter]);
-	
+
 	function getResultsArray(store){
 		var results = [];
 		store.forEach(function(data){

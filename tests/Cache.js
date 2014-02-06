@@ -13,7 +13,7 @@ define([
 
 	var cachingStore = new Memory();
 	var masterFilterCalled;
-	var MasterStore = new declare([Memory], {
+	var MasterStore = declare([Memory], {
 		filter: function(){
 			masterFilterCalled = true;
 			return this.inherited(arguments);
@@ -114,7 +114,7 @@ define([
 		'delayed cached filter': function(){
 			var fetchCalled;
 			var MasterCollection = declare(Store, {
-				fetch: function(callback){
+				fetch: function(){
 					fetchCalled = true;
 					var def = new Deferred();
 					setTimeout(function(){
@@ -135,7 +135,7 @@ define([
 			fetchCalled = false;
 			var testDef = new Deferred();
 			var count = 0;
-			store.filter({prime: true}).forEach(function(results){
+			store.filter({prime: true}).forEach(function(){
 				count++;
 			}).then(function(){
 				assert.strictEqual(count, 3);
@@ -158,14 +158,14 @@ define([
 			var results = [];
 			return store.filter({name: 'node2'}).forEach(function(object){
 				results.push(object);
-				console.log('node', object)
 			}).then(function(){
 				assert.strictEqual(JSON.stringify(results), JSON.stringify([{ id: 'node2', name:'node2', someProperty:'somePropertyB'}]));
 				return store.get('node3').then(function(object){
 					object.changed = true;
-					return when(store.put(object), function(object){
+					return when(store.put(object), function(){
 						return when(store.get('node3'), function(object){
-							assert.strictEqual(JSON.stringify(object), JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC', changed: true}));
+							assert.strictEqual(JSON.stringify(object),
+								JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC', changed: true}));
 						});
 					});
 				});

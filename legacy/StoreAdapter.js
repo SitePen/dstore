@@ -3,17 +3,17 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'../Store'
-], function(declare, lang, when, Store){
+], function (declare, lang, when, Store) {
 // module:
 //		An adapter mixin that makes a legacy Dojo object store look like a dstore object.
 
 	var StoreAdapter = declare(Store, {
 
-		constructor: function(){
+		constructor: function () {
 			this._queryOptions = {};
 		},
 
-		get: function(id){
+		get: function () {
 			// summary:
 			//		Retrieves an object by its identity
 			// id: Number
@@ -26,7 +26,7 @@ define([
 			});
 		},
 
-		filter: function(query){
+		filter: function (query) {
 			// summary:
 			//		Filters the collection, returning a new subset collection
 			// query: String|Object|Function
@@ -37,7 +37,7 @@ define([
 			});
 		},
 
-		sort: function(property, descending){
+		sort: function (property, descending) {
 			// summary:
 			//		Sorts the collection, returning a new collection with the objects sorted
 			// property: String|Function
@@ -46,18 +46,18 @@ define([
 			//		Indicate if the sort order should be descending (defaults to ascending)
 			// returns: StoreAdapter
 			var sort;
-			if(typeof property === 'function'){
+			if (typeof property === 'function') {
 				sort = property;
-			}else{
+			} else {
 				var options = this._queryOptions;
 				var fieldSort = {
 					attribute: property,
 					descending: descending != null && descending
 				};
-				if(options && Object.prototype.toString.call(options.sort) === '[object Array]'){
+				if (options && Object.prototype.toString.call(options.sort) === '[object Array]') {
 					sort = options.sort.slice(0);
 					sort.unshift(fieldSort);
-				}else{
+				} else {
 					sort = [ fieldSort ];
 				}
 			}
@@ -66,7 +66,7 @@ define([
 			});
 		},
 
-		range: function(start, end){
+		range: function (start, end) {
 			// summary:
 			//		Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range
 			// start: Number
@@ -75,7 +75,7 @@ define([
 			//		The exclusive end of objects to return
 			// returns: StoreAdapter
 			var options = lang.delegate(this._queryOptions, { start: start });
-			if(end){
+			if (end) {
 				options.count = end - start;
 			}
 			return lang.delegate(this, {
@@ -83,20 +83,20 @@ define([
 			});
 		},
 
-		fetch: function(){
+		fetch: function () {
 			// summary:
 			//		Fetches the query results. Note that the fetch may occur asynchronously
 			// returns: Array|Promise
 			//		The results or a promise for the results
 			var results = this.query(this._query, this._queryOptions);
-			if(results){
+			if (results) {
 				results.forEach(this.assignPrototype, this);
 			}
 			return results;
 		}
 	});
 
-	StoreAdapter.adapt = function(obj, config){
+	StoreAdapter.adapt = function (obj, config) {
 		// summary:
 		//		Adapts an existing dstore object to behave like a dstore object.
 		// obj: Object
@@ -105,7 +105,7 @@ define([
 		//		An optional configuration object that will be mixed into the adapted object.
 		//
 		obj = declare.safeMixin(obj, new StoreAdapter());
-		if(config){
+		if (config) {
 			obj = lang.mixin(obj, config);
 		}
 		return obj;

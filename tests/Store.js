@@ -13,7 +13,7 @@ define([
 		},
 
 		'filter': function(){
-			var expectedFilter1 = { prop1: "one" },
+			var expectedFilter1 = { prop1: 'one' },
 				expectedFilter2 = function filterFunc(){},
 				filteredCollection;
 
@@ -25,8 +25,8 @@ define([
 		},
 
 		'sort': function(){
-			var sortObject = { property: "prop1", descending: true },
-				sortObjectArray = [ sortObject, { property: "prop2", descending: false } ],
+			var sortObject = { property: 'prop1', descending: true },
+				sortObjectArray = [ sortObject, { property: 'prop2', descending: false } ],
 				comparator = function comparator(){},
 				sortedCollection;
 

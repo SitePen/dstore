@@ -1,8 +1,7 @@
 define([
 	'dojo/_base/declare',
-	'./Model',
-	'dojo/when'
-], function (declare, Model, when) {
+	'./Model'
+], function (declare, Model) {
 	return declare(Model.Property, {
 	});
 });

@@ -11,9 +11,9 @@ define([
 		}),
 		TestStore = declare([ Base, SimpleQuery ], {}),
 		testData = [
-			{ id: 1, name: "one", odd: true },
-			{ id: 2, name: "two", odd: false },
-			{ id: 3, name: "three", odd: true }
+			{ id: 1, name: 'one', odd: true },
+			{ id: 2, name: 'two', odd: false },
+			{ id: 3, name: 'three', odd: true }
 		];
 
 	var store;
@@ -29,7 +29,7 @@ define([
 
 			var filterObject = { odd: true },
 				filterFunction = function filterFunc(o){ return o.id >= 2; },
-				filterIdentifier = "testFilter",
+				filterIdentifier = 'testFilter',
 				filteredCollection;
 
 			filteredCollection = store.filter(filterObject);
@@ -55,9 +55,9 @@ define([
 		},
 
 		'sort': function(){
-			var expectedSort1 = { attribute: "id", descending: true },
-				expectedSort2 = { attribute: "odd", descending: false },
-				expectedSort3 = { attribute: "name" },
+			var expectedSort1 = { attribute: 'id', descending: true },
+				expectedSort2 = { attribute: 'odd', descending: false },
+				expectedSort3 = { attribute: 'name' },
 				sortedCollection;
 
 			sortedCollection = store.sort(expectedSort1.attribute, expectedSort1.descending);
