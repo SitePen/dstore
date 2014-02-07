@@ -20,9 +20,9 @@ define([
 			this.store = store;
 
 			if (value) {
-				if (typeof value == 'function') {
+				if (typeof value === 'function') {
 					this.value = value;
-				} else if (typeof value == 'object') {
+				} else if (typeof value === 'object') {
 					this.value = function (object) {
 						var o = {};
 						for (var key in value) {

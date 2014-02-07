@@ -34,8 +34,8 @@ define([
 			// id: Number
 			//		The identity to use to lookup the object
 			// options: Object?
-			//		HTTP headers. For consistency with other methods, if a `headers` key exists on this object, it will be
-			//		used to provide HTTP headers instead.
+			//		HTTP headers. For consistency with other methods, if a `headers` key exists on this
+			//		object, it will be used to provide HTTP headers instead.
 			// returns: Object
 			//		The object in the store that matches the given id.
 			options = options || {};
@@ -62,7 +62,7 @@ define([
 			// returns: dojo/_base/Deferred
 			options = options || {};
 			var id = ('id' in options) ? options.id : this.getIdentity(object);
-			var hasId = typeof id != 'undefined';
+			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
 			var store = this.store || this;
 			return request(hasId ? this.target + id : this.target, {

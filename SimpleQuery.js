@@ -29,7 +29,7 @@ define([
 								if (!required.test(object[key], object)) {
 									return false;
 								}
-							} else if(required != object[key]) {
+							} else if(required !== object[key]) {
 								return false;
 							}
 						}
@@ -56,7 +56,7 @@ define([
 			var newCollection = this.inherited(arguments);
 			return this._addQueryer(newCollection, function (data) {
 				var sorted = newCollection.sorted;
-				data.sort(typeof property == 'function' ? property : function (a, b) {
+				data.sort(typeof property === 'function' ? property : function (a, b) {
 					for(var i = 0; i < sorted.length; i++){
 						var property = sorted[i].property;
 						var descending = sorted[i].descending;

@@ -233,7 +233,8 @@ define([
 			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
 			definition = property || this.schema[key];
-			if (definition && definition.valueOf && (definition.valueOf !== simplePropertyValueOf || definition.hasCustomGet)) {
+			if (definition && definition.valueOf &&
+					(definition.valueOf !== simplePropertyValueOf || definition.hasCustomGet)) {
 				// we have custom get functionality, need to create at least a temporary property
 				// instance
 				property = property || (this.hasOwnProperty('_properties') && this._properties[key]);
@@ -519,7 +520,8 @@ define([
 					// value && value.length check is because dijit/_FormMixin
 					// returns an array for checkboxes; an array coerces to true,
 					// but an empty array should be set as false
-					value = (value === 'false' || value === '0' || value instanceof Array && !value.length) ? false : !!value;
+					value = (value === 'false' || value === '0' || value instanceof Array && !value.length) ?
+						false : !!value;
 				}
 				else if (typeof type === 'function' && !(value instanceof type)) {
 					value = new type(value);

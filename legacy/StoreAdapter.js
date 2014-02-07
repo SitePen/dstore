@@ -68,7 +68,8 @@ define([
 
 		range: function (start, end) {
 			// summary:
-			//		Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range
+			//		Retrieves a range of objects from the collection, returning a new collection
+			//		with the objects indicated by the range
 			// start: Number
 			//		The starting index of objects to return (0-indexed)
 			// end?: Number

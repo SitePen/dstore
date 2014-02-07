@@ -95,7 +95,8 @@ define([
 			}
 
 			var observed = this._createSubCollection({
-				// Any sub-collections created from the tracked collection should be based on this parent collection instead
+				// Any sub-collections created from the tracked collection should be based on this
+				// parent collection instead
 				_createSubCollection: lang.hitch(this, '_createSubCollection'),
 
 				tracking: {
@@ -165,7 +166,8 @@ define([
 					var queryExecutor = observed.queryer;
 					var i, j, l, range;
 					/*if(++queryRevision != revision){
-						throw new Error('Query is out of date, you must observe() the query prior to any data modifications');
+						throw new Error('Query is out of date, you must observe() the' +
+						' query prior to any data modifications');
 					}*/
 
 					var targetId = type === 'remove' ? target : store.getIdentity(target);
@@ -181,7 +183,7 @@ define([
 							range = ranges[i];
 							for (j = range.start, l = j + range.count; j < l; ++j) {
 								var object = resultsArray[j];
-								if (store.getIdentity(object) == targetId) {
+								if (store.getIdentity(object) === targetId) {
 									removedFrom = event.previousIndex = j;
 									removalRangeIndex = i;
 									resultsArray.splice(removedFrom, 1);
@@ -203,7 +205,8 @@ define([
 						if (queryExecutor) {
 							// with a queryExecutor, we can determine the correct sorted index for the change
 
-							if (queryExecutor.matches ? queryExecutor.matches(target) : queryExecutor([target]).length) {
+							if (queryExecutor.matches ? queryExecutor.matches(target) :
+									queryExecutor([target]).length) {
 								var begin = 0,
 									end = ranges.length - 1,
 									sampleArray,
@@ -217,7 +220,8 @@ define([
 
 									// If the original index came from this range, put back in the original slot
 									// so it doesn't move unless it needs to (relying on a stable sort below)
-									if (removedFrom >= Math.max(0, range.start - 1) && removedFrom <= (range.start + range.count)){
+									if (removedFrom >= Math.max(0, range.start - 1) &&
+											removedFrom <= (range.start + range.count)){
 										sampleArray.splice(removedFrom, 0, target);
 									} else {
 										sampleArray.push(target);
@@ -228,7 +232,8 @@ define([
 
 									if (sortedIndex === 0 && range.start !== 0) {
 										end = i - 1;
-									} else if(sortedIndex >= (sampleArray.length - 1) && adjustedIndex < resultsArray.length) {
+									} else if(sortedIndex >= (sampleArray.length - 1) &&
+											adjustedIndex < resultsArray.length) {
 										begin = i + 1;
 									} else {
 										insertedInto = adjustedIndex;
@@ -238,8 +243,8 @@ define([
 							}
 						} else {
 							// we don't have a queryEngine, so we can't provide any information
-							// about where it was inserted or moved to. If it is an update, we leave it's position alone. 
-							// other we at least indicate a new object
+							// about where it was inserted or moved to. If it is an update, we leave
+							// its position alone. other we at least indicate a new object
 
 							if (type === 'update') {
 								insertedInto = removedFrom;
@@ -249,7 +254,6 @@ define([
 								// a new object
 								insertedInto = store.defaultIndex || 0;
 
-								var range;
 								for (i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i) {
 									range = ranges[i];
 									if (range.start <= insertedInto && insertedInto < (range.start + range.count)) {

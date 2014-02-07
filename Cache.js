@@ -131,9 +131,11 @@ define([
 		add: function (object, directives) {
 			var cachingStore = this.cachingStore;
 			return when(this.inherited(arguments), function(result){
-				// now put result in cache (note we don't do add, because add may have called put() and already added it)
-				cachingStore.put(object && typeof result == 'object' ? result : object, directives);
-				return result; // the result from the add should be dictated by the master store and be unaffected by the cachingStore
+				// now put result in cache (note we don't do add, because add may have
+				// called put() and already added it)
+				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
+				// the result from the add should be dictated by the master store and be unaffected by the cachingStore
+				return result;
 			});
 		},
 		put: function (object, directives) {
@@ -142,8 +144,9 @@ define([
 			cachingStore.remove((directives && directives.id) || this.getIdentity(object));
 			return when(this.inherited(arguments), function(result){
 				// now put result in cache
-				cachingStore.put(object && typeof result == 'object' ? result : object, directives);
-				return result; // the result from the put should be dictated by the master store and be unaffected by the cachingStore
+				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
+				// the result from the put should be dictated by the master store and be unaffected by the cachingStore
+				return result;
 			});
 		},
 		remove: function (id, directives) {
