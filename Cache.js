@@ -97,6 +97,7 @@ define([
 					return store.cachingStore.fetch();
 				});
 			}
+			/* jshint boss: true */
 			return this.allLoaded = when(this.inherited(arguments), function(results){
 				arrayUtil.forEach(results, function(object){
 					// store each object before calling the callback

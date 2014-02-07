@@ -32,6 +32,7 @@ define([
 						// another property
 						parentObject.get(dependency);
 			}
+			/* jshint boss: true */
 			return this.value = this.getValue.apply(this, args);
 		},
 		_has: function () {

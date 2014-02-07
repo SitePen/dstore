@@ -11,6 +11,7 @@ define([
 
 	// module:
 	//		dstore/Store
+	/* jshint proto: true */
 	// detect __proto__
 	has.add('object-proto', !!{}.__proto__);
 	var hasProto = has('object-proto');

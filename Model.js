@@ -524,6 +524,7 @@ define([
 						false : !!value;
 				}
 				else if (typeof type === 'function' && !(value instanceof type)) {
+					/* jshint newcap: false */
 					value = new type(value);
 				}
 			}

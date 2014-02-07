@@ -2,6 +2,7 @@ define(['dojo/_base/declare'], function (declare) {
 
 	// module:
 	//		dojo/api/Store
+	/* jshint unused: false */
 
 	var Collection = declare(null, {
 		// summary:

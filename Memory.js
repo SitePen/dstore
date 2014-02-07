@@ -3,6 +3,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 
 	// module:
 	//		dstore/Memory
+	/* jshint proto: true */
 	var hasProto = !!{}.__proto__;
 	return declare(SimpleQuery, {
 		constructor: function () {

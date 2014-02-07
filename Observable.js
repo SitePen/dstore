@@ -163,6 +163,7 @@ define([
 				event = lang.delegate(event);
 				when(observed.hasOwnProperty('data') ? observed.data :
 						observed.partialData, function(resultsArray){
+					/* jshint maxcomplexity: 30 */
 					var queryExecutor = observed.queryer;
 					var i, j, l, range;
 					/*if(++queryRevision != revision){
