@@ -21,7 +21,7 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			var self = this;
-			return when(this.inherited(arguments), function(object){
+			return when(this.inherited(arguments), function (object) {
 				return self.assignPrototype(object);
 			});
 		},

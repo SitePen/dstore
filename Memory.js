@@ -1,5 +1,5 @@
 define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQuery' /*=====, './api/Store' =====*/],
-		function(declare, lang, arrayUtil, SimpleQuery /*=====, Store =====*/){
+		function (declare, lang, arrayUtil, SimpleQuery /*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Memory

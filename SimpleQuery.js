@@ -15,7 +15,7 @@ define([
 		filter: function (query) {
 			// create our matching query function
 			var queryer = query;
-			switch(typeof query){
+			switch (typeof query) {
 				default:
 					throw new Error('Can not query with a ' + typeof query);
 				case 'object':
@@ -29,7 +29,7 @@ define([
 								if (!required.test(object[key], object)) {
 									return false;
 								}
-							} else if(required !== object[key]) {
+							} else if (required !== object[key]) {
 								return false;
 							}
 						}
@@ -42,9 +42,9 @@ define([
 						throw new Error('No filter function ' + query + ' was found in store');
 					}
 					queryer = this[query];
-					// fall through
+					/* falls through */
 				case 'function':
-					// fall through
+					/* falls through */
 			}
 
 			return this._addQueryer(this.inherited(arguments), function (data) {
@@ -52,12 +52,13 @@ define([
 			});
 		},
 
+		/* jshint ignore:start */
 		sort: function (property) {
 			var newCollection = this.inherited(arguments);
 			return this._addQueryer(newCollection, function (data) {
 				var sorted = newCollection.sorted;
 				data.sort(typeof property === 'function' ? property : function (a, b) {
-					for(var i = 0; i < sorted.length; i++){
+					for (var i = 0; i < sorted.length; i++) {
 						var property = sorted[i].property;
 						var descending = sorted[i].descending;
 						var aValue = a[property];
@@ -71,6 +72,7 @@ define([
 				return data;
 			});
 		},
+		/* jshint ignore:end */
 
 		_addQueryer: function (collection, queryer) {
 			var previousQueryer = this.queryer;

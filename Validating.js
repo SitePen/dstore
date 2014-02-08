@@ -1,4 +1,4 @@
-define(['./Store', 'dojo/when', 'dojo/_base/declare'], function(Store, when, declare){
+define(['./Store', 'dojo/when', 'dojo/_base/declare'], function (Store, when, declare) {
 	// module:
 	//		dstore/Validating
 	//	summary:

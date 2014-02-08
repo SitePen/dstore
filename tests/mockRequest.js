@@ -3,7 +3,7 @@ define([
 	'dojo/Deferred',
 	'dojo/io-query',
 	'intern/chai!assert'
-], function(lang, Deferred, ioQuery, assert){
+], function (lang, Deferred, ioQuery, assert) {
 	// A mock request handler for testing.
 	var latestUrl,
 		latestQuery,
@@ -12,14 +12,14 @@ define([
 		latestOptions,
 		responseText;
 
-	function mockRequest(url, options){
+	function mockRequest(url, options) {
 		latestUrl = url;
 		latestQuery = ioQuery.queryToObject(url.match(/[^?]*(?:\?([^#]*))?/)[1] || '');
 		latestOptions = options;
 		latestRequestHeaders = {};
 
 		var headers = options.headers;
-		for(var name in headers){
+		for (var name in headers) {
 			latestRequestHeaders[name.toLowerCase()] = headers[name];
 		}
 
@@ -28,7 +28,7 @@ define([
 
 		var responseDfd = new Deferred();
 		responseDfd.resolve({
-			getHeader: function(name){
+			getHeader: function (name) {
 				return responseHeaders[name.toLowerCase()];
 			}
 		});
@@ -38,28 +38,28 @@ define([
 		});
 	}
 
-	mockRequest.setResponseText = function(text){
+	mockRequest.setResponseText = function (text) {
 		responseText = text;
 	};
-	mockRequest.setResponseHeaders = function(headers){
+	mockRequest.setResponseHeaders = function (headers) {
 		responseHeaders = {};
-		for(var name in headers){
+		for (var name in headers) {
 			responseHeaders[name.toLowerCase()] = headers[name];
 		}
 	};
 
-	mockRequest.assertHttpMethod = function(expectedMethod){
+	mockRequest.assertHttpMethod = function (expectedMethod) {
 		assert.strictEqual(latestOptions.method || 'GET', expectedMethod);
 	};
-	mockRequest.assertRequestHeaders = function(expectedHeaders){
-		for(var name in expectedHeaders){
+	mockRequest.assertRequestHeaders = function (expectedHeaders) {
+		for (var name in expectedHeaders) {
 			var lowerCaseName = name.toLowerCase();
 			assert.isTrue(lowerCaseName in latestRequestHeaders);
 			assert.strictEqual(latestRequestHeaders[lowerCaseName], expectedHeaders[name]);
 		}
 	};
-	mockRequest.assertQueryParams = function(expectedParams){
-		for(var name in expectedParams){
+	mockRequest.assertQueryParams = function (expectedParams) {
+		for (var name in expectedParams) {
 			assert.isTrue(name in latestQuery);
 			assert.equal(expectedParams[name].toString(), latestQuery[name]);
 		}

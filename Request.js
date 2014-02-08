@@ -111,7 +111,7 @@ define([
 			//		Constructs filter-related params to be inserted into the query string
 			// returns: String
 			//		Filter-related params to be inserted in the query string
-			return this.filtered && array.map(this.filtered, function(filter){
+			return this.filtered && array.map(this.filtered, function (filter) {
 				return typeof filter === 'object' ? ioQuery.objectToQuery(filter) : filter;
 			}).join('&');
 		},
@@ -124,7 +124,7 @@ define([
 			var sortString = '';
 
 			if (this.sorted) {
-				sortString = array.map(this.sorted, function(sortOption) {
+				sortString = array.map(this.sorted, function (sortOption) {
 					var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
 					return prefix + encodeURIComponent(sortOption.property);
 				}, this).join(',');

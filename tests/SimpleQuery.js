@@ -3,11 +3,11 @@ define([
 	'dojo/_base/declare',
 	'intern!object',
 	'intern/chai!assert'
-], function(SimpleQuery, declare, registerSuite, assert){
+], function (SimpleQuery, declare, registerSuite, assert) {
 	var Base = declare(null, {
-			filter: function() { return {}; },
-			sort: function() { return {}; },
-			range: function() { return {}; }
+			filter: function () { return {}; },
+			sort: function () { return {}; },
+			range: function () { return {}; }
 		}),
 		TestStore = declare([ Base, SimpleQuery ], {}),
 		testData = [
@@ -20,15 +20,15 @@ define([
 	registerSuite({
 		name: 'dstore SimpleQuery',
 
-		beforeEach: function(){
+		beforeEach: function () {
 			store = new TestStore();
 		},
 
-		'filter': function(){
-			store.testFilter = function(o) { return !o.odd; };
+		'filter': function () {
+			store.testFilter = function (o) { return !o.odd; };
 
 			var filterObject = { odd: true },
-				filterFunction = function filterFunc(o){ return o.id >= 2; },
+				filterFunction = function filterFunc(o) { return o.id >= 2; },
 				filterIdentifier = 'testFilter',
 				filteredCollection;
 
@@ -54,7 +54,7 @@ define([
 			);
 		},
 
-		'sort': function(){
+		'sort': function () {
 			var expectedSort1 = { attribute: 'id', descending: true },
 				expectedSort2 = { attribute: 'odd', descending: false },
 				expectedSort3 = { attribute: 'name' },

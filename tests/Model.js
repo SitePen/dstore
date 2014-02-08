@@ -172,7 +172,7 @@ define([
 						required: true
 					}),
 					range: new Property({
-						checkForErrors: function(value) {
+						checkForErrors: function (value) {
 							var errors = this.inherited(arguments);
 							if (value < 10 || value > 20) {
 								errors.push('not in range');
@@ -191,7 +191,7 @@ define([
 			model.set('range', 15);
 			assert.isTrue(model.validate());
 			var lastReceivedErrors;
-			model.property('range').property('errors').observe(function(errors){
+			model.property('range').property('errors').observe(function (errors) {
 				lastReceivedErrors = errors;
 			});
 			model.set('requiredString', '');
@@ -248,7 +248,7 @@ define([
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
 			var updatedName2;
-			var handle = model.property('name').observe(function(name){
+			var handle = model.property('name').observe(function (name) {
 				updatedName2 = name;
 			});
 			assert.strictEqual(updatedName2, 'Jane Doe');

@@ -12,7 +12,7 @@ define([
 		checkForErrors: function (value) {
 			var property = this;
 			return when(this.inherited(arguments), function (errors) {
-				return when(property.uniqueStore.get(value), function(object) {
+				return when(property.uniqueStore.get(value), function (object) {
 					if (object) {
 						errors.push(property.uniqueError);
 					}

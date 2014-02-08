@@ -12,5 +12,5 @@ define([
 	'intern/node_modules/dojo/has!host-browser?./charting/StoreSeries',
 	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-Memory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-JsonRest'
-], function(){
+], function () {
 });

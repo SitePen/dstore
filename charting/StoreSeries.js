@@ -30,12 +30,12 @@ define([
 						}
 						return o;
 					};
-				}else{
+				} else {
 					this.value = function (object) {
 						return object[value];
 					};
 				}
-			}else{
+			} else {
 				this.value = function (object) {
 					return object.value;
 				};

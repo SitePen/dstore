@@ -9,12 +9,13 @@ define([
 	'./mockRequest',
 	'dojo/when',
 	'dstore/Cache'
-], function(registerSuite, assert, Deferred, declare, Store, Memory, Request, mockRequest, when, Cache){
+], function (registerSuite, assert, Deferred, declare, Store, Memory, Request, mockRequest, when, Cache) {
 
+	/* jshint newcap: false */
 	var cachingStore = new Memory();
 	var masterFilterCalled;
 	var MasterStore = declare([Memory], {
-		filter: function(){
+		filter: function () {
 			masterFilterCalled = true;
 			return this.inherited(arguments);
 		}
@@ -33,7 +34,7 @@ define([
 	registerSuite({
 		name: 'dstore Cache',
 
-		'get': function(){
+		'get': function () {
 			assert.strictEqual(store.get(1).name, 'one');
 			assert.strictEqual(cachingStore.get(1).name, 'one'); // second one should be cached
 			assert.strictEqual(store.get(1).name, 'one');
@@ -42,26 +43,26 @@ define([
 			assert.strictEqual(store.get(4).name, 'four');
 		},
 
-		'filter': function(){
-			store.isLoaded = store.canCacheQuery = function(){
+		'filter': function () {
+			store.isLoaded = store.canCacheQuery = function () {
 				return false;
 			};
 			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
 			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
 			assert.strictEqual(cachingStore.get(3), undefined);
-			store.isLoaded = store.canCacheQuery = function(){
+			store.isLoaded = store.canCacheQuery = function () {
 				return true;
 			};
 			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
 			assert.strictEqual(cachingStore.get(3).name, 'three');
 		},
 
-		'filter with sort': function(){
+		'filter with sort': function () {
 			assert.strictEqual(store.filter({prime: true}).sort('name').fetch().length, 3);
 			assert.strictEqual(store.filter({even: true}).sort('name').fetch()[1].name, 'two');
 		},
 
-		'put update': function(){
+		'put update': function () {
 			var four = store.get(4);
 			four.square = true;
 			store.put(four);
@@ -73,7 +74,7 @@ define([
 			assert.isTrue(four.square);
 		},
 
-		'put new': function(){
+		'put new': function () {
 			store.put({
 				id: 6,
 				perfect: true
@@ -82,20 +83,20 @@ define([
 			assert.isTrue(cachingStore.get(6).perfect);
 		},
 
-		'add duplicate': function(){
+		'add duplicate': function () {
 			var threw;
-			try{
+			try {
 				store.add({
 					id: 6,
 					perfect: true
 				});
-			}catch(e){
+			} catch (e) {
 				threw = true;
 			}
 			assert.isTrue(threw);
 		},
 
-		'add new': function(){
+		'add new': function () {
 			store.add({
 				id: 7,
 				prime: true
@@ -104,20 +105,20 @@ define([
 			assert.isTrue(cachingStore.get(7).prime);
 		},
 
-		'cached filter': function(){
+		'cached filter': function () {
 			store.fetch(); // should result in everything being cached
 			masterFilterCalled = false;
 			assert.strictEqual(store.filter({prime: true}).fetch().length, 4);
 			assert.isFalse(masterFilterCalled);
 		},
 
-		'delayed cached filter': function(){
+		'delayed cached filter': function () {
 			var fetchCalled;
 			var MasterCollection = declare(Store, {
-				fetch: function(){
+				fetch: function () {
 					fetchCalled = true;
 					var def = new Deferred();
-					setTimeout(function(){
+					setTimeout(function () {
 						def.resolve([
 							{id: 1, name: 'one', prime: false},
 							{id: 2, name: 'two', even: true, prime: true},
@@ -135,35 +136,35 @@ define([
 			fetchCalled = false;
 			var testDef = new Deferred();
 			var count = 0;
-			store.filter({prime: true}).forEach(function(){
+			store.filter({prime: true}).forEach(function () {
 				count++;
-			}).then(function(){
+			}).then(function () {
 				assert.strictEqual(count, 3);
 				assert.isFalse(fetchCalled);
 				testDef.resolve(true);
 			});
 			return testDef;
 		},
-		'like RequestMemory': function(){
+		'like RequestMemory': function () {
 			var store = new declare([Request, Cache], {
-				constructor: function(){
+				constructor: function () {
 					this.fetch();
 				}
 			})({
 				target: require.toUrl('dstore/tests/data/treeTestRoot')
 			});
-			store.get('node3').then(function(object){
+			store.get('node3').then(function (object) {
 				assert.strictEqual(JSON.stringify(object), JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC'}));
 			});
 			var results = [];
-			return store.filter({name: 'node2'}).forEach(function(object){
+			return store.filter({name: 'node2'}).forEach(function (object) {
 				results.push(object);
-			}).then(function(){
+			}).then(function () {
 				assert.strictEqual(JSON.stringify(results), JSON.stringify([{ id: 'node2', name:'node2', someProperty:'somePropertyB'}]));
-				return store.get('node3').then(function(object){
+				return store.get('node3').then(function (object) {
 					object.changed = true;
-					return when(store.put(object), function(){
-						return when(store.get('node3'), function(object){
+					return when(store.put(object), function () {
+						return when(store.get('node3'), function (object) {
 							assert.strictEqual(JSON.stringify(object),
 								JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC', changed: true}));
 						});

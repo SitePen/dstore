@@ -4,13 +4,13 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'dstore/legacy/StoreAdapter'
-], function(declare, registerSuite, assert, Memory, StoreAdapter){
+], function (declare, registerSuite, assert, Memory, StoreAdapter) {
 
 	var AdaptedStore = declare([Memory, StoreAdapter]);
 
-	function getResultsArray(store){
+	function getResultsArray(store) {
 		var results = [];
-		store.forEach(function(data){
+		store.forEach(function (data) {
 			results.push(data);
 		});
 		return results;
@@ -22,7 +22,7 @@ define([
 	registerSuite({
 		name: 'legacy dstore adapter - Memory',
 
-		beforeEach: function(){
+		beforeEach: function () {
 			store = new AdaptedStore({
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
@@ -32,20 +32,20 @@ define([
 					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 				]
 			});
-			store.model.prototype.describe =function(){
+			store.model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};
 			
 		},
 
-		'get': function(){
+		'get': function () {
 			assert.strictEqual(store.get(1).name, 'one');
 			assert.strictEqual(store.get(4).name, 'four');
 			assert.isTrue(store.get(5).prime);
 			assert.strictEqual(store.getIdentity(store.get(1)), 1);
 		},
 
-		'model': function(){
+		'model': function () {
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
 			var results = getResultsArray(store.filter({even: true}));
@@ -53,47 +53,47 @@ define([
 			assert.strictEqual(results[1].describe(), 'four is not a prime');
 		},
 
-		'query': function(){
+		'query': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
 			assert.strictEqual(getResultsArray(store.filter({even: true}))[1].name, 'four');
 		},
 
-		'query with string': function(){
+		'query with string': function () {
 			assert.strictEqual(getResultsArray(store.filter({name: 'two'})).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({name: 'two'}))[0].name, 'two');
 		},
 
-		'query with regexp': function(){
+		'query with regexp': function () {
 			assert.strictEqual(getResultsArray(store.filter({name: /^t/})).length, 2);
 			assert.strictEqual(getResultsArray(store.filter({name: /^t/}))[1].name, 'three');
 			assert.strictEqual(getResultsArray(store.filter({name: /^o/})).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({name: /o/})).length, 3);
 		},
 
-		'query with test function': function(){
-			assert.strictEqual(getResultsArray(store.filter({id: {test: function(id){
+		'query with test function': function () {
+			assert.strictEqual(getResultsArray(store.filter({id: {test: function (id) {
 				return id < 4;
 			}}})).length, 3);
-			assert.strictEqual(getResultsArray(store.filter({even: {test: function(even, object){
+			assert.strictEqual(getResultsArray(store.filter({even: {test: function (even, object) {
 				return even && object.id > 2;
 			}}})).length, 1);
 		},
 
-		'query with sort': function(){
+		'query with sort': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true}).sort('name')).length, 3);
 			assert.strictEqual(getResultsArray(store.filter({even: true}).sort('name'))[1].name, 'two');
-			assert.strictEqual(getResultsArray(store.filter({even: true}).sort(function(a, b){
+			assert.strictEqual(getResultsArray(store.filter({even: true}).sort(function (a, b) {
 				return a.name < b.name ? -1 : 1;
 			}))[1].name, 'two');
 			assert.strictEqual(getResultsArray(store.filter(null).sort('mappedTo'))[4].name, 'four');
 		},
 
-		'query with paging': function(){
+		'query with paging': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true}).range(1, 2)).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({even: true}).range(1, 2))[0].name, 'four');
 		},
 
-		'put update': function(){
+		'put update': function () {
 			var four = store.get(4);
 			four.square = true;
 			store.put(four);
@@ -101,7 +101,7 @@ define([
 			assert.isTrue(four.square);
 		},
 
-		'put new': function(){
+		'put new': function () {
 			store.put({
 				id: 6,
 				perfect: true
@@ -109,20 +109,20 @@ define([
 			assert.isTrue(store.get(6).perfect);
 		},
 
-		'add duplicate': function(){
+		'add duplicate': function () {
 			var threw;
-			try{
+			try {
 				store.add({
 					id: 5,
 					perfect: true
 				});
-			}catch(e){
+			} catch (e) {
 				threw = true;
 			}
 			assert.isTrue(threw);
 		},
 
-		'add new': function(){
+		'add new': function () {
 			store.add({
 				id: 7,
 				prime: true
@@ -130,18 +130,18 @@ define([
 			assert.isTrue(store.get(7).prime);
 		},
 
-		'remove': function(){
+		'remove': function () {
 			assert.isTrue(store.remove(3));
 			assert.strictEqual(store.get(3), undefined);
 		},
 
-		'remove missing': function(){
+		'remove missing': function () {
 			assert(!store.remove(77));
 			// make sure nothing changed
 			assert.strictEqual(store.get(1).id, 1);
 		},
 
-		'query after changes': function(){
+		'query after changes': function () {
 			store.add({ id: 7, prime: true });
 			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 4);
 			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 0);
@@ -151,7 +151,7 @@ define([
 			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 1);
 		},
 
-		'ifrs style data': function(){
+		'ifrs style data': function () {
 			var anotherLegacy = new Memory({
 				data: {
 					items: [
@@ -169,7 +169,7 @@ define([
 			assert.strictEqual(getResultsArray(anotherStore.filter({name: 'one'}))[0].name, 'one');
 		},
 
-		'add new id assignment': function(){
+		'add new id assignment': function () {
 			var object = {
 				random: true
 			};
@@ -181,7 +181,7 @@ define([
 	registerSuite({
 		name: 'legacy dstore adapter sorting - Memory',
 
-		before: function(){
+		before: function () {
 			legacyStore = new Memory({
 				data: [
 					{id: 1, field1: 'one', field2: '1'},
@@ -197,7 +197,7 @@ define([
 			});
 		},
 
-		'multiple sort fields - ascend + ascend': function(){
+		'multiple sort fields - ascend + ascend': function () {
 
 			var results = getResultsArray(store.sort('field2').sort('field1'));
 			/**
@@ -217,7 +217,7 @@ define([
 			assert.strictEqual(results[5].id, 3);
 		},
 
-		'multiple sort fields - ascend + descend': function(){
+		'multiple sort fields - ascend + descend': function () {
 
 			var results = getResultsArray(store.sort('field2', true).sort('field1', false));
 			assert.strictEqual(results.length, 6, 'Length is 6');
@@ -237,7 +237,7 @@ define([
 			assert.strictEqual(results[5].id, 5);
 		},
 
-		'multiple sort fields - descend + ascend': function(){
+		'multiple sort fields - descend + ascend': function () {
 
 			var results = getResultsArray(store.sort('field2', false).sort('field1', true));
 			/**
@@ -257,7 +257,7 @@ define([
 			assert.strictEqual(results[5].id, 6);
 		},
 
-		'multiple sort fields - descend + descend': function(){
+		'multiple sort fields - descend + descend': function () {
 
 			var results = getResultsArray(store.sort('field2', true).sort('field2', true));
 			/**

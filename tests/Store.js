@@ -2,19 +2,19 @@ define([
 	'../Store',
 	'intern!object',
 	'intern/chai!assert'
-], function(Store, registerSuite, assert){
+], function (Store, registerSuite, assert) {
 
 	var store;
 	registerSuite({
 		name: 'dstore Store',
 
-		beforeEach: function(){
+		beforeEach: function () {
 			store = new Store();
 		},
 
-		'filter': function(){
+		'filter': function () {
 			var expectedFilter1 = { prop1: 'one' },
-				expectedFilter2 = function filterFunc(){},
+				expectedFilter2 = function filterFunc() {},
 				filteredCollection;
 
 			filteredCollection = store.filter(expectedFilter1);
@@ -24,10 +24,10 @@ define([
 			assert.deepEqual(filteredCollection.filtered, [ expectedFilter1, expectedFilter2 ]);
 		},
 
-		'sort': function(){
+		'sort': function () {
 			var sortObject = { property: 'prop1', descending: true },
 				sortObjectArray = [ sortObject, { property: 'prop2', descending: false } ],
-				comparator = function comparator(){},
+				comparator = function comparator() {},
 				sortedCollection;
 
 			sortedCollection = store.sort(sortObject.property, sortObject.descending);
@@ -43,7 +43,7 @@ define([
 			assert.deepEqual(sortedCollection.sorted, comparator);
 		},
 
-		'range': function(){
+		'range': function () {
 			var expectedRange1 = { start: 10, end: 20 },
 				expectedRange2 = { start: 25 },
 				rangedCollection;

@@ -7,7 +7,7 @@ define([
 	'dstore/Csv',
 	'dstore/Memory'
 ],
-		function(registerSuite, assert, request, all, declare, Csv, Memory){
+		function (registerSuite, assert, request, all, declare, Csv, Memory) {
 	var CsvMemory = declare([Memory, Csv]);
 	var xhrBase = require.toUrl('dstore/tests/data');
 	var csvs = {}; // holds retrieved raw CSV data
@@ -16,7 +16,7 @@ define([
 		// Load CSV data.  The referenced data has various inconsistencies
 		// throughout on purpose, to test that the implementation responds
 		// properly to things like extra whitespace, blank values/lines, etc.
-		request(xhrBase + '/noquote.csv').then(function(data){
+		request(xhrBase + '/noquote.csv').then(function (data) {
 			csvs.noQuote = data;
 			stores.noQuoteNoHeader = new CsvMemory({
 				data: data,
@@ -34,7 +34,7 @@ define([
 				trim: true
 			});
 		}),
-		request(xhrBase + '/quote.csv').then(function(data){
+		request(xhrBase + '/quote.csv').then(function (data) {
 			csvs.quote = data;
 			stores.quoteNoHeader = new CsvMemory({
 				data: data,
@@ -47,7 +47,7 @@ define([
 				// No fieldNames; first row will be treated as header row.
 			});
 		}),
-		request(xhrBase + '/contributors.csv').then(function(data){
+		request(xhrBase + '/contributors.csv').then(function (data) {
 			csvs.contributors = data;
 			stores.contributors = new CsvMemory({
 				data: data,
@@ -56,11 +56,11 @@ define([
 		})
 	]);
 
-	readyPromise.then(function(){
+	readyPromise.then(function () {
 		registerSuite({
 			name: 'dstore CSV',
 
-			'no quote': function(){
+			'no quote': function () {
 				var noHeader = stores.noQuoteNoHeader,
 					withHeader = stores.noQuoteWithHeader,
 					trim = stores.noQuoteTrim,
@@ -101,7 +101,7 @@ define([
 				assert.isTrue(withHeader.get('3').died === '', 'Test blank value at end of line.');
 			},
 
-			'quote': function(){
+			'quote': function () {
 				var noHeader = stores.quoteNoHeader,
 					withHeader = stores.quoteWithHeader;
 
@@ -126,7 +126,7 @@ define([
 					'Multiline value should use same newline format as input.');
 			},
 
-			'import export': function(){
+			'import export': function () {
 				assert.strictEqual(csvs.contributors, stores.contributors.toCsv(),
 					'toCsv() should generate data matching original if it is well-formed');
 			}

@@ -13,7 +13,7 @@ define([
 			if (this.maximumLength < value.length) {
 				errors.push(this.maximumLengthError);
 			}
-			if (this.pattern && !this.pattern.test(value)){
+			if (this.pattern && !this.pattern.test(value)) {
 				errors.push(this.patternMatchError);
 			}
 			return errors;

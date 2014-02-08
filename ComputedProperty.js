@@ -62,7 +62,7 @@ define([
 						this._parent.property(dependsOn[i]).observe(changeListener, true));
 			}
 			return {
-				remove: function() {
+				remove: function () {
 					for (var i = 0; i < dependsOn.length; i++) {
 						handles[i].remove();
 					}

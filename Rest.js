@@ -5,7 +5,7 @@ define([
 	'dojo/io-query',
 	'dojo/_base/declare',
 	'./Request' /*=====, './api/Store' =====*/
-], function(request, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/){
+], function (request, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/) {
 
 	/*=====
 	var __HeaderOptions = {

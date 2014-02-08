@@ -7,7 +7,7 @@ define([
 	'dojo/_base/array',
 	'dojo/on'
 	/*=====, './api/Store' =====*/
-], function(lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/){
+], function (lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Observable
@@ -30,7 +30,7 @@ define([
 				// existing range completely precedes new range. we are done.
 				ranges.splice(i + 1, 0, createRange(newStart, newEnd));
 				return;
-			} else if(newEnd >= existingStart) {
+			} else if (newEnd >= existingStart) {
 				// the ranges overlap and must be merged into a single range
 				newStart = Math.min(newStart, existingStart);
 				newEnd = Math.max(newEnd, existingEnd);
@@ -41,16 +41,16 @@ define([
 		ranges.unshift(createRange(newStart, newEnd));
 	}
 
-	function unregisterRange (ranges, start, end) {
+	function unregisterRange(ranges, start, end) {
 		for (var i = 0, range; (range = ranges[i]); ++i) {
 			var existingStart = range.start,
 				existingEnd = existingStart + range.count;
 
-			if(start <= existingStart){
-				if(end >= existingEnd){
+			if (start <= existingStart) {
+				if (end >= existingEnd) {
 					// The existing range is within the forgotten range
 					ranges.splice(i, 1);
-				}else{
+				} else {
 					// The forgotten range overlaps the beginning of the existing range
 					range.start = end;
 					range.count = existingEnd - range.start;
@@ -59,14 +59,14 @@ define([
 					// there are no more ranges to update, and we are done
 					return;
 				}
-			}else if(start < existingEnd){
-				if(end > existingStart){
+			} else if (start < existingEnd) {
+				if (end > existingStart) {
 					// The forgotten range is within the existing range
 					ranges.splice(i, 1, createRange(existingStart, start), createRange(end, existingEnd));
 
 					// We are done because the existing range bounded the forgotten range
 					return;
-				}else{
+				} else {
 					// The forgotten range overlaps the end of the existing range
 					range.count = start - range.start;
 				}
@@ -86,8 +86,8 @@ define([
 			// register to listen for updates
 			for (var type in eventTypes) {
 				handles.push(
-					this.on(type, (function(type){
-						return function(event){
+					this.on(type, (function (type) {
+						return function (event) {
 							notify(type, event.target || event.id, event);
 						};
 					})(type))
@@ -105,7 +105,7 @@ define([
 							handles.pop().remove();
 						}
 
-						this.remove = function(){};
+						this.remove = function () {};
 					}
 				}
 			});
@@ -126,7 +126,7 @@ define([
 				// Treat in-memory data as one range to allow a single code path for all stores
 				registerRange(ranges, 0, observed.data.length);
 
-				observed.releaseRange = function(){};
+				observed.releaseRange = function () {};
 			} else {
 				var originalRange = observed.range;
 				observed.range = function (start, end) {
@@ -139,7 +139,7 @@ define([
 					whenAll({
 						data: rangeCollection.fetch(),
 						total: rangeCollection.total
-					}).then(function(result){
+					}).then(function (result) {
 						partialData.length = result.total;
 
 						// copy the new ranged data into the parent partial data set
@@ -152,7 +152,7 @@ define([
 				observed.releaseRange = function (start, end) {
 					unregisterRange(ranges, start, end);
 
-					for(var i = start; i < end; ++i){
+					for (var i = start; i < end; ++i) {
 						delete this.partialData[i];
 					}
 				};
@@ -162,7 +162,7 @@ define([
 				revision++;
 				event = lang.delegate(event);
 				when(observed.hasOwnProperty('data') ? observed.data :
-						observed.partialData, function(resultsArray){
+						observed.partialData, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
 					var queryExecutor = observed.queryer;
 					var i, j, l, range;
@@ -222,7 +222,7 @@ define([
 									// If the original index came from this range, put back in the original slot
 									// so it doesn't move unless it needs to (relying on a stable sort below)
 									if (removedFrom >= Math.max(0, range.start - 1) &&
-											removedFrom <= (range.start + range.count)){
+											removedFrom <= (range.start + range.count)) {
 										sampleArray.splice(removedFrom, 0, target);
 									} else {
 										sampleArray.push(target);
@@ -233,7 +233,7 @@ define([
 
 									if (sortedIndex === 0 && range.start !== 0) {
 										end = i - 1;
-									} else if(sortedIndex >= (sampleArray.length - 1) &&
+									} else if (sortedIndex >= (sampleArray.length - 1) &&
 											adjustedIndex < resultsArray.length) {
 										begin = i + 1;
 									} else {

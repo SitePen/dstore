@@ -1,7 +1,7 @@
 define([
 	'dojo/_base/lang',
 	'dojo/_base/declare'
-], function(lang, declare) {
+], function (lang, declare) {
 	// originally from https://github.com/kfranqueiro/dojo-smore/blob/master/Csv.js
 	var quoteRx = /^\s*"([\S\s]*)"\s*$/,
 		doubleQuoteRx = /""/g,
@@ -43,7 +43,7 @@ define([
 		//		If true, leading/trailing space will be trimmed from any unquoted values.
 		trim: false,
 		
-		parse: function(str) {
+		parse: function (str) {
 			// summary:
 			//		Populates the store based on a CSV-formatted string.
 			// str: String
@@ -131,12 +131,12 @@ define([
 			// The data is assembled; return
 			return data;
 		},
-		toCsv: function(options){
+		toCsv: function (options) {
 			// summary:
 			//		Returns data from Memory store, re-exported to CSV format.
 			return this.stringify(this.data, options);
 		},
-		stringify: function(data, options) {
+		stringify: function (data, options) {
 			// summary:
 			//		Serializes data as CSV
 			// options: Object?

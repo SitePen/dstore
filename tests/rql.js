@@ -8,10 +8,10 @@ define([
 	'dstore/RqlServer',
 	'dstore/Memory',
 	'dstore/Rest'
-], function(registerSuite, assert, declare, Deferred, registry, RqlClient, RqlServer, Memory, Rest){
+], function (registerSuite, assert, declare, Deferred, registry, RqlClient, RqlServer, Memory, Rest) {
 
 	var TestModel = declare(null, {
-		describe: function(){
+		describe: function () {
 			return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 		}
 	});
@@ -30,13 +30,13 @@ define([
 	registerSuite({
 		name: 'dstore RqlMemory',
 
-		'get': function(){
+		'get': function () {
 			assert.strictEqual(rqlMemory.get(1).name, 'one');
 			assert.strictEqual(rqlMemory.get(4).name, 'four');
 			assert.strictEqual(rqlMemory.get(1).describe(), 'one is not a prime');
 		},
 
-		'filter': function(){
+		'filter': function () {
 			assert.strictEqual(rqlMemory.filter('prime=true').data.length, 3);
 			assert.strictEqual(rqlMemory.filter('prime=true&even!=true').data.length, 2);
 			assert.strictEqual(rqlMemory.filter('prime=true&id>3').data.length, 1);
@@ -47,7 +47,7 @@ define([
 	});
 
 	var lastMockRequest;
-	registry.register(/http:\/\/test.com\/.*/, function mock(url){
+	registry.register(/http:\/\/test.com\/.*/, function mock(url) {
 		lastMockRequest = url;
 		var def = new Deferred();
 		def.resolve('[]');
@@ -61,7 +61,7 @@ define([
 	registerSuite({
 		name: 'dstore RqlRest',
 
-		'filter': function(){
+		'filter': function () {
 			rqlRest.filter({prime: true, even: true}).fetch();
 			assert.strictEqual(lastMockRequest, 'http://test.com/?eq(prime,true)&eq(even,true)');
 		}

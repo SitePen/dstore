@@ -188,15 +188,6 @@ define(['dojo/_base/declare'], function (declare) {
 			//		Deletes an object by its identity
 			// id: Number
 			//		The identity to use to delete the object
-			delete this.index[id];
-			var data = this.data,
-				idProperty = this.idProperty;
-			for(var i = 0, l = data.length; i < l; i++){
-				if(data[i][idProperty] === id){
-					data.splice(i, 1);
-					return;
-				}
-			}
 		},
 		transaction: function () {
 			// summary:

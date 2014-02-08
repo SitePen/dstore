@@ -6,7 +6,7 @@ define([
 	'dojo/when'
 ], function (declare, lang, Deferred, aspect, when) {
 
-	function getSchemaProperty (object, key) {
+	function getSchemaProperty(object, key) {
 		// this function will retrieve the individual property definition
 		// from the schema, for the provided object and key
 		var definition = object.schema[key];
@@ -40,7 +40,7 @@ define([
 		}
 
 		if (property && property.validate) {
-			return when(property.validate(), function(isValid) {
+			return when(property.validate(), function (isValid) {
 				if (!isValid) {
 					// errors, so don't perform set
 					if (!hasOwnPropertyInstance) {
@@ -74,7 +74,7 @@ define([
 					// make sure we have a deferred
 					deferred = new Deferred();
 				}
-				value.then(function (value){
+				value.then(function (value) {
 					// result received, call callback, and then indicate another item is done
 					doneItem(callback(value, key));
 				}).then(null, deferred.reject);
@@ -159,7 +159,7 @@ define([
 				// suppress any non-date from serialization output
 				object.prepareForSerialization();
 				return object._store && when(object._store[scenario === 'insert' ? 'add' : 'put'](object),
-						function(returned) {
+						function (returned) {
 					if (typeof returned === 'object') {
 						// receive any updates from the server
 						object.set(returned);
@@ -293,7 +293,7 @@ define([
 				// we can shortcut right to just setting the object property
 				this[key] = value;
 				// check to see if we should do validation
-				if (definition && definition.validateOnSet !== false){
+				if (definition && definition.validateOnSet !== false) {
 					validate(this, key);
 				}
 			}
@@ -331,7 +331,7 @@ define([
 					// check to see if we are allowed to validate this key
 					if (!fieldMap || (fieldMap.hasOwnProperty(key))) {
 						// run validation
-						whenItem(validate(object, key), function (isValid, key){
+						whenItem(validate(object, key), function (isValid, key) {
 							if (!isValid) {
 								notValid(key);
 							}
@@ -480,17 +480,17 @@ define([
 				if (hasOldObject ||  hasNewObject) {
 					// we will iterate through the properties recording the changes
 					var changes = {};
-					if (hasOldObject){
+					if (hasOldObject) {
 						for (key in oldValue) {
 							changes[key] = {old: oldValue[key]};
 						}
 					}
-					if (hasNewObject){
+					if (hasNewObject) {
 						for (key in value) {
 							(changes[key] = changes[key] || {}).value = value[key];
 						}
 					}
-					for(key in changes){
+					for (key in changes) {
 						// now for each change, we can notify the property object
 						var change = changes[key];
 						property.set(key, change.value, change.old);
@@ -554,7 +554,7 @@ define([
 				errors.push(value + ' is not a ' + this.type);
 			}
 			
-			if(this.required && !(value != null && value !== '')) {
+			if (this.required && !(value != null && value !== '')) {
 				errors.push('required, and it was not present');
 			}
 			return errors;
@@ -599,11 +599,11 @@ define([
 	});
 	// a function that returns a function, to stop JSON serialization of an
 	// object
-	function toJSONHidden () {
+	function toJSONHidden() {
 		return toJSONHidden;
 	}
 	// An object that will be hidden from JSON serialization
-	var Hidden = function() {
+	var Hidden = function () {
 	};
 	Hidden.prototype.toJSON = toJSONHidden;
 

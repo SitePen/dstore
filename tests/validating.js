@@ -6,7 +6,7 @@ define([
 	'dstore/Memory',
 	'dstore/Validating',
 	'dstore/extensions/jsonSchema'
-], function(registerSuite, assert, lang, declare, Memory, Validating, jsonSchema){
+], function (registerSuite, assert, lang, declare, Memory, Validating, jsonSchema) {
 
 	var validatingMemory = (declare([Memory, Validating]))({
 		model: jsonSchema({
@@ -37,19 +37,19 @@ define([
 	registerSuite({
 		name: 'dstore validatingMemory',
 
-		'get': function(){
+		'get': function () {
 			assert.strictEqual(validatingMemory.get(1).name, 'one');
 		},
 
-		'put update': function(){
+		'put update': function () {
 			var four = lang.delegate(validatingMemory.get(4));
 			four.prime = 'not a boolean';
 			four.number = 34;
 			four.name = 33;
 			var validationError;
-			try{
+			try {
 				validatingMemory.put(four);
-			}catch(e){
+			} catch (e) {
 				validationError = e;
 			}
 			assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
@@ -59,7 +59,7 @@ define([
 			]));
 		},
 
-		'model errors': function(){
+		'model errors': function () {
 			validatingMemory.allowErrors = true;
 			var four = validatingMemory.get(4);
 			four.set('number', 33);

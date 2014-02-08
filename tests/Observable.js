@@ -9,10 +9,10 @@ define([
 	'dstore/Store',
 	'dstore/Observable',
 	'dstore/SimpleQuery'
-], function(registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, SimpleQuery){
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, SimpleQuery) {
 
 	var MyStore = declare([Memory, Observable], {
-		get: function(){
+		get: function () {
 			// need to make sure that this.inherited still works with Observable
 			return this.inherited(arguments);
 		}
@@ -29,32 +29,32 @@ define([
 	});
 
 	// TODO: Maybe name this differently
-	function createBigStore(numItems, Store){
+	function createBigStore(numItems, Store) {
 		var data = [];
 		var i;
-		for(i = 0; i < numItems; i++){
+		for (i = 0; i < numItems; i++) {
 			data.push({id: i, name: 'item ' + i, order: i});
 		}
 		return new Store({data: data});
 	}
 
 	// A store for testing Observable with only partial in-memory data
-	var ObservablePartialDataStore = declare([ Store, Observable, SimpleQuery ], (function(){
+	var ObservablePartialDataStore = declare([ Store, Observable, SimpleQuery ], (function () {
 		var proto = {
-			constructor: function(kwArgs){
+			constructor: function (kwArgs) {
 				delete this.data;
 				this.backingMemoryStore = new MyStore(kwArgs);
 			}
 		};
 
-		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove'], function(method){
-			proto[method] = function(){
+		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove'], function (method) {
+			proto[method] = function () {
 				return this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 			};
 		});
 
-		arrayUtil.forEach(['filter', 'sort', 'range'], function(method){
-			proto[method] = function(){
+		arrayUtil.forEach(['filter', 'sort', 'range'], function (method) {
+			proto[method] = function () {
 				var newBackingStore = this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 				return lang.mixin(this.inherited(arguments), {
 					backingMemoryStore: newBackingStore
@@ -63,16 +63,16 @@ define([
 		});
 
 		// Make backing store an observed collection so its data is kept up-to-date
-		proto.track = function(){
-			this.backingMemoryStore = this.backingMemoryStore.track(function(){});
+		proto.track = function () {
+			this.backingMemoryStore = this.backingMemoryStore.track(function () {});
 			return this.inherited(arguments);
 		};
 		// Make events go to backing store
-		proto.on = function(type, listener){
+		proto.on = function (type, listener) {
 			return this.backingMemoryStore.on(type, listener);
 		};
 
-		proto.fetch = function(){
+		proto.fetch = function () {
 			this.data = when(this.backingMemoryStore.fetch());
 			this.total = when(this.backingMemoryStore.total);
 			return this.data;
@@ -84,34 +84,34 @@ define([
 	registerSuite({
 		name: 'dstore Observable',
 
-		'get': function(){
+		'get': function () {
 			assert.strictEqual(store.get(1).name, 'one');
 			assert.strictEqual(store.get(4).name, 'four');
 			assert.isTrue(store.get(5).prime);
 		},
 
-		'filter': function(){
+		'filter': function () {
 			var results = store.filter({prime: true});
 
 			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
 			var tracked = results.track();
-			tracked.on('update', function(event){
+			tracked.on('update', function (event) {
 				changes.push(event);
 			});
-			tracked.on('remove', function(event){
+			tracked.on('remove', function (event) {
 				changes.push(event);
 			});
-			tracked.on('add', function(event){
+			tracked.on('add', function (event) {
 				changes.push(event);
 			});
-			var secondObserverUpdate = tracked.on('update', function(event){
+			var secondObserverUpdate = tracked.on('update', function (event) {
 				secondChanges.push(event);
 			});
-			var secondObserverRemove = tracked.on('remove', function(event){
+			var secondObserverRemove = tracked.on('remove', function (event) {
 				secondChanges.push(event);
 			});
-			var secondObserverAdd = tracked.on('add', function(event){
+			var secondObserverAdd = tracked.on('add', function (event) {
 				secondChanges.push(event);
 			});
 			var expectedChanges = [],
@@ -142,7 +142,7 @@ define([
 			});
 			assert.strictEqual(tracked.data.length, 3);
 			// shouldn't be added
-			var six = {id:6, name:'six'};
+			var six = {id: 6, name: 'six'};
 			store.add(six);
 			assert.strictEqual(tracked.data.length, 3);
 
@@ -154,7 +154,7 @@ define([
 			});
 
 			// should be added
-			var seven = {id:7, name:'seven', prime:true};
+			var seven = {id: 7, name: 'seven', prime: true};
 			store.add(seven);
 			assert.strictEqual(tracked.data.length, 4);
 
@@ -175,12 +175,12 @@ define([
 			assert.deepEqual(changes, expectedChanges);
 		},
 
-		'filter with zero id': function(){
+		'filter with zero id': function () {
 			var results = store.filter({});
 			results.fetch();
 			assert.strictEqual(results.data.length, 7);
 			var tracked = results.track();
-			tracked.on('update', function(event){
+			tracked.on('update', function (event) {
 				// we only do puts so previous & new indices must always been the same
 				assert.ok(event.index === event.previousIndex);
 			});
@@ -188,29 +188,29 @@ define([
 			store.put({id: 0, name: '-ZERO-', prime: false});
 		},
 
-		'paging with store.data': function(){
+		'paging with store.data': function () {
 			var results,
 				bigStore = createBigStore(100, MyStore),
 				bigFiltered = bigStore.filter({}).sort('order');
 
 			var observations = [];
 			var bigObserved = bigFiltered.track();
-			bigObserved.on('update', function(event){
+			bigObserved.on('update', function (event) {
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
-			bigObserved.on('add', function(event){
+			bigObserved.on('add', function (event) {
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
-			bigObserved.on('remove', function(event){
+			bigObserved.on('remove', function (event) {
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
-			bigObserved.range(0,25).fetch();
-			bigObserved.range(25,50).fetch();
-			bigObserved.range(50,75).fetch();
-			bigObserved.range(75,100).fetch();
+			bigObserved.range(0, 25).fetch();
+			bigObserved.range(25, 50).fetch();
+			bigObserved.range(50, 75).fetch();
+			bigObserved.range(75, 100).fetch();
 
 			bigObserved.fetch();
 			var results = bigObserved.data;
@@ -226,32 +226,32 @@ define([
 		},
 
 		// TODO: Consider breaking this down into smaller test cases
-		'paging with store.partialData': function(){
+		'paging with store.partialData': function () {
 			var bigStore = createBigStore(100, ObservablePartialDataStore),
 				bigFiltered = bigStore.filter({}).sort('order'),
 				latestObservation,
 				bigObserved = bigFiltered.track(),
 				item,
-				assertObservationIs = function(expectedObservation){
+				assertObservationIs = function (expectedObservation) {
 					expectedObservation = lang.delegate(expectedObservation);
-					if(expectedObservation.type in { add: 1, update: 1 }
-						&& !('index' in expectedObservation)){
+					if (expectedObservation.type in { add: 1, update: 1 }
+						&& !('index' in expectedObservation)) {
 						expectedObservation.index = undefined;
 					}
-					if(expectedObservation.type in { update: 1, remove: 1 }
-						&& !('previousIndex' in expectedObservation)){
+					if (expectedObservation.type in { update: 1, remove: 1 }
+						&& !('previousIndex' in expectedObservation)) {
 						expectedObservation.previousIndex = undefined;
 					}
 
 					assert.deepEqual(latestObservation, expectedObservation);
 				};
-			bigObserved.on('update', function(event){
+			bigObserved.on('update', function (event) {
 				latestObservation = event;
 			});
-			bigObserved.on('add', function(event){
+			bigObserved.on('add', function (event) {
 				latestObservation = event;
 			});
-			bigObserved.on('remove', function(event){
+			bigObserved.on('remove', function (event) {
 				latestObservation = event;
 			});
 			// TODO: Fix names bigXyz names. Probably use the term collection instead of store for return value of filter and sort
@@ -364,7 +364,7 @@ define([
 			assertObservationIs({ type: 'add', target: item });
 		},
 
-		'paging releaseRange with store.partialData': function(){
+		'paging releaseRange with store.partialData': function () {
 			var itemCount = 100,
 				store = createBigStore(itemCount, ObservablePartialDataStore),
 				rangeToBeEclipsed = { start: 5, end: 15 },
@@ -378,13 +378,13 @@ define([
 
 			var observations = [],
 				trackedStore = store.track(),
-				assertRangeDefined = function(start, end){
-					for(var i = start; i < end; ++i){
+				assertRangeDefined = function (start, end) {
+					for(var i = start; i < end; ++i) {
 						assert.notEqual(trackedStore.partialData[i], undefined);
 					}
 				},
-				assertRangeUndefined = function(start, end){
-					for(var i = start; i < end; ++i){
+				assertRangeUndefined = function (start, end) {
+					for(var i = start; i < end; ++i) {
 						assert.equal(trackedStore.partialData[i], undefined);
 					}
 				};
@@ -418,13 +418,13 @@ define([
 			assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
 		},
 
-		'new item with default index': function(){
+		'new item with default index': function () {
 			var store = createBigStore(100, ObservablePartialDataStore),
 				trackedStore = store.track();
 
-			return trackedStore.range(0, 25).fetch().then(function(){
+			return trackedStore.range(0, 25).fetch().then(function () {
 				var addEvent = null;
-				trackedStore.on('add', function(event){
+				trackedStore.on('add', function (event) {
 					addEvent = event;
 				});
 
@@ -449,18 +449,18 @@ define([
 			});
 		},
 
-		'type': function(){
-			assert.isFalse(store === store.track(function(){}));
+		'type': function () {
+			assert.isFalse(store === store.track(function () {}));
 		},
 
-		'track and collection.tracking.remove': function(){
+		'track and collection.tracking.remove': function () {
 			var store = createBigStore(10, declare([ Memory, Observable ])),
 				trackedCollection = store.track();
 
 			assert.property(trackedCollection, 'tracking');
 
 			var lastEvent = null;
-			trackedCollection.on('add, update', function(event){
+			trackedCollection.on('add, update', function (event) {
 				lastEvent = event;
 			});
 

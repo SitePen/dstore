@@ -30,15 +30,15 @@ define([
 		map: function (callback, thisObject) {
 			var results = [];
 			// like forEach, except we collect results
-			return when(this.forEach(function(object, i){
+			return when(this.forEach(function (object, i) {
 				results.push(callback.call(thisObject, object, i));
-			}, thisObject), function(){
+			}, thisObject), function () {
 				return results;
 			});
 		},
 		forEach: function (callback, thisObject) {
-			return when(this.fetch(), function(data){
-				for(var i = 0, l = data.length; i < l; i++){
+			return when(this.fetch(), function (data) {
+				for (var i = 0, l = data.length; i < l; i++) {
 					callback.call(thisObject, data[i], i);
 				}
 				return data;
@@ -47,7 +47,7 @@ define([
 		on: function (type, listener) {
 			//	summary:
 			//		Listen for data changes
-			if (type !== 'refresh' && this.store && this.store !== this){
+			if (type !== 'refresh' && this.store && this.store !== this) {
 				return this.store.on(type, listener);
 			}
 			return this.inherited(arguments);
@@ -83,7 +83,7 @@ define([
 		assignPrototype: function (object) {
 			// Set the object's prototype
 			var model = this.model;
-			if(model && object){
+			if (model && object) {
 				var prototype = model.prototype;
 				if (hasProto) {
 					// the fast easy way
@@ -128,7 +128,7 @@ define([
 				sorted = property;
 			} else if (lang.isArray(property)) {
 				sorted = property.slice(0);
-			} else if(typeof property === 'object') {
+			} else if (typeof property === 'object') {
 				sorted = [].slice.call(arguments, 0);
 			} else {
 				sorted = [{

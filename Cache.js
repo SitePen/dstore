@@ -5,7 +5,7 @@ define([
 	'dojo/_base/declare',
 	'./Store',
 	'./Memory'
-], function(lang, arrayUtil, when, declare, Store, Memory){
+], function (lang, arrayUtil, when, declare, Store, Memory) {
 
 	// module:
 	//		dstore/Cache
@@ -13,28 +13,28 @@ define([
 	return declare(Store, {
 		cachingStore: null,
 		constructor: function (options) {
-			for(var i in options){
+			for (var i in options) {
 				// mixin the options
 				this[i] = options[i];
 			}
-			if(!this.cachingStore){
+			if (!this.cachingStore) {
 				this.cachingStore = new Memory();
 			}
 			this._collectionCache = {};
 		},
 		_tryCacheForResults: function (method, serialized, args) {
 			var cachingStore = this.cachingStore;
-			if(this.allLoaded && this.hasOwnProperty('cachingStore')){
+			if (this.allLoaded && this.hasOwnProperty('cachingStore')) {
 				// if we have loaded everything, we can go to the caching store
 				// for quick client side querying
 				var subCachingStore = new Memory();
 				// wait for it to finish loading
 				var data = when(when(this.allLoaded, function () {
 						return cachingStore[method].apply(cachingStore, args);
-					}), function(results){
+					}), function (results) {
 						// now process the results to populate sub caching store
 						var data = results.data;
-						for(var i = 0; i < data.length; i++){
+						for (var i = 0; i < data.length; i++) {
 							subCachingStore.put(data[i]);
 						}
 						return data;
@@ -50,13 +50,13 @@ define([
 			if (cacheable) {
 				// we use a key to see if we already have a sub-collection
 				serialized = method + ':' + serialized;
-				if(this._collectionCache[serialized]){
+				if (this._collectionCache[serialized]) {
 					return this._collectionCache[serialized];
 				}
 			}
 			// nothing in the cache, have to use the inherited method to perform the action
 			var results = this.inherited(args);
-			if(cacheable){
+			if (cacheable) {
 				this._collectionCache[serialized] = results;
 			}
 			// give the results it's own collection cache and caching store
@@ -64,11 +64,11 @@ define([
 
 			if (results.data) {
 				var store = this;
-				when(results.allLoaded = results.data, function(data){
+				when(results.allLoaded = results.data, function (data) {
 					results.cachingStore = new Memory({data: data});
-					for(var i = 0, l = data.length; i < l; i++){
+					for (var i = 0, l = data.length; i < l; i++) {
 						var object = data[i];
-						if(!store.isLoaded || store.isLoaded(object)){
+						if (!store.isLoaded || store.isLoaded(object)) {
 							cachingStore.put(object);
 						}
 					}
@@ -93,15 +93,15 @@ define([
 			var store = this;
 			if (this.allLoaded) {
 				// everything has been loaded, use the caching store
-				return when(this.allLoaded, function(){
+				return when(this.allLoaded, function () {
 					return store.cachingStore.fetch();
 				});
 			}
 			/* jshint boss: true */
-			return this.allLoaded = when(this.inherited(arguments), function(results){
-				arrayUtil.forEach(results, function(object){
+			return this.allLoaded = when(this.inherited(arguments), function (results) {
+				arrayUtil.forEach(results, function (object) {
 					// store each object before calling the callback
-					if(!store.isLoaded || store.isLoaded(object)){
+					if (!store.isLoaded || store.isLoaded(object)) {
 						cachingStore.put(object);
 					}
 				});
@@ -118,10 +118,10 @@ define([
 			var masterGet = this.getInherited(arguments);
 			var masterStore = this;
 			// if everything is being loaded, we always wait for that to finish
-			return when(this.allLoaded, function(){
-				return when(cachingStore.get(id), function(result){
-					return result || when(masterGet.call(masterStore, id, directives), function(result){
-						if(result){
+			return when(this.allLoaded, function () {
+				return when(cachingStore.get(id), function (result) {
+					return result || when(masterGet.call(masterStore, id, directives), function (result) {
+						if (result) {
 							cachingStore.put(result, {id: id});
 						}
 						return result;
@@ -131,7 +131,7 @@ define([
 		},
 		add: function (object, directives) {
 			var cachingStore = this.cachingStore;
-			return when(this.inherited(arguments), function(result){
+			return when(this.inherited(arguments), function (result) {
 				// now put result in cache (note we don't do add, because add may have
 				// called put() and already added it)
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
@@ -143,7 +143,7 @@ define([
 			// first remove from the cache, so it is empty until we get a response from the master store
 			var cachingStore = this.cachingStore;
 			cachingStore.remove((directives && directives.id) || this.getIdentity(object));
-			return when(this.inherited(arguments), function(result){
+			return when(this.inherited(arguments), function (result) {
 				// now put result in cache
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore
