@@ -376,8 +376,7 @@ define([
 				headTrimmingRange = { start: 50, end: 60 },
 				tailTrimmingRange = { start: 90, end: 100 };
 
-			var observations = [],
-				trackedStore = store.track(),
+			var trackedStore = store.track(),
 				assertRangeDefined = function (start, end) {
 					for(var i = start; i < end; ++i) {
 						assert.notEqual(trackedStore.partialData[i], undefined);
