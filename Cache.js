@@ -20,6 +20,8 @@ define([
 			if (!this.cachingStore) {
 				this.cachingStore = new Memory();
 			}
+			this.cachingStore.model = this.model;
+			this.cachingStore.idProperty = this.idProperty;
 			this._collectionCache = {};
 		},
 		_tryCacheForResults: function (method, serialized, args) {
