@@ -99,6 +99,9 @@ define([
 			// If we use _createSubCollection, it will return a new collection that may exclude
 			// important, defining properties from the tracked collection.
 			var observed = lang.delegate(this, {
+				// TODO: The fact that we have to remember `store` here might indicate the need to adjust our approach to _createSubCollection and perhaps allow for not excluding existing properties
+				store: this.store || this,
+
 				// Any sub-collections created from the tracked collection should be based on this
 				// parent collection instead
 				_createSubCollection: lang.hitch(this, '_createSubCollection'),
