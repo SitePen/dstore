@@ -448,6 +448,50 @@ define([
 			});
 		},
 
+		'new item in empty store - with queryExecutor': function () {
+			var store = new MyStore({ data: [] }),
+				collection = store.filter({ type: 'test-item' }).track();
+
+			var actualEvent;
+			collection.on('add', function (event) {
+				actualEvent = event;
+			});
+
+			var expectedTarget = collection.add({
+				type: 'test-item',
+				id: 1,
+				name: 'one'
+			});
+
+			assert.deepEqual(actualEvent, {
+				type: 'add',
+				index: 0,
+				target: expectedTarget
+			});
+		},
+
+		'new item in empty store - without queryExecutor': function () {
+			var store = new MyStore({ data: [] }),
+				collection = store.track();
+
+			var actualEvent;
+			collection.on('add', function (event) {
+				actualEvent = event;
+			});
+
+			var expectedTarget = collection.add({
+				type: 'test-item',
+				id: 1,
+				name: 'one'
+			});
+
+			assert.deepEqual(actualEvent, {
+				type: 'add',
+				index: 0,
+				target: expectedTarget
+			});
+		},
+
 		'type': function () {
 			assert.isFalse(store === store.track(function () {}));
 		},

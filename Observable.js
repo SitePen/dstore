@@ -261,7 +261,7 @@ define([
 
 								for (i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i) {
 									range = ranges[i];
-									if (range.start <= insertedInto && insertedInto < (range.start + range.count)) {
+									if (range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
 										insertionRangeIndex = i;
 									}
 								}
