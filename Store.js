@@ -27,6 +27,21 @@ define([
 			// give a reference back to the store for saving, etc.
 			this.model.prototype._store = this;
 		},
+
+		// idProperty: String
+		//		Indicates the property to use as the identity property. The values of this
+		//		property should be unique.
+		idProperty: 'id',
+
+		getIdentity: function (object) {
+			// summary:
+			//		Returns an object's identity
+			// object: Object
+			//		The object to get the identity from
+			// returns: Number
+			return object[this.idProperty];
+		},
+
 		map: function (callback, thisObject) {
 			var results = [];
 			// like forEach, except we collect results

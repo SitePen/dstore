@@ -51,11 +51,6 @@ define([
 		//		sent to the server
 		target: '',
 
-		// idProperty: String
-		//		Indicates the property to use as the identity property. The values of this
-		//		property should be unique.
-		idProperty: 'id',
-
 		// sortParam: String
 		//		The query parameter to used for holding sort information. If this is omitted, than
 		//		the sort information is included in a functional query token to avoid colliding
@@ -72,15 +67,6 @@ define([
 		// accepts: String
 		//		Defines the Accept header to use on HTTP requests
 		accepts: 'application/json',
-
-		getIdentity: function (object) {
-			// summary:
-			//		Returns an object's identity
-			// object: Object
-			//		The object to get the identity from
-			// returns: Number
-			return object[this.idProperty];
-		},
 
 		fetch: function () {
 			if (!this.hasOwnProperty('data')) {

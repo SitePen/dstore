@@ -19,11 +19,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 		//		The array of all the objects in the memory store
 		data: null,
 
-		// idProperty: String
-		//		Indicates the property to use as the identity property. The values of this
-		//		property should be unique.
-		idProperty: 'id',
-
 		// index: Object
 		//		An index of data indices into the data array by id
 		index: null,
@@ -36,14 +31,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			// returns: Object
 			//		The object in the store that matches the given id.
 			return this.fullData[(this.store || this).index[id]];
-		},
-		getIdentity: function (object) {
-			// summary:
-			//		Returns an object's identity
-			// object: Object
-			//		The object to get the identity from
-			// returns: Number
-			return object[this.idProperty];
 		},
 		put: function (object, options) {
 			// summary:

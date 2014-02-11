@@ -104,11 +104,19 @@ define([
 		//		A dstore object that will have an adapter applied to it.
 		// config: Object?
 		//		An optional configuration object that will be mixed into the adapted object.
-		//
-		obj = declare.safeMixin(obj, new StoreAdapter());
+		var adapter = new StoreAdapter();
+		// we need to keep any the original store's own properties
+		for (var i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				adapter[i] = obj[i];
+			}
+		}
+		// we now mixin adapter properties
+		obj = declare.safeMixin(obj, adapter);
 		if (config) {
 			obj = lang.mixin(obj, config);
 		}
+
 		return obj;
 	};
 
