@@ -94,7 +94,11 @@ define([
 				);
 			}
 
-			var observed = this._createSubCollection({
+			// delegate rather than call _createSubCollection because we are not ultimately creating
+			// a new collection, just decorating an existing collection with item index tracking.
+			// If we use _createSubCollection, it will return a new collection that may exclude
+			// important, defining properties from the tracked collection.
+			var observed = lang.delegate(this, {
 				// Any sub-collections created from the tracked collection should be based on this
 				// parent collection instead
 				_createSubCollection: lang.hitch(this, '_createSubCollection'),
@@ -121,7 +125,7 @@ define([
 			};
 
 			var ranges = [];
-			if (this.hasOwnProperty('data')) {
+			if (this.data) {
 				observed.data = this.data.slice(0); // make local copy
 				// Treat in-memory data as one range to allow a single code path for all stores
 				registerRange(ranges, 0, observed.data.length);
@@ -245,7 +249,7 @@ define([
 						} else {
 							// we don't have a queryEngine, so we can't provide any information
 							// about where it was inserted or moved to. If it is an update, we leave
-							// its position alone. other we at least indicate a new object
+							// its position alone. otherwise, we at least indicate a new object
 
 							if (type === 'update') {
 								insertedInto = removedFrom;
@@ -257,7 +261,7 @@ define([
 
 								for (i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i) {
 									range = ranges[i];
-									if (range.start <= insertedInto && insertedInto < (range.start + range.count)) {
+									if (range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
 										insertionRangeIndex = i;
 									}
 								}

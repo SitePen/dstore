@@ -376,8 +376,7 @@ define([
 				headTrimmingRange = { start: 50, end: 60 },
 				tailTrimmingRange = { start: 90, end: 100 };
 
-			var observations = [],
-				trackedStore = store.track(),
+			var trackedStore = store.track(),
 				assertRangeDefined = function (start, end) {
 					for(var i = start; i < end; ++i) {
 						assert.notEqual(trackedStore.partialData[i], undefined);
@@ -446,6 +445,50 @@ define([
 				assert.deepEqual(addEvent.target, expectedNewItem);
 				assert.isTrue('index' in addEvent);
 				assert.isUndefined(addEvent.index);
+			});
+		},
+
+		'new item in empty store - with queryExecutor': function () {
+			var store = new MyStore({ data: [] }),
+				collection = store.filter({ type: 'test-item' }).track();
+
+			var actualEvent;
+			collection.on('add', function (event) {
+				actualEvent = event;
+			});
+
+			var expectedTarget = collection.add({
+				type: 'test-item',
+				id: 1,
+				name: 'one'
+			});
+
+			assert.deepEqual(actualEvent, {
+				type: 'add',
+				index: 0,
+				target: expectedTarget
+			});
+		},
+
+		'new item in empty store - without queryExecutor': function () {
+			var store = new MyStore({ data: [] }),
+				collection = store.track();
+
+			var actualEvent;
+			collection.on('add', function (event) {
+				actualEvent = event;
+			});
+
+			var expectedTarget = collection.add({
+				type: 'test-item',
+				id: 1,
+				name: 'one'
+			});
+
+			assert.deepEqual(actualEvent, {
+				type: 'add',
+				index: 0,
+				target: expectedTarget
 			});
 		},
 
