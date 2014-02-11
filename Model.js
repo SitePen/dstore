@@ -153,7 +153,7 @@ define([
 			var object = this;
 			return when(skipValidation ? true : this.validate(), function (isValid) {
 				if (!isValid) {
-					throw this.validateError();
+					throw object.validateError();
 				}
 				var scenario = object.scenario;
 				// suppress any non-date from serialization output
