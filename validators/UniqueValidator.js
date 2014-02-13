@@ -1,7 +1,7 @@
 define([
 	'dojo/_base/declare',
 	'dojo/when',
-	'../Property',
+	'../Property'
 ], function (declare, when, Property) {
 	return declare(Property, {
 		//	summary:
@@ -27,7 +27,7 @@ define([
 		uniqueStore: null,
 		//	uniqueError: String
 		//		The error message for when the value is not unique
-		uniqueError: 'The value is not unique',
+		uniqueError: 'The value is not unique'
 	});
 });
 

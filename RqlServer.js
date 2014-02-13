@@ -1,6 +1,6 @@
 define([
 	'rql/query',
-	'dojo/_base/declare',
+	'dojo/_base/declare'
 ], function (rql, declare) {
 	return declare(null, {
 		// summary:

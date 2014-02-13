@@ -38,6 +38,6 @@ define(['./Store', 'dojo/when', 'dojo/_base/declare'], function (Store, when, de
 			return when(this.validate(object, true), function (object) {
 				return inheritedAdd.call(store, object, options);
 			});
-		},
+		}
 	});
 });
