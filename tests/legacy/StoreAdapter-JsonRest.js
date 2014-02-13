@@ -3,11 +3,12 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
+	'dojo/json',
 	'dojo/_base/lang',
 	'dojo/when',
 	'dojo/store/JsonRest',
 	'dstore/legacy/StoreAdapter'
-], function (require, registerSuite, assert, declare, lang, when, JsonRest, StoreAdapter) {
+], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, StoreAdapter) {
 
 	var legacyStore = new JsonRest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],

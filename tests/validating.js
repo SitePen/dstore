@@ -2,11 +2,12 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/lang',
+	'dojo/json',
 	'dojo/_base/declare',
 	'dstore/Memory',
 	'dstore/Validating',
 	'dstore/extensions/jsonSchema'
-], function (registerSuite, assert, lang, declare, Memory, Validating, jsonSchema) {
+], function (registerSuite, assert, lang, JSON, declare, Memory, Validating, jsonSchema) {
 
 	var validatingMemory = (declare([Memory, Validating]))({
 		model: jsonSchema({

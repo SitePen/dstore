@@ -2,10 +2,11 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
+	'dojo/json',
 	'dstore/Memory',
 	'dstore/Observable',
 	'dstore/charting/StoreSeries'
-], function(registerSuite, assert, declare, Memory, Observable, StoreSeries){
+], function(registerSuite, assert, declare, JSON, Memory, Observable, StoreSeries){
 
 	var testSeriesObj = {
 		// This is a mock Series object for testing.

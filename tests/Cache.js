@@ -2,6 +2,7 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/Deferred',
+	'dojo/json',
 	'dojo/_base/declare',
 	'dstore/Store',
 	'dstore/Memory',
@@ -9,7 +10,7 @@ define([
 	'./mockRequest',
 	'dojo/when',
 	'dstore/Cache'
-], function (registerSuite, assert, Deferred, declare, Store, Memory, Request, mockRequest, when, Cache) {
+], function (registerSuite, assert, Deferred, JSON, declare, Store, Memory, Request, mockRequest, when, Cache) {
 
 	/* jshint newcap: false */
 	var cachingStore = new Memory();

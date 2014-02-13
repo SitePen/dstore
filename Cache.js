@@ -1,11 +1,12 @@
 define([
 	'dojo/_base/lang',
 	'dojo/_base/array',
+	'dojo/json',
 	'dojo/when',
 	'dojo/_base/declare',
 	'./Store',
 	'./Memory'
-], function (lang, arrayUtil, when, declare, Store, Memory) {
+], function (lang, arrayUtil, JSON, when, declare, Store, Memory) {
 
 	// module:
 	//		dstore/Cache

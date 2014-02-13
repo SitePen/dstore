@@ -1,13 +1,14 @@
 define([
 	'intern!object',
 	'intern/chai!assert',
+	'dojo/json',
 	'dojo/_base/declare',
 	'dojo/Deferred',
 	'../Model',
 	'../Property',
 	'../ComputedProperty',
 	'../Memory'
-], function (registerSuite, assert, declare, Deferred, Model, Property, ComputedProperty, Memory) {
+], function (registerSuite, assert, JSON, declare, Deferred, Model, Property, ComputedProperty, Memory) {
 	function createPopulatedModel() {
 		var model = new (declare(Model, {
 			schema: {
