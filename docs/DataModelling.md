@@ -16,6 +16,7 @@ Method | Description
 `get(name)` | This returns the property value with the given name.
 `set(name, value)` | This sets the value of a property.
 `property(name)` | This returns a property object instance for the given name.
+`observe(name, listener, options)` | This will listen for any changes to the value of the given property. See the Property's observe for the options.
 `validate()` | This will validate the object, determining if there are any errors on the object.
 `save()` | This will save the object, validating and then storing the object in the store.
 `remove()` | This will delete the object from the object store.

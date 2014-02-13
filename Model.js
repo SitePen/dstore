@@ -301,6 +301,20 @@ define([
 			return value;
 		},
 
+		observe: function (/*string*/ key, /*function*/ listener, /*object*/ options) {
+			//	summary:
+			//		Registers a listener for any changes in the specified property
+			//	key:
+			//		The name of the property to listen to
+			//	listener:
+			//		Function to be called for each change
+			//	options.onlyFutureUpdates
+			//		If this is true, it won't call the listener for the current value,
+			//		just future updates. If this is true, it also won't return
+			//		a new reactive object
+			return this.property(key).observe(listener, options);
+		},
+
 		validate: function (/*string[]?*/ fields) {
 			//	summary:
 			//		Validates the current object.
@@ -384,6 +398,10 @@ define([
 			//		just future updates. If this is true, it also won't return
 			//		a new reactive object
 			
+			if (typeof listener === 'string') {
+				// a property key was provided, use the Model's method
+				return this.inherited(arguments);
+			}
 			if (!options || !options.onlyFutureUpdates) {
 				// create a new reactive to contain the results of the execution
 				// of the provided function

@@ -251,7 +251,7 @@ define([
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
 			var updatedName2;
-			var handle = model.property('name').observe(function (name) {
+			var handle = model.observe('name', function (name) {
 				updatedName2 = name;
 			});
 			assert.strictEqual(updatedName2, 'Jane Doe');
@@ -270,7 +270,7 @@ define([
 			model.set('birthDate', then);
 			assert.strictEqual(model.get('birthDate').getTime(), 1000000);
 			var updatedDate, now = new Date();
-			model.property('birthDate').observe(function (newDate) {
+			model.observe('birthDate', function (newDate) {
 				updatedDate = newDate;
 			});
 			model.set('birthDate', now);
