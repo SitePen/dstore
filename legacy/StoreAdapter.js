@@ -91,7 +91,7 @@ define([
 			//		The results or a promise for the results
 			var results = this.query(this._query, this._queryOptions);
 			if (results) {
-				results.forEach(this.assignPrototype, this);
+				results = results.map(this.assignPrototype, this);
 			}
 			return results;
 		}

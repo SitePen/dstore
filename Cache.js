@@ -30,6 +30,7 @@ define([
 				// if we have loaded everything, we can go to the caching store
 				// for quick client side querying
 				var subCachingStore = new Memory();
+				subCachingStore.model = this.model;
 				// wait for it to finish loading
 				var data = when(when(this.allLoaded, function () {
 						return cachingStore[method].apply(cachingStore, args);
