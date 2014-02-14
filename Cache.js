@@ -95,14 +95,8 @@ define([
 		fetch: function () {
 			var cachingStore = this.cachingStore;
 			var store = this;
-			if (this.allLoaded) {
-				// everything has been loaded, use the caching store
-				return when(this.allLoaded, function () {
-					return store.cachingStore.fetch();
-				});
-			}
 			/* jshint boss: true */
-			return this.allLoaded = when(this.inherited(arguments), function (results) {
+			return this.allLoaded || (this.allLoaded = when(this.inherited(arguments), function (results) {
 				arrayUtil.forEach(results, function (object) {
 					// store each object before calling the callback
 					if (!store.isLoaded || store.isLoaded(object)) {
@@ -110,7 +104,7 @@ define([
 					}
 				});
 				return results;
-			});
+			}));
 		},
 		// canCacheQuery: Function
 		//		this function can be overriden to provide more specific functionality for
