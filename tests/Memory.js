@@ -41,6 +41,17 @@ define([
 			assert.strictEqual(store.filter({even: true}).data[1].describe(), 'four is not a prime');
 		},
 
+		'no model': function() {
+			var noModelStore = new Memory({
+				data: [
+					{id: 1, name: 'one', prime: false, mappedTo: 'E'}
+				],
+				model: null
+			});
+			assert.strictEqual(noModelStore.get(1).get, undefined);
+			assert.strictEqual(noModelStore.get(1).save, undefined);
+		},
+
 		'query': function () {
 			assert.strictEqual(store.filter({prime: true}).data.length, 3);
 			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
