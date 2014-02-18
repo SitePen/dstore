@@ -159,6 +159,7 @@ define([
 
 		range: function (start, end) {
 			return this._createSubCollection({
+				// TODO: `ranged` should probably base itself on an existing `ranged` if it exitsts
 				ranged: { start: start, end: end }
 			});
 		}
