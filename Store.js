@@ -19,13 +19,15 @@ define([
 		constructor: function (options) {
 			// perform the mixin
 			declare.safeMixin(this, options);
-			if (!this.hasOwnProperty('model')) {
+			if (!this.hasOwnProperty('model') && this.model) {
 				// we need a distinct model for each store, so we can
 				// save the reference back to this store on it
 				this.model = declare(Model, {});
 			}
-			// give a reference back to the store for saving, etc.
-			this.model.prototype._store = this;
+			if(this.model){
+				// give a reference back to the store for saving, etc.
+				this.model.prototype._store = this;
+			}
 		},
 
 		// idProperty: String
@@ -82,7 +84,7 @@ define([
 		// model: Function
 		//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 		//		used as the prototype for all objects returned from this store. One can set this
-		//		to an empty object if you don't want any methods to decorate the returned
+		//		to null if you don't want any methods to decorate the returned
 		//		objects (this can improve performance by avoiding prototype setting)
 		model: Model,
 

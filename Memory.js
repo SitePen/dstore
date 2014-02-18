@@ -48,8 +48,9 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			var id = object[idProperty] = (options && 'id' in options) ?
 					options.id :
 					idProperty in object ? object[idProperty] : Math.random();
-			var prototype = this.model.prototype;
-			if (prototype && !(object instanceof this.model)) {
+			var model = this.model;
+			if (model && !(object instanceof model)) {
+				var prototype = model.prototype;
 				if (hasProto) {
 					// the fast easy way
 					object.__proto__ = prototype;
@@ -127,10 +128,11 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 		_reindex: function (data) {
 			this.fullData = data;
 			this.index = {};
-			var prototype = this.model.prototype;
+			var model = this.model;
+			var prototype = model && model.prototype;
 			for (var i = 0, l = data.length; i < l; i++) {
 				var object = data[i];
-				if (prototype) {
+				if (model && !(object instanceof model)) {
 					if (hasProto) {
 						// the fast easy way
 						object.__proto__ = prototype;
