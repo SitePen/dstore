@@ -158,8 +158,20 @@ define([
 		},
 
 		range: function (start, end) {
+			if (this.ranged) {
+				var base = this.ranged.start,
+					cap = this.ranged.end;
+				// TODO: Should we quietly cap start and end? Should we warn or throw an error instead?
+				if (isFinite(cap)) {
+					start = Math.min(base + start, cap);
+					end = isFinite(end) ? Math.min(base + end, cap) : cap;
+				} else {
+					start = base + start;
+					end = isFinite(end) ? base + end : undefined;
+				}
+			}
+
 			return this._createSubCollection({
-				// TODO: `ranged` should probably base itself on an existing `ranged` if it exitsts
 				ranged: { start: start, end: end }
 			});
 		}
