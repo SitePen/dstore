@@ -221,6 +221,7 @@ define([
 									sortedIndex,
 									adjustedIndex;
 								while (begin <= end && insertedInto === -1) {
+									// doing a binary search for the containing range
 									i = begin + Math.round((end - begin) / 2);
 									range = ranges[i];
 
@@ -276,6 +277,7 @@ define([
 							event.index = insertedInto;
 							resultsArray.splice(insertedInto, 0, target);
 
+							// update the count and start of the appropriate ranges
 							ranges[insertionRangeIndex].count++;
 							for (i = insertionRangeIndex + 1; i < ranges.length; ++i) {
 								ranges[i].start++;
