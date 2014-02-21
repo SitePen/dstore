@@ -44,15 +44,15 @@ define([
 		},
 
 		'range': function () {
-			var expectedRange1 = { start: 10, end: 20 },
-				expectedRange2 = { start: 25 },
-				rangedCollection;
+			var rangedCollection = store.range(100);
+			assert.deepEqual(rangedCollection.ranged, { start: 100, end: undefined });
+			rangedCollection = rangedCollection.range(25, 50);
+			assert.deepEqual(rangedCollection.ranged, { start: 125, end: 150 });
 
-			rangedCollection = store.range(expectedRange1.start, expectedRange1.end);
-			assert.deepEqual(rangedCollection.ranged, expectedRange1);
-
-			rangedCollection = rangedCollection.range(expectedRange2.start);
-			assert.deepEqual(rangedCollection.ranged, { start: expectedRange2.start, end: undefined });
+			rangedCollection = store.range(100, 200);
+			assert.deepEqual(rangedCollection.ranged, { start: 100, end: 200 });
+			rangedCollection = rangedCollection.range(25);
+			assert.deepEqual(rangedCollection.ranged, { start: 125, end: 200 });
 		}
 
 		// TODO: Add map test and tests for other Store features
