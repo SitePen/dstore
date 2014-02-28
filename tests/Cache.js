@@ -45,17 +45,23 @@ define([
 		},
 
 		'filter': function () {
-			store.isLoaded = store.canCacheQuery = function () {
+			store.canCacheQuery = function () {
 				return false;
 			};
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
-			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
-			assert.strictEqual(cachingStore.get(3), undefined);
-			store.isLoaded = store.canCacheQuery = function () {
+
+			var collection = store.filter({prime: true});
+			assert.strictEqual(collection.fetch().length, 3);
+			assert.strictEqual(collection.cachingStore.get(3), undefined);
+
+			collection = store.filter({even: true});
+			assert.strictEqual(collection.fetch()[1].name, 'four');
+
+			store.canCacheQuery = function () {
 				return true;
 			};
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
-			assert.strictEqual(cachingStore.get(3).name, 'three');
+			collection = store.filter({prime: true});
+			assert.strictEqual(collection.fetch().length, 3);
+			assert.strictEqual(collection.cachingStore.get(3).name, 'three');
 		},
 
 		'filter with sort': function () {

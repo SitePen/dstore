@@ -26,59 +26,52 @@ define([
 			this._collectionCache = {};
 		},
 		_tryCacheForResults: function (method, serialized, args) {
-			var cachingStore = this.cachingStore;
-			if (this.allLoaded && this.hasOwnProperty('cachingStore')) {
-				// if we have loaded everything, we can go to the caching store
-				// for quick client side querying
-				var subCachingStore = new Memory();
-				subCachingStore.model = this.model;
-				// wait for it to finish loading
-				var data = when(when(this.allLoaded, function () {
-						return cachingStore[method].apply(cachingStore, args);
-					}), function (results) {
-						// now process the results to populate sub caching store
-						var data = results.data;
-						for (var i = 0; i < data.length; i++) {
-							subCachingStore.put(data[i]);
-						}
+			serialized = method + ':' + serialized;
+
+			var cacheable = !this.canCacheQuery || this.canCacheQuery(method, args);
+
+			if (cacheable && this._collectionCache[serialized]) {
+				return this._collectionCache[serialized];
+			} else {
+				var cachingStore = this.cachingStore,
+					subCollection;
+
+				if (this.allLoaded) {
+					subCollection = this._createSubCollection({});
+
+					// if we have loaded everything, we can go to the caching store
+					// for quick client side querying
+
+					// wait for it to finish loading
+					subCollection.allLoaded = subCollection.data = when(this.allLoaded, function () {
+						var subCachingStore = cachingStore[method].apply(cachingStore, args);
+						subCollection.cachingStore = subCachingStore;
+
+						var data = subCachingStore.fetch();
+						subCollection.total = subCachingStore.total;
+
 						return data;
 					});
-
-				return this._createSubCollection({
-					allLoaded: data,
-					data: data,
-					cachingStore: subCachingStore
-				});
-			}
-			var cacheable = !this.canCacheQuery || this.canCacheQuery(method, args);
-			if (cacheable) {
-				// we use a key to see if we already have a sub-collection
-				serialized = method + ':' + serialized;
-				if (this._collectionCache[serialized]) {
-					return this._collectionCache[serialized];
+				} else {
+					// nothing in the cache, have to use the inherited method to perform the action
+					subCollection = this.inherited(args);
 				}
-			}
-			// nothing in the cache, have to use the inherited method to perform the action
-			var results = this.inherited(args);
-			if (cacheable) {
-				this._collectionCache[serialized] = results;
-			}
-			// give the results it's own collection cache and caching store
-			results._collectionCache = {};
 
-			if (results.data) {
-				var store = this;
-				when(results.allLoaded = results.data, function (data) {
-					results.cachingStore = new Memory({data: data});
-					for (var i = 0, l = data.length; i < l; i++) {
-						var object = data[i];
-						if (!store.isLoaded || store.isLoaded(object)) {
-							cachingStore.put(object);
-						}
-					}
-				});
+				if (cacheable) {
+					this._collectionCache[serialized] = subCollection;
+				}
+
+				return subCollection;
 			}
-			return results;
+		},
+		_createSubCollection: function (kwArgs) {
+			kwArgs = lang.delegate(kwArgs);
+			// each sub collection should have it's own collection cache and caching store
+			kwArgs._collectionCache = {};
+			if (!('cachingStore' in kwArgs)) {
+				kwArgs.cachingStore = new this.cachingStore.constructor();
+			}
+			return this.inherited(arguments, [ kwArgs ]);
 		},
 		sort: function (property, descending) {
 			return this._tryCacheForResults('sort',
@@ -94,15 +87,14 @@ define([
 		},
 		fetch: function () {
 			var cachingStore = this.cachingStore;
-			var store = this;
 			/* jshint boss: true */
 			return this.allLoaded || (this.allLoaded = when(this.inherited(arguments), function (results) {
+				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
-					// store each object before calling the callback
-					if (!store.isLoaded || store.isLoaded(object)) {
-						cachingStore.put(object);
-					}
+					// TODO: fetch is now the only place objects are put in the cachingStore. Is there need for an isLoaded method?
+					cachingStore.put(object);
 				});
+
 				return results;
 			}));
 		},
