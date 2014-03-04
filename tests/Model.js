@@ -211,6 +211,22 @@ define([
 			model.property('range').addError('manually added error');
 			assert.deepEqual(lastReceivedErrors, ['manually added error']);
 		},
+		defaults: function () {
+			var model = new (declare(Model, {
+				schema: {
+					toOverride: {
+						'default': 'beginning value'
+					},
+					hasDefault: {
+						'default': 'beginning value'
+					}
+				}
+			}))({
+				toOverride: 'new value'
+			});
+			assert.strictEqual(model.get('toOverride'), 'new value');
+			assert.strictEqual(model.get('hasDefault'), 'beginning value');
+		},
 		'computed properties': function () {
 			var model = new (declare(Model, {
 				schema: {

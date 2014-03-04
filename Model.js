@@ -131,13 +131,13 @@ define([
 			// if we are being constructed, we default to the insert scenario
 			this.scenario = 'insert';
 			// copy in the default values
-			lang.mixin(this, options);
 			for (var key in this.schema) {
 				var definition = this.schema[key];
 				if (definition && typeof definition === 'object' && 'default' in definition) {
 					this[key] = definition['default'];
 				}
 			}
+			lang.mixin(this, options);
 		},
 
 		save: function (/*boolean*/ skipValidation) {
