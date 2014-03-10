@@ -286,9 +286,7 @@ define([
 				if (definition && definition.coerce) {
 					// if a schema definition exists, and has a coerce method,
 					// we can use without creating a new instance
-					if (definition.coerce) {
-						value = definition.coerce(value);
-					}
+					value = definition.coerce(value);
 				}
 				// we can shortcut right to just setting the object property
 				this[key] = value;
