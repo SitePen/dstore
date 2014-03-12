@@ -4,7 +4,7 @@ define(['./Store', 'dojo/when', 'dojo/_base/declare'], function (Store, when, de
 	//	summary:
 	//		This module provides a store mixin that enforces validation of objects on put and add
 	return declare(Store, {
-		validate: function (object, isNew) {
+		validate: function (object) {
 			//	summary:
 			//		Validates the given object (by making it an instance of the 
 			//		current model, and calling validate() on it)
@@ -13,7 +13,7 @@ define(['./Store', 'dojo/when', 'dojo/_base/declare'], function (Store, when, de
 			//	isNew: Boolean
 			//		Indicates whether or not to assume the object is new or not
 			if (!(object instanceof this.model)) {
-				object = isNew ? new this.model(object) : this.assignPrototype(object);
+				object = this._restore(object);
 			}
 			return when(object.validate(), function (isValid) {
 				if (!isValid) {

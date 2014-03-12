@@ -80,7 +80,7 @@ define([
 				this.data = response.then(function (response) {
 					var results = parse(response);
 					for (var i = 0, l = results.length; i < l; i++) {
-						results[i] = store.assignPrototype(results[i]);
+						results[i] = store._restore(results[i]);
 					}
 					return results;
 				});

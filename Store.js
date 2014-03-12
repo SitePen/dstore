@@ -97,12 +97,35 @@ define([
 			total: true
 		},
 
-		assignPrototype: function (object) {
-			// Set the object's prototype
+		_restore: function (object) {
+			// summary:
+			//		Restores a plain raw object, making an instance of the store's model.
+			//		This is called when an object had been persisted into the underlying
+			//		medium, and is now being restored. Typically restored objects will come
+			//		through a phase of deserialization (through JSON.parse, DB retrieval, etc.)
+			//		in which their __proto__ will be set to Object.prototype. To provide
+			//		data model support, the returned object needs to be an instance of the model.
+			//		This can be accomplished by setting __proto__ to the model's prototype
+			//		or by creating a new instance of the model, and copying the properties to it.
+			//		Also, model's can provide their own restore method that will allow for
+			//		custom model-defined behavior. However, one should be aware that copying
+			//		properties is a slower operation than prototype assignment.
+			//		The restore process is designed to be distinct from the create process
+			//		so their is a clear delineation between new objects and restored objects.
+			// object: Object
+			//		The raw object with the properties that need to be defined on the new
+			//		model instance
+			// returns: Object
+			//		An instance of the store model, with all the properties that were defined
+			//		on object. This may or may not be the same object that was passed in.
 			var model = this.model;
 			if (model && object) {
 				var prototype = model.prototype;
-				if (hasProto) {
+				var restore = prototype._restore;
+				if (restore) {
+					// the prototype provides its own restore method
+					object = restore.call(object, model);
+				} else if (hasProto) {
 					// the fast easy way
 					// http://jsperf.com/setting-the-prototype
 					object.__proto__ = prototype;
@@ -115,6 +138,13 @@ define([
 		},
 
 		create: function (properties) {
+			// summary:
+			//		This creates a new instance from the store's model.
+			//	properties:
+			//		The properties that are passed to the model constructor to
+			//		be copied onto the new instance. Note, that should only be called
+			//		when new objects are being created, not when existing objects
+			//		are being restored from storage.
 			return new this.model(properties);
 		},
 

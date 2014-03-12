@@ -1,8 +1,10 @@
 define([
 	'../Store',
+	'../Model',
+	'dojo/_base/declare',
 	'intern!object',
 	'intern/chai!assert'
-], function (Store, registerSuite, assert) {
+], function (Store, Model, declare, registerSuite, assert) {
 
 	var store;
 	registerSuite({
@@ -53,6 +55,24 @@ define([
 			assert.deepEqual(rangedCollection.ranged, { start: 100, end: 200 });
 			rangedCollection = rangedCollection.range(25);
 			assert.deepEqual(rangedCollection.ranged, { start: 125, end: 200 });
+		},
+
+		'restore': function () {
+			var TestModel = declare(Model, {
+				_restore: function (Constructor) {
+					// use constructor based restoration
+					var restored = new Constructor(this);
+					restored.restored = true;
+					return restored;
+				}
+			});
+			var store = new Store({
+				model: TestModel
+			});
+			var restoredObject = store._restore({foo: 'original'});
+			assert.strictEqual(restoredObject.foo, 'original');
+			assert.strictEqual(restoredObject.restored, true);
+			assert.isTrue(restoredObject instanceof TestModel);
 		}
 
 		// TODO: Add map test and tests for other Store features

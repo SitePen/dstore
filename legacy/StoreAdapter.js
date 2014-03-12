@@ -22,7 +22,7 @@ define([
 			//		The object in the store that matches the given id.
 			var self = this;
 			return when(this.inherited(arguments), function (object) {
-				return self.assignPrototype(object);
+				return self._restore(object);
 			});
 		},
 
@@ -91,7 +91,7 @@ define([
 			//		The results or a promise for the results
 			var results = this.query(this._query, this._queryOptions);
 			if (results) {
-				results = results.map(this.assignPrototype, this);
+				results = results.map(this._restore, this);
 			}
 			return results;
 		}

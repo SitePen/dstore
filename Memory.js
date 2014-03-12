@@ -133,12 +133,11 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			for (var i = 0, l = data.length; i < l; i++) {
 				var object = data[i];
 				if (model && !(object instanceof model)) {
-					if (hasProto) {
-						// the fast easy way
-						object.__proto__ = prototype;
-					} else {
-						// create a new object with the correct prototype
-						data[i] = lang.delegate(prototype, object);
+					var restoredObject = this._restore(object);
+					if (object !== restoredObject) {
+						// a new object was generated in the restoration process,
+						// so we have to update the item in the data array.
+						data[i] = object = restoredObject;
 					}
 				}
 				this.index[object[this.idProperty]] = i;

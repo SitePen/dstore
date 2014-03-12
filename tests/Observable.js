@@ -148,7 +148,7 @@ define([
 
 			expectedChanges.push({
 				type: 'add',
-				target: store.assignPrototype(six),
+				target: store._restore(six),
 				index: undefined
 				// no index because the addition doesn't have a place in the filtered results
 			});
@@ -160,7 +160,7 @@ define([
 
 			expectedChanges.push({
 				type: 'add',
-				target: store.assignPrototype(seven),
+				target: store._restore(seven),
 				index: 3
 			});
 			store.remove(3);
@@ -263,7 +263,7 @@ define([
 			assertObservationIs({ type: 'update', target: item });
 
 			// An addition outside of requested ranges has an indeterminate index
-			item = bigStore.assignPrototype({ id: 1.5, name: 'item 1.5', order: 1.5 });
+			item = bigStore._restore({ id: 1.5, name: 'item 1.5', order: 1.5 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item });
 
@@ -279,7 +279,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1 });
 
 			// An addition sorted to the beginning of a range and the data has a known index
-			item = bigStore.assignPrototype({ id: -1, name: 'item -1', order: -1 });
+			item = bigStore._restore({ id: -1, name: 'item -1', order: -1 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item, index: 0 });
 
@@ -294,7 +294,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, previousIndex: 24 });
 
 			// An addition sorted to the end of a range has an indeterminate index
-			item = bigStore.assignPrototype({ id: 24.1, name: 'item 24.1', order: 24.1 });
+			item = bigStore._restore({ id: 24.1, name: 'item 24.1', order: 24.1 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item });
 
@@ -315,7 +315,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22 });
 
 			// An addition sorted to the end of a range but adjacent to another range has a known index
-			item = bigStore.assignPrototype({ id: 23.2, name: 'item 23.2', order: 23.2 });
+			item = bigStore._restore({ id: 23.2, name: 'item 23.2', order: 23.2 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item, index: 24 });
 
@@ -330,7 +330,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25 });
 
 			// An addition sorted to the beginning of a range but adjacent to another range has a known index
-			item = bigStore.assignPrototype({ id: 23.8, name: 'item 23.8', order: 23.8 });
+			item = bigStore._restore({ id: 23.8, name: 'item 23.8', order: 23.8 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item, index: 24 });
 
@@ -348,7 +348,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98 });
 
 			// An addition at the end of a range and the data has a known index
-			item = bigStore.assignPrototype({ id: 99.2, name: 'item 99.2', order: 99.2 });
+			item = bigStore._restore({ id: 99.2, name: 'item 99.2', order: 99.2 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item, index: 100 });
 
@@ -359,7 +359,7 @@ define([
 			assertObservationIs({ type: 'update', target: item, previousIndex: 76 });
 
 			// An addition at the beginning of a range has an indeterminate index
-			item = bigStore.assignPrototype({ id: 74.8, name: 'item 74.8', order: 74.8 });
+			item = bigStore._restore({ id: 74.8, name: 'item 74.8', order: 74.8 });
 			bigStore.add(item);
 			assertObservationIs({ type: 'add', target: item });
 		},
@@ -428,7 +428,7 @@ define([
 				});
 
 				// a new item with a default index within a known range has a known index
-				var expectedNewItem = store.assignPrototype({ id: 200, name: 'item-200', order: Infinity });
+				var expectedNewItem = store._restore({ id: 200, name: 'item-200', order: Infinity });
 				store.add(expectedNewItem);
 				assert.isDefined(addEvent);
 				assert.deepEqual(addEvent.target, expectedNewItem);
@@ -437,7 +437,7 @@ define([
 				// choose a defaultIndex outside requested, known range
 				store.defaultIndex = 50;
 				addEvent = null;
-				expectedNewItem = store.assignPrototype({ id: 201, name: 'item-201', order: Infinity });
+				expectedNewItem = store._restore({ id: 201, name: 'item-201', order: Infinity });
 
 				// a new item with a default index outside a known range is treated as if it has no known index
 				store.add(expectedNewItem);

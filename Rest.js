@@ -45,7 +45,7 @@ define([
 			return request(this.target + id, {
 				headers: headers
 			}).then(function (response) {
-				return store.assignPrototype(parse(response));
+				return store._restore(parse(response));
 			});
 		},
 
@@ -75,7 +75,7 @@ define([
 						'If-None-Match': options.overwrite === false ? '*' : null
 					}, this.headers, options.headers)
 				}).then(function (response) {
-					var result = store.assignPrototype(parse(response));
+					var result = store._restore(parse(response));
 					store.emit(options.overwrite === false ? 'add' : 'update', {target: result || object});
 					return result;
 				});
