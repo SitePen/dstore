@@ -192,12 +192,12 @@ define([
 			return new Error('Validation error');
 		},
 
-		property: function (/*string+*/ key, nextKey) {
+		property: function (/*String...*/ key, nextKey) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
 			//		of the provided property. You can optionally provide a listener, to be notified
 			//		of the value of this property, now and in the future
-			//	key:
+			//	key: String...
 			//		The name of the property to retrieve
 
 			// create the properties object, if it doesn't exist yet
