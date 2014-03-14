@@ -8,15 +8,6 @@ define([
 	'./Store'
 ], function (request, lang, array, JSON, ioQuery, declare, Store) {
 
-
-	/*=====
-	var __HeaderOptions = {
-			// headers: Object?
-			//		Additional headers to send along with the request.
-		},
-		__PutDirectives = declare(Store.PutDirectives, __HeaderOptions),
-		__QueryOptions = declare(Store.QueryOptions, __HeaderOptions);
-	=====*/
 	return declare(Store, {
 		// summary:
 		//		This is a basic store for RESTful communicating with a server through JSON

@@ -13,7 +13,6 @@ define([
 			//		Additional headers to send along with the request.
 		},
 		__PutDirectives = declare(Store.PutDirectives, __HeaderOptions),
-		__QueryOptions = declare(Store.QueryOptions, __HeaderOptions);
 	=====*/
 
 	return declare(Request, {
