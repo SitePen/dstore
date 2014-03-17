@@ -11,7 +11,7 @@ define([
 	return declare(Store, {
 		// summary:
 		//		This is a basic store for RESTful communicating with a server through JSON
-		//		formatted data. It implements dstore/api/Store.
+		//		formatted data. It extends dstore/Store.
 
 		constructor: function () {
 			// summary:

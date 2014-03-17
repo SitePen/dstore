@@ -37,7 +37,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			//		Stores an object
 			// object: Object
 			//		The object to store.
-			// options: dstore/api/Store.PutDirectives?
+			// options: dstore/Store.PutDirectives?
 			//		Additional metadata for storing the data.  Includes an 'id'
 			//		property if a specific id is to be used.
 			// returns: Number
@@ -79,7 +79,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			//		Creates an object, throws an error if the object already exists
 			// object: Object
 			//		The object to store.
-			// options: dstore/api/Store.PutDirectives?
+			// options: dstore/Store.PutDirectives?
 			//		Additional metadata for storing the data.  Includes an 'id'
 			//		property if a specific id is to be used.
 			// returns: Number

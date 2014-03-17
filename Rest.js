@@ -4,7 +4,7 @@ define([
 	'dojo/json',
 	'dojo/io-query',
 	'dojo/_base/declare',
-	'./Request' /*=====, './api/Store' =====*/
+	'./Request' /*=====, './Store' =====*/
 ], function (request, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/) {
 
 	/*=====
