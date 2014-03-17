@@ -62,8 +62,6 @@ define([
 			});
 		},
 		on: function (type, listener) {
-			//	summary:
-			//		Listen for data changes
 			if (type !== 'refresh' && this.store && this.store !== this) {
 				return this.store.on(type, listener);
 			}
