@@ -219,7 +219,9 @@ define([
 			//		The object to store.
 			// directives: dstore/Store.PutDirectives?
 			//		Additional directives for storing objects.
-			// returns: Number|String
+			// returns: Object
+			//		The object that was stored, with any changes that were made by
+			//		the storage system (like generated id)
 		},
 		add: function (object, directives) {
 			// summary:
@@ -228,7 +230,9 @@ define([
 			//		The object to store.
 			// directives: dstore/Store.PutDirectives?
 			//		Additional directives for creating objects.
-			// returns: Number|String
+			// returns: Object
+			//		The object that was stored, with any changes that were made by
+			//		the storage system (like generated id)
 		},
 		remove: function (id) {
 			// summary:

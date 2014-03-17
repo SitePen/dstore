@@ -140,18 +140,18 @@ define([
 			lang.mixin(this, options);
 		},
 
-		save: function (/*boolean*/ skipValidation) {
+		save: function (/*Object*/ options) {
 			//	summary:
 			//		Saves this object. By default, this is a no-op. Implementations should call `commit` after saving
 			//		has completed.
-			//	skipValidation:
+			//	options.skipValidation:
 			//		Normally, validation is performed to ensure that the object
 			//		is not invalid before being stored. Set `skipValidation` to
 			//		true to skip it.
 			//	returns: any
 
 			var object = this;
-			return when(skipValidation ? true : this.validate(), function (isValid) {
+			return when((options && options.skipValidation) ? true : this.validate(), function (isValid) {
 				if (!isValid) {
 					throw object.validateError();
 				}
@@ -160,10 +160,8 @@ define([
 				object.prepareForSerialization();
 				return object._store && when(object._store[scenario === 'insert' ? 'add' : 'put'](object),
 						function (returned) {
-					if (typeof returned === 'object') {
-						// receive any updates from the server
-						object.set(returned);
-					}
+					// receive any updates from the server
+					object.set(returned);
 					object.scenario = 'update';
 					return object;
 				});
