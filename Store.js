@@ -76,8 +76,13 @@ define([
 		// parse: Function
 		//		One can provide a parsing function that will permit the parsing of the data. By
 		//		default we assume the provide data is a simple JavaScript array that requires
-		//		no parsing
+		//		no parsing (subclass stores may provide their own default parse function)
 		parse: null,
+
+		// stringify: Function
+		//		For stores that serialize data (to send to a server, for example) the stringify 
+		//		function can be specified to control how objects are serialized to strings
+		stringify: null,
 
 		// model: Function
 		//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
