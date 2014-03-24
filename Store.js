@@ -270,15 +270,11 @@ define([
 /*====
 	var Collection = declare(null, {
 		// summary:
-		//		This is an abstract API that for a collection of items, which can be filtered,
-		//		sorted, and sliced to create new collections
-		//		Every method and property is optional, and is only needed if the functionality
-		//		it provides is required.
-		//		Every method may return a promise for the specified return value if the
-		//		execution of the operation is asynchronous (except
-		//		for query() which already defines an async return value).
-		//		Note that the objects in the collection may not be immediately retrieved from
-		//		the underlying data storage until they are actually accessed through forEach() or then().
+		//		This is an abstract API for a collection of objects, which can be filtered,
+		//		sorted, and sliced to create new collections. This is considered to be base
+		//		interface for all stores and  query results in dstore. Note that the objects in the 
+		//		collection may not be immediately retrieved from the underlying data 
+		//		storage until they are actually accessed through forEach() or fetch().
 
 		filter: function (query) {
 			// summary:
@@ -289,7 +285,7 @@ define([
 		},
 		sort: function (property, descending) {
 			// summary:
-			//		Sorts the current collection, reordering the objects by the provided sort order.
+			//		Sorts the current collection into a new collection, reordering the objects by the provided sort order.
 			// property: String|Function
 			//		The property to sort on. Alternately a function can be provided to sort with
 			// descending?: Boolean
@@ -309,12 +305,14 @@ define([
 			// summary:
 			//		Iterates over the query results, based on
 			//		https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/forEach.
-			//		Note that this may executed asynchronously. The callback may be called
-			//		after this function returns.
+			//		Note that this may executed asynchronously (in which case it will return a promise),
+			//		and the callback may be called after this function returns.
 			// callback:
 			//		Function that is called for each object in the query results
 			// thisObject:
 			//		The object to use as |this| in the callback.
+			// returns:
+			//		undefined|Promise
 		},
 		map: function (callback, thisObject) {
 			// summary:
@@ -328,16 +326,14 @@ define([
 			//		The object to use as |this| in the callback.
 			// returns: dstore/Store.Collection
 		},
-		then: function (callback, errorHandler) {
+		fetch: function () {
 			// summary:
-			//		This registers a callback for when the query is complete, if the query is asynchronous.
-			//		This is an optional method, and may not be present for synchronous queries.
-			// callback:
-			//		This is called when the query is completed successfully, and is passed a single argument
-			//		that is an array representing the query results.
-			// errorHandler:
-			//		This is called if the query failed, and is passed a single argument that is the error
-			//		for the failure.
+			//		This can be called to materialize and request the data behind this collection.
+			//		Often collections may be lazy, and won't retrieve their underlying data until
+			//		forEach or fetch is called. This returns an array, or for asynchronous stores, 
+			//		this will return a promise, resolving to an array of objects, once the
+			//		operation is complete.
+			//	returns Array|Promise
 		},
 		on: function (type, listener) {
 			// summary:
