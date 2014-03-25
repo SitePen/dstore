@@ -132,7 +132,8 @@ define([
 		},
 		add: function (object, directives) {
 			var cachingStore = this.cachingStore;
-			return when(this.inherited(arguments), function (result) {
+			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
+					this.store.add(object, directives) : this.inherited(arguments), function (result) {
 				// now put result in cache (note we don't do add, because add may have
 				// called put() and already added it)
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
@@ -144,7 +145,8 @@ define([
 			// first remove from the cache, so it is empty until we get a response from the master store
 			var cachingStore = this.cachingStore;
 			cachingStore.remove((directives && directives.id) || this.getIdentity(object));
-			return when(this.inherited(arguments), function (result) {
+			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
+					this.store.put(object, directives) : this.inherited(arguments), function (result) {
 				// now put result in cache
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore
@@ -153,7 +155,8 @@ define([
 		},
 		remove: function (id, directives) {
 			var cachingStore = this.cachingStore;
-			return when(this.inherited(arguments), function (result) {
+			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
+					this.store.remove(id, directives) : this.inherited(arguments), function (result) {
 				return when(cachingStore.remove(id, directives), function () {
 					return result;
 				});
