@@ -45,7 +45,7 @@ define([
 		},
 
 		'filter': function () {
-			store.canCacheQuery = function () {
+			store.isLoaded = store.canCacheQuery = function () {
 				return false;
 			};
 
@@ -56,7 +56,7 @@ define([
 			collection = store.filter({even: true});
 			assert.strictEqual(collection.fetch()[1].name, 'four');
 
-			store.canCacheQuery = function () {
+			store.isLoaded = store.canCacheQuery = function () {
 				return true;
 			};
 			collection = store.filter({prime: true});
@@ -115,7 +115,7 @@ define([
 		'cached filter': function () {
 			store.fetch(); // should result in everything being cached
 			masterFilterCalled = false;
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 4);
+			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
 			assert.isFalse(masterFilterCalled);
 		},
 

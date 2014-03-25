@@ -87,20 +87,31 @@ define([
 		},
 		fetch: function () {
 			var cachingStore = this.cachingStore;
+			var store = this;
 			/* jshint boss: true */
 			return this.allLoaded || (this.allLoaded = when(this.inherited(arguments), function (results) {
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
-					// TODO: fetch is now the only place objects are put in the cachingStore. Is there need for an isLoaded method?
-					cachingStore.put(object);
+					// store each object before calling the callback
+					if (!store.isLoaded || store.isLoaded(object)) {
+						cachingStore.put(object);
+					}
 				});
 
 				return results;
 			}));
 		},
 		// canCacheQuery: Function
-		//		this function can be overriden to provide more specific functionality for
-		// 		determining if a query should go to the master store or the caching store
+		//		This function can be overriden to provide more specific functionality for
+		// 		determining if a query should go to the master store or the caching store.
+		//		This will be called with the query method (sort, filter, or range), and the
+		//		arguments, and should return true or false indicating if the query is cacheable.
+
+		// isLoaded: Function
+		//		This function can be overriden to specify if individual objects can be cached
+		//		(if they are a fully loaded representation, that can be cached for later retrieval through
+		//		get()). This is called with an object, and can return true or false to indicate
+		//		if it is fully loaded cacheable object.
 
 		allLoaded: false,
 		get: function (id, directives) {
