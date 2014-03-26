@@ -176,7 +176,7 @@ define([
 
 			if (typeof property === 'function') {
 				sorted = property;
-			} else if (lang.isArray(property)) {
+			} else if (property instanceof Array) {
 				sorted = property.slice(0);
 			} else if (typeof property === 'object') {
 				sorted = [].slice.call(arguments, 0);

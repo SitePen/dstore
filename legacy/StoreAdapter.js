@@ -7,11 +7,16 @@ define([
 // module:
 //		An adapter mixin that makes a legacy Dojo object store look like a dstore object.
 
+	var modifyDelegate = function (name) {
+		return function () {
+			var store = this.store;
+			if (store && store !== this) {
+				return store[name].apply(store, arguments);
+			}
+			return this.inherited(arguments);
+		}
+	}
 	var StoreAdapter = declare(Store, {
-
-		constructor: function () {
-			this._queryOptions = {};
-		},
 
 		get: function () {
 			// summary:
@@ -21,76 +26,48 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			var self = this;
+			var store = this.store;
+			if (store && store !== this) {
+				return this.get.apply(this, arguments);
+			}
 			return when(this.inherited(arguments), function (object) {
 				return self._restore(object);
 			});
 		},
 
-		filter: function (query) {
-			// summary:
-			//		Filters the collection, returning a new subset collection
-			// query: String|Object|Function
-			//		The query to use for retrieving objects from the store.
-			// returns: StoreAdapter
-			return lang.delegate(this, {
-				_query: query
-			});
-		},
-
-		sort: function (property, descending) {
-			// summary:
-			//		Sorts the collection, returning a new collection with the objects sorted
-			// property: String|Function
-			//		The property to sort on. Alternately a function can be provided to sort with
-			// descending?: Boolean
-			//		Indicate if the sort order should be descending (defaults to ascending)
-			// returns: StoreAdapter
-			var sort;
-			if (typeof property === 'function') {
-				sort = property;
-			} else {
-				var options = this._queryOptions;
-				var fieldSort = {
-					attribute: property,
-					descending: descending != null && descending
-				};
-				if (options && Object.prototype.toString.call(options.sort) === '[object Array]') {
-					sort = options.sort.slice(0);
-					sort.unshift(fieldSort);
-				} else {
-					sort = [ fieldSort ];
-				}
-			}
-			return lang.delegate(this, {
-				_queryOptions: lang.delegate(this._queryOptions, { sort: sort })
-			});
-		},
-
-		range: function (start, end) {
-			// summary:
-			//		Retrieves a range of objects from the collection, returning a new collection
-			//		with the objects indicated by the range
-			// start: Number
-			//		The starting index of objects to return (0-indexed)
-			// end?: Number
-			//		The exclusive end of objects to return
-			// returns: StoreAdapter
-			var options = lang.delegate(this._queryOptions, { start: start });
-			if (end) {
-				options.count = end - start;
-			}
-			return lang.delegate(this, {
-				_queryOptions: options
-			});
-		},
+		put: modifyDelegate('put'),
+		add: modifyDelegate('add'),
+		remove: modifyDelegate('remove'),
 
 		fetch: function () {
 			// summary:
 			//		Fetches the query results. Note that the fetch may occur asynchronously
 			// returns: Array|Promise
 			//		The results or a promise for the results
-			var results = this.query(this._query, this._queryOptions);
+
+			// create an object store query and query options based on current collection
+			// information
+			var queryOptions = {};
+			var sorted = this.sorted;
+			// if it is an array, setup the attribute property that object stores expect
+			if (sorted) {
+				queryOptions.sort = sorted;
+				if (typeof sorted === 'object') {
+					for (var i = 0; i < sorted.length; i++) {
+						var sortSegment = sorted[i];
+						sortSegment.attribute = sortSegment.property;
+					}
+				}
+			}
+			var ranged = this.ranged;
+			if (ranged) {
+				// set the range
+				queryOptions.count = ranged.end - ((queryOptions.start = ranged.start) || 0);
+			}
+			var filtered = this.filtered;
+			var results = (this.store || this).query(filtered && filtered[0], queryOptions);
 			if (results) {
+				// apply the object restoration
 				results = results.map(this._restore, this);
 			}
 			return results;
