@@ -255,16 +255,38 @@ define([
 			var rangeCollection = store.range(15, 25);
 			return runCollectionTest(rangeCollection, {
 				queryParams: {
-					'range(15,25)': ''
+					'limit(10,15)': ''
+				}
+			});
+		},
+		'range with rangeParam': function () {
+			store.rangeParam = 'range';
+			var rangeCollection = store.range(15, 25);
+			delete store.rangeParam;
+			return runCollectionTest(rangeCollection, {
+				queryParams: {
+					'range': '15-25'
+				}
+			});
+		},
+		'range with headers': function () {
+			store.useRangeHeaders = true;
+			var rangeCollection = store.range(15, 25);
+			delete store.useRangeHeaders;
+			return runCollectionTest(rangeCollection, {
+				headers: {
+					'Range': 'items=15-24'
 				}
 			});
 		},
 
-		'range without end': function () {
+		'range with headers without end': function () {
+			store.useRangeHeaders = true;
 			var rangeCollection = store.range(15);
+			delete store.useRangeHeaders;
 			return runCollectionTest(rangeCollection, {
-				queryParams: {
-					'range(15)': ''
+				headers: {
+					'Range': 'items=15-Infinity'
 				}
 			});
 		},
@@ -274,7 +296,7 @@ define([
 			var collection = store.filter(filter).sort('prop1').range(15, 25);
 			return runCollectionTest(collection, {
 				queryParams: lang.mixin({}, filter, {
-					'range(15,25)': '',
+					'limit(10,15)': '',
 					'sort(+prop1)': ''
 				})
 			});
@@ -318,12 +340,12 @@ define([
 				assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
 				assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
 
-				rangeCollection = sortedCollection.range(15, 25);
+				rangeCollection = sortedCollection.range(0, 25);
 				return rangeCollection.fetch();
 			}).then(function (results) {
 				mockRequest.assertQueryParams({
 					'sort(-id)': '',
-					'range(15,25)': ''
+					'limit(25)': ''
 				});
 				assert.strictEqual(results.length, expectedResults.length);
 			});

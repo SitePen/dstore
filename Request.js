@@ -59,23 +59,49 @@ define([
 		//		Defines the Accept header to use on HTTP requests
 		accepts: 'application/json',
 
+		// useRangeHeaders: Boolean
+		//		The indicates if range limits (start and end) should be specified
+		//		a Range header, using items units. If this is set to true, a header
+		//		be included of the form:
+		//			Range: items=start-end
+
+		// rangeParam: String
+		//		The indicates if range limits (start and end) should be specified
+		//		in a query parameter. If this is not specified, the range will
+		//		included with a RQL style limit() parameter
+
 		fetch: function () {
 			if (!this.hasOwnProperty('data')) {
 				// perform the actual query
+				var headers = lang.delegate(this.headers, { Accept: this.accepts });
+				var ranged = this.ranged;
+				if (ranged && this.useRangeHeaders) {
+					// use range headers
+					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
+						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
+				}
 				var response = request(this._renderUrl(), {
 					method: 'GET',
-					headers: lang.delegate(this.headers, { Accept: this.accepts })
+					headers: headers
 				});
 				var parse = this.parse;
 				var store = this;
 				this.data = response.then(function (response) {
 					var results = parse(response);
+					// support items in the results
+					results = results.items || results;
 					for (var i = 0, l = results.length; i < l; i++) {
 						results[i] = store._restore(results[i]);
 					}
 					return results;
 				});
 				this.total = response.response.then(function (response) {
+					var total = response.data.total;
+					if (total > -1) {
+						// if we have a valid positive number from the data,
+						// we can use that
+						return total;
+					}
 					var range = response.getHeader('Content-Range');
 					return range && (range = range.match(/\/(.*)/)) && +range[1];
 				});
@@ -117,12 +143,12 @@ define([
 			//		Constructs range-related params to be inserted in the query string
 			// returns: String
 			//		Range-related params to be inserted in the query string
-			if (this.ranged) {
+			if (this.ranged && !this.useRangeHeaders) {
 				var start = this.ranged.start;
 				var end = this.ranged.end;
 				return this.rangeParam
 					? this.rangeParam + '=' + start + '-' + (end || '')
-					: 'range(' + start + (end ? (',' + end) : '') + ')';
+					: 'limit(' + (end - start) + (start ? (',' + start) : '') + ')';
 			}
 		},
 
