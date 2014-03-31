@@ -47,7 +47,7 @@ define([
 	});
 
 	var lastMockRequest;
-	registry.register(/http:\/\/test.com\/.*/, function mock(url) {
+	var mockHandle = registry.register(/http:\/\/test.com\/.*/, function mock(url) {
 		lastMockRequest = url;
 		var def = new Deferred();
 		def.resolve('[]');
@@ -64,6 +64,10 @@ define([
 		'filter': function () {
 			rqlRest.filter({prime: true, even: true}).fetch();
 			assert.strictEqual(lastMockRequest, 'http://test.com/?eq(prime,true)&eq(even,true)');
+		},
+
+		after: function () {
+			mockHandle.remove();
 		}
 	});
 });
