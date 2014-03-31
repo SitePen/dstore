@@ -2,8 +2,9 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
+	'./sorting',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, Memory) {
+], function (registerSuite, assert, declare, sorting, Memory) {
 
 	var store;
 
@@ -248,105 +249,14 @@ define([
 			assert.strictEqual(rangedCollection.data.length, 3);
 		}
 	});
-
-	registerSuite({
-		name: 'dstore Memory sorting',
-
-		before: function () {
-			store = new Memory({
-				data: [
-					{id: 1, field1: 'one', field2: '1'},
-					{id: 2, field1: 'one', field2: '2'},
-					{id: 3, field1: 'two', field2: '5'},
-					{id: 4, field1: 'two', field2: '4'},
-					{id: 5, field1: 'two', field2: '3'},
-					{id: 6, field1: 'one', field2: '3'}
-				]
-			});
-		},
-
-		'multiple sort fields - ascend + ascend': function () {
-
-			var results = store.sort({property: 'field1'},
-				{property: 'field2'}).fetch();
-			/**
-			 * {id: 1, field1: 'one', field2: '1'},
-			 * {id: 2, field1: 'one', field2: '2'},
-			 * {id: 6, field1: 'one', field2: '3'}
-			 * {id: 5, field1: 'two', field2: '3'},
-			 * {id: 4, field1: 'two', field2: '4'},
-			 * {id: 3, field1: 'two', field2: '5'},
-			 */
-			assert.strictEqual(results.length, 6, 'Length is 6');
-			assert.strictEqual(results[0].id, 1);
-			assert.strictEqual(results[1].id, 2);
-			assert.strictEqual(results[2].id, 6);
-			assert.strictEqual(results[3].id, 5);
-			assert.strictEqual(results[4].id, 4);
-			assert.strictEqual(results[5].id, 3);
-		},
-
-		'multiple sort fields - ascend + descend': function () {
-
-			var results = store.sort({property: 'field1', descending: false},
-				{property: 'field2', descending: true}).map(passThrough);
-			assert.strictEqual(results.length, 6, 'Length is 6');
-			/**
-			 * {id: 6, field1: 'one', field2: '3'}
-			 * {id: 2, field1: 'one', field2: '2'},
-			 * {id: 1, field1: 'one', field2: '1'},
-			 * {id: 3, field1: 'two', field2: '5'},
-			 * {id: 4, field1: 'two', field2: '4'},
-			 * {id: 5, field1: 'two', field2: '3'},
-			 */
-			assert.strictEqual(results[0].id, 6);
-			assert.strictEqual(results[1].id, 2);
-			assert.strictEqual(results[2].id, 1);
-			assert.strictEqual(results[3].id, 3);
-			assert.strictEqual(results[4].id, 4);
-			assert.strictEqual(results[5].id, 5);
-		},
-
-		'multiple sort fields - descend + ascend': function () {
-
-			var results = store.sort({property: 'field1', descending: true},
-				{property: 'field2', descending: false}).map(passThrough);
-			/**
-			 * {id: 5, field1: 'two', field2: '3'},
-			 * {id: 4, field1: 'two', field2: '4'},
-			 * {id: 3, field1: 'two', field2: '5'},
-			 * {id: 1, field1: 'one', field2: '1'},
-			 * {id: 2, field1: 'one', field2: '2'},
-			 * {id: 6, field1: 'one', field2: '3'}
-			 */
-			assert.strictEqual(results.length, 6, 'Length is 6');
-			assert.strictEqual(results[0].id, 5);
-			assert.strictEqual(results[1].id, 4);
-			assert.strictEqual(results[2].id, 3);
-			assert.strictEqual(results[3].id, 1);
-			assert.strictEqual(results[4].id, 2);
-			assert.strictEqual(results[5].id, 6);
-		},
-
-		'multiple sort fields - descend + descend': function () {
-
-			var results = store.sort({property: 'field1',descending: true},
-				{property: 'field2', descending: true}).map(passThrough);
-			/**
-			 * {id: 3, field1: 'two', field2: '5'},
-			 * {id: 4, field1: 'two', field2: '4'},
-			 * {id: 5, field1: 'two', field2: '3'},
-			 * {id: 6, field1: 'one', field2: '3'}
-			 * {id: 2, field1: 'one', field2: '2'},
-			 * {id: 1, field1: 'one', field2: '1'},
-			 */
-			assert.strictEqual(results.length, 6, 'Length is 6');
-			assert.strictEqual(results[0].id, 3);
-			assert.strictEqual(results[1].id, 4);
-			assert.strictEqual(results[2].id, 5);
-			assert.strictEqual(results[3].id, 6);
-			assert.strictEqual(results[4].id, 2);
-			assert.strictEqual(results[5].id, 1);
-		}
+	var store;
+	var sortTests = sorting(function before(data) {
+		return function before() {
+			store = new Memory({data: data});
+		};
+	}, function sort() {
+		return store.sort.apply(store, arguments).fetch();
 	});
+	sortTests.name = 'dstore Memory sorting';
+	registerSuite(sortTests);
 });
