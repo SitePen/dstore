@@ -95,12 +95,6 @@ define([
 					}
 					return results;
 				});
-				this.data.then(null, function () {
-					// if there was an error, reset the data, so we could
-					// potentially try it again. This could include
-					// cancelation
-					delete collection.data;
-				});
 				this.total = response.response.then(function (response) {
 					var total = response.data.total;
 					if (total > -1) {
@@ -110,6 +104,13 @@ define([
 					}
 					var range = response.getHeader('Content-Range');
 					return range && (range = range.match(/\/(.*)/)) && +range[1];
+				});
+				this.data.then(null, function () {
+					// if there was an error, reset the data, so we could
+					// potentially try it again. This could include
+					// cancelation
+					delete collection.data;
+					delete collection.total;
 				});
 			}
 			return this.data;
