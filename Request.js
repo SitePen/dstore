@@ -85,15 +85,21 @@ define([
 					headers: headers
 				});
 				var parse = this.parse;
-				var store = this;
+				var collection = this;
 				this.data = response.then(function (response) {
 					var results = parse(response);
 					// support items in the results
 					results = results.items || results;
 					for (var i = 0, l = results.length; i < l; i++) {
-						results[i] = store._restore(results[i]);
+						results[i] = collection._restore(results[i]);
 					}
 					return results;
+				});
+				this.data.then(null, function () {
+					// if there was an error, reset the data, so we could
+					// potentially try it again. This could include
+					// cancelation
+					delete collection.data;
 				});
 				this.total = response.response.then(function (response) {
 					var total = response.data.total;
