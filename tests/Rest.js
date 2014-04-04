@@ -6,7 +6,7 @@ define([
 	'dojo/_base/lang',
 	'dojo/aspect',
 	'./mockRequest',
-	'dojo/text!./data/node1.1',
+	'dojo/text!./data/node1.1'
 ], function (
 	registerSuite,
 	assert,
