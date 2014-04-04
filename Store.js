@@ -166,12 +166,21 @@ define([
 		},
 
 		filter: function (filter) {
+			if (this.ranged) {
+				throw new Error('Can not filter a ranged collection');
+			}
+			if (this.sorted) {
+				throw new Error('Can not filter a sorted collection');
+			}
 			return this._createSubCollection({
 				filtered: (this.filtered || []).concat(filter)
 			});
 		},
 
 		sort: function (property, descending) {
+			if (this.ranged) {
+				throw new Error('Can not sort a ranged collection');
+			}
 			var sorted;
 
 			if (typeof property === 'function') {
