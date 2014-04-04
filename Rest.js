@@ -48,6 +48,7 @@ define([
 			});
 		},
 
+		autoEmitEvents: false, // this is handled by the methods themselves
 
 		put: function (object, options) {
 			// summary:

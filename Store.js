@@ -24,11 +24,39 @@ define([
 				// save the reference back to this store on it
 				this.model = declare(Model, {});
 			}
-			if(this.model){
+			if (this.model) {
 				// give a reference back to the store for saving, etc.
 				this.model.prototype._store = this;
 			}
+			if (this.autoEmitEvents) {
+				// emit events when modification operations are called
+				var store = this;
+				aspect.after(this, 'add', function (result) {
+					when(result, function (result) {
+						store.emit('add', {target: result});
+					});
+					return result;
+				});
+				aspect.after(this, 'put', function (result) {
+					when(result, function (result) {
+						store.emit('update', {target: result});
+					});
+					return result;
+				});
+				aspect.after(this, 'remove', function (result, args) {
+					when(result, function () {
+						store.emit('remove', {id: args[0]});
+					});
+					return result;
+				});
+			}
 		},
+
+		// autoEmitEvents: Boolean
+		//		Indicates if the events should automatically be fired for put, add, remove
+		//		method calls. Stores may wish to explicitly fire events, to control when
+		//		and which event is fired.
+		autoEmitEvents: true,
 
 		// idProperty: String
 		//		Indicates the property to use as the identity property. The values of this
@@ -47,16 +75,17 @@ define([
 		map: function (callback, thisObject) {
 			var results = [];
 			// like forEach, except we collect results
-			return when(this.forEach(function (object, i) {
-				results.push(callback.call(thisObject, object, i));
+			return when(this.forEach(function (object, i, collection) {
+				results.push(callback.call(thisObject, object, i, collection));
 			}, thisObject), function () {
 				return results;
 			});
 		},
 		forEach: function (callback, thisObject) {
+			var collection = this;
 			return when(this.fetch(), function (data) {
 				for (var i = 0, l = data.length; i < l; i++) {
-					callback.call(thisObject, data[i], i);
+					callback.call(thisObject, data[i], i, collection);
 				}
 				return data;
 			});

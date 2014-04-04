@@ -73,9 +73,72 @@ define([
 			assert.strictEqual(restoredObject.foo, 'original');
 			assert.strictEqual(restoredObject.restored, true);
 			assert.isTrue(restoredObject instanceof TestModel);
+		},
+
+		events: function () {
+			var methodCalls = [],
+				events = [];
+
+			// rely on autoEventEmits
+			var store = new (declare(Store, {
+				put: function (object) {
+					methodCalls.push('put');
+					return object;
+				},
+				add: function (object) {
+					methodCalls.push('add');
+					return object;
+				},
+				remove: function (id) {
+					methodCalls.push('remove');
+				}
+			}))();
+			store.on('add', function (event) {
+				events.push(event.type);
+			});
+			store.on('update', function (event) {
+				events.push(event.type);
+			});
+			store.on('remove', function (event) {
+				events.push(event.type);
+			});
+			store.put({});
+			store.add({});
+			store.remove(1);
+
+			assert.deepEqual(methodCalls, ['put', 'add', 'remove']);
+			assert.deepEqual(events, ['update', 'add', 'remove']);
+		},
+
+		forEach: function () {
+			var store = new (declare(Store, {
+				fetch: function () {
+					return [0, 1, 2];
+				}
+			}))();
+			var results = [];
+			store.forEach(function (item, i, instance) {
+				assert.strictEqual(item, i);
+				results.push(item);
+				assert.strictEqual(instance, store);
+			});
+			assert.deepEqual(results, [0, 1, 2]);
+		},
+
+		map: function () {
+			var store = new (declare(Store, {
+				fetch: function () {
+					return [0, 1, 2];
+				}
+			}))();
+			var results = store.map(function (item, i, instance) {
+				assert.strictEqual(item, i);
+				assert.strictEqual(instance, store);
+				return item * 2;
+			});
+			assert.deepEqual(results, [0, 2, 4]);
 		}
 
 		// TODO: Add map test and tests for other Store features
-		// TODO: Add tests for add, update, remove, and refresh events, including refresh being emitted on sort.
 	});
 });

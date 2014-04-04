@@ -23,6 +23,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 		//		An index of data indices into the data array by id
 		index: null,
 
+		autoEmitEvents: false, // this is handled by the methods themselves
+
 		get: function (id) {
 			// summary:
 			//		Retrieves an object by its identity
