@@ -109,7 +109,7 @@ define([
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
 				store.emit('remove', {id: id});
-				return store.parse(response);
+				return response ? store.parse(response) : true;
 			});
 		}
 	});
