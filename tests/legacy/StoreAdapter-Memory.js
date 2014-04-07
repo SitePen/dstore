@@ -152,7 +152,7 @@ define([
 			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 1);
 		},
 
-		'ifrs style data': function () {
+		'ItemFileReadStore style data': function () {
 			var anotherLegacy = new Memory({
 				data: {
 					items: [

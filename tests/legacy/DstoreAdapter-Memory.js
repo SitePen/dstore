@@ -124,7 +124,7 @@ define([
 			assert.strictEqual(store.query({prime: true}).length, 3);
 			assert.strictEqual(store.query({perfect: true}).length, 1);
 		},
-		'ifrs style data': function () {
+		'ItemFileReadStore style data': function () {
 			var dstoreObj = new Memory({
 				data: {
 					items: [

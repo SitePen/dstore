@@ -210,7 +210,7 @@ define([
 			assert.strictEqual(store.filter({perfect: true}).data.length, 1);
 		},
 
-		'ifrs style data': function () {
+		'ItemFileReadStore style data': function () {
 			var anotherStore = new Memory({
 				data: {
 

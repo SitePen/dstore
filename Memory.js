@@ -118,7 +118,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 				data = this.parse(data);
 			}
 			if (data.items) {
-				// just for convenience with the data format IFRS expects
+				// just for convenience with the data format ItemFileReadStore expects
 				this.idProperty = data.identifier || this.idProperty;
 				data = data.items;
 			}
