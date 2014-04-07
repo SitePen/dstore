@@ -54,24 +54,24 @@ define([
 			assert.strictEqual(results[1].describe(), 'four is not a prime');
 		},
 
-		'query': function () {
+		'filter': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
 			assert.strictEqual(getResultsArray(store.filter({even: true}))[1].name, 'four');
 		},
 
-		'query with string': function () {
+		'filter with string': function () {
 			assert.strictEqual(getResultsArray(store.filter({name: 'two'})).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({name: 'two'}))[0].name, 'two');
 		},
 
-		'query with regexp': function () {
+		'filter with regexp': function () {
 			assert.strictEqual(getResultsArray(store.filter({name: /^t/})).length, 2);
 			assert.strictEqual(getResultsArray(store.filter({name: /^t/}))[1].name, 'three');
 			assert.strictEqual(getResultsArray(store.filter({name: /^o/})).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({name: /o/})).length, 3);
 		},
 
-		'query with test function': function () {
+		'filter with test function': function () {
 			assert.strictEqual(getResultsArray(store.filter({id: {test: function (id) {
 				return id < 4;
 			}}})).length, 3);
@@ -80,7 +80,7 @@ define([
 			}}})).length, 1);
 		},
 
-		'query with sort': function () {
+		'filter with sort': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true}).sort('name')).length, 3);
 			assert.strictEqual(getResultsArray(store.filter({even: true}).sort('name'))[1].name, 'two');
 			assert.strictEqual(getResultsArray(store.filter({even: true}).sort(function (a, b) {
@@ -89,7 +89,7 @@ define([
 			assert.strictEqual(getResultsArray(store.filter(null).sort('mappedTo'))[4].name, 'four');
 		},
 
-		'query with paging': function () {
+		'filter with paging': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true}).range(1, 2)).length, 1);
 			assert.strictEqual(getResultsArray(store.filter({even: true}).range(1, 2))[0].name, 'four');
 		},
@@ -142,7 +142,7 @@ define([
 			assert.strictEqual(store.get(1).id, 1);
 		},
 
-		'query after changes': function () {
+		'filter after changes': function () {
 			store.add({ id: 7, prime: true });
 			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 4);
 			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 0);

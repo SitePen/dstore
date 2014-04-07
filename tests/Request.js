@@ -95,7 +95,7 @@ define([
 				createRequestTests.store = store;
 			},
 
-			'query': function () {
+			'filter': function () {
 				mockRequest.setResponseText(treeTestRootData);
 
 				return when(store.filter('data/treeTestRoot').fetch()).then(function (results) {
@@ -106,7 +106,7 @@ define([
 				});
 			},
 
-			'query iterative': function () {
+			'filter iterative': function () {
 				mockRequest.setResponseText(treeTestRootData);
 
 				var i = 0;
@@ -121,7 +121,7 @@ define([
 				});
 			},
 
-			'filter': function () {
+			'filter object': function () {
 				var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
 				return runCollectionTest(store.filter(filter), { queryParams: filter });
 			},

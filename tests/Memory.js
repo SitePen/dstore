@@ -53,24 +53,24 @@ define([
 			assert.strictEqual(noModelStore.get(1).save, undefined);
 		},
 
-		'query': function () {
+		'filter': function () {
 			assert.strictEqual(store.filter({prime: true}).data.length, 3);
 			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
 		},
 
-		'query with string': function () {
+		'filter with string': function () {
 			assert.strictEqual(store.filter({name: 'two'}).data.length, 1);
 			assert.strictEqual(store.filter({name: 'two'}).data[0].name, 'two');
 		},
 
-		'query with regexp': function () {
+		'filter with regexp': function () {
 			assert.strictEqual(store.filter({name: /^t/}).data.length, 2);
 			assert.strictEqual(store.filter({name: /^t/}).data[1].name, 'three');
 			assert.strictEqual(store.filter({name: /^o/}).data.length, 1);
 			assert.strictEqual(store.filter({name: /o/}).data.length, 3);
 		},
 
-		'query with test function': function () {
+		'filter with test function': function () {
 			assert.strictEqual(store.filter({id: {test: function (id) {
 				return id < 4;
 			}}}).data.length, 3);
@@ -79,7 +79,7 @@ define([
 			}}}).data.length, 1);
 		},
 
-		'query with sort': function () {
+		'filter with sort': function () {
 			assert.strictEqual(store.filter({prime: true}).sort('name').data.length, 3);
 			assert.strictEqual(store.filter({even: true}).sort('name').data[1].name, 'two');
 			assert.strictEqual(store.filter({even: true}).sort(function (a, b) {
@@ -88,12 +88,12 @@ define([
 			assert.strictEqual(store.filter(null).sort('mappedTo').data[4].name, 'four');
 		},
 
-		'query with paging': function () {
+		'filter with paging': function () {
 			assert.strictEqual(store.filter({prime: true}).range(1, 2).data.length, 1);
 			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
 		},
 
-		'query with inheritance': function () {
+		'filter with inheritance': function () {
 			var store = new Memory({
 				data: [
 					{id: 1, name: 'one', prime: false},
@@ -203,7 +203,7 @@ define([
 			assert.strictEqual(store.data.length, expectedLength);
 		},
 
-		'query after changes': function () {
+		'filter after changes': function () {
 			store.remove(2);
 			store.add({ id: 6, perfect: true });
 			assert.strictEqual(store.filter({prime: true}).data.length, 2);

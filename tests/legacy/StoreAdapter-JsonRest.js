@@ -52,7 +52,7 @@ define([
 			}));
 		},
 
-		'query': function () {
+		'filter': function () {
 			return when(store.filter('data/treeTestRoot').fetch()).then(function (results) {
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');
@@ -61,7 +61,7 @@ define([
 			});
 		},
 
-		'query iterative': function () {
+		'filter iterative': function () {
 			var d = this.async();
 			var i = 0;
 			return store.filter('data/treeTestRoot').forEach(d.rejectOnError(function (object) {
@@ -84,7 +84,7 @@ define([
 			}));
 		},
 
-		'query': function () {
+		'filter': function () {
 			return when(adaptedStore.filter('data/treeTestRoot').fetch()).then(function (results) {
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');
@@ -93,7 +93,7 @@ define([
 			});
 		},
 
-		'query iterative': function () {
+		'filter iterative': function () {
 			var d = this.async();
 			var i = 0;
 			return adaptedStore.filter('data/treeTestRoot').forEach(d.rejectOnError(function (object) {
