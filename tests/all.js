@@ -10,6 +10,7 @@ define([
 	'intern/node_modules/dojo/has!host-browser?./Csv',
 	'intern/node_modules/dojo/has!host-browser?./rql',
 	'./validating',
+	'./extensions/validating-jsonSchema',
 	'./validators',
 	'./legacy/DstoreAdapter-Memory',
 	'./charting/StoreSeries',
