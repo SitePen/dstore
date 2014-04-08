@@ -65,7 +65,7 @@ define([
 		// config: Object?
 		//		An optional configuration object that will be mixed into the adapted object.
 		//
-		obj = declare.safeMixin(obj, new DstoreAdapter());
+		obj = declare.safeMixin(obj, DstoreAdapter.prototype);
 		if (config) {
 			obj = lang.mixin(obj, config);
 		}
