@@ -107,13 +107,13 @@ define([
 				}
 			});
 			var filtered = store.filter({even: true}).sort('name');
-			var one = filtered.get(1);
+			var one = filtered.get('id-1');
 			one.changed = true;
 			filtered.put(one);
 			assert.strictEqual(filtered.getIdentity(one), 'id-1');
 			assert.strictEqual(filtered.newMethod(), 'hello');
-			store.remove(1);
-			assert.strictEqual(filtered.get(1), undefined);
+			store.remove('id-1');
+			assert.strictEqual(filtered.get('id-1'), undefined);
 		},
 
 		'put update': function () {

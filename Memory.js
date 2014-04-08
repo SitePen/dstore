@@ -45,11 +45,12 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 			// returns: Number
 			var store = this.store || this,
 				data = this.fullData,
-				index = store.index,
-				idProperty = this.idProperty;
-			var id = object[idProperty] = (options && 'id' in options) ?
-					options.id :
-					idProperty in object ? object[idProperty] : Math.random();
+				index = store.index;
+
+			var id = this.getIdentity(object);
+			if (id == null) {
+				id = this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
+			}
 			var model = this.model;
 			if (model && !(object instanceof model)) {
 				var prototype = model.prototype;
@@ -142,7 +143,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 						data[i] = object = restoredObject;
 					}
 				}
-				this.index[object[this.idProperty]] = i;
+				this.index[this.getIdentity(object)] = i;
 			}
 
 			this.data = data;

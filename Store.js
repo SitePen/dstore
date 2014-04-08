@@ -72,6 +72,19 @@ define([
 			return object[this.idProperty];
 		},
 
+		_setIdentity: function (object, identityArg) {
+			// summary:
+			//		Sets an object's identity
+			// description:
+			//		This method sets an object's identity and is useful to override to support
+			//		multi-key identities and object's whose properties are not stored directly on the object.
+			// object: Object
+			//		The target object
+			// identityArg:
+			//		The argument used to set the identity
+			object[this.idProperty] = identityArg;
+		},
+
 		map: function (callback, thisObject) {
 			var results = [];
 			// like forEach, except we collect results
