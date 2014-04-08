@@ -65,9 +65,17 @@ define([
 		//		be included of the form:
 		//			Range: items=start-end
 
-		// rangeParam: String
+		// rangeStartParam: String
 		//		The indicates if range limits (start and end) should be specified
-		//		in a query parameter. If this is not specified, the range will
+		//		in a query parameter, and what the start parameter should be.
+		//		This must be used in conjunction with the rangeCountParam
+		//		If this is not specified, the range will
+		//		included with a RQL style limit() parameter
+		// rangeCountParam: String
+		//		The indicates if range limits (start and end) should be specified
+		//		in a query parameter, and what the count parameter should be.
+		//		This must be used in conjunction with the rangeStartParam
+		//		If this is not specified, the range will
 		//		included with a RQL style limit() parameter
 
 		fetch: function () {
@@ -153,8 +161,8 @@ define([
 			if (this.ranged && !this.useRangeHeaders) {
 				var start = this.ranged.start;
 				var end = this.ranged.end;
-				return this.rangeParam
-					? this.rangeParam + '=' + start + '-' + (end || '')
+				return this.rangeStartParam
+					? this.rangeStartParam + '=' + start + '&' + this.rangeCountParam + '=' + (end || '')
 					: 'limit(' + (end - start) + (start ? (',' + start) : '') + ')';
 			}
 		},

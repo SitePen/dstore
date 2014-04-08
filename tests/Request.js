@@ -191,11 +191,13 @@ define([
 				});
 			},
 			'range with rangeParam': function () {
-				store.rangeParam = 'range';
+				store.rangeStartParam = 'start';
+				store.rangeCountParam = 'count';
 				var rangeCollection = store.range(15, 25);
 				return runCollectionTest(rangeCollection, {
 					queryParams: {
-						'range': '15-25'
+						'start': '15',
+						'count': '25'
 					}
 				});
 			},
