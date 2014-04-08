@@ -8,7 +8,7 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Request',
-	'dstore/SimpleQuery',
+	'dstore/simpleQueryEngine',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
 
@@ -22,7 +22,7 @@ define([
 	when,
 	whenAll,
 	Request,
-	SimpleQuery,
+	simpleQueryEngine,
 	mockRequest,
 	treeTestRootData
 ) {
@@ -232,12 +232,13 @@ define([
 				});
 			},
 
-			'composition with SimpleQuery': function () {
-				var RestWithSimpleQuery = declare([ Store, SimpleQuery ], {
-					target: '/mockRequest/'
+			'composition with client-side query engine': function () {
+				var RestWithSimpleQueryEngine = declare(Store, {
+					target: '/mockRequest/',
+					queryEngine: simpleQueryEngine
 				});
 
-				var store = new RestWithSimpleQuery(),
+				var store = new RestWithSimpleQueryEngine(),
 					expectedResults = [
 						{ id: 1, name: 'one', odd: true },
 						{ id: 2, name: 'two', odd: false },
@@ -247,30 +248,54 @@ define([
 				var filter = { odd: true },
 					filteredCollection = store.filter(filter),
 					sortedCollection,
-					rangeCollection;
+					rangeCollection,
+					getTopQueryLogEntry = function (collection) {
+						var queryLog = collection.queryLog;
+						return queryLog[queryLog.length - 1];
+					},
+					queryer;
+
+				assert.strictEqual(filteredCollection.queryLog.length, 1);
 				return when(filteredCollection.fetch()).then(function (results) {
 					mockRequest.assertQueryParams(filter);
 					assert.strictEqual(results.length, expectedResults.length);
 
-					assert.property(filteredCollection, 'queryer');
+					var queryLogEntry = getTopQueryLogEntry(filteredCollection);
+					assert.property(queryLogEntry, 'queryer');
+					queryer = queryLogEntry.queryer;
 
-					var filteredResults = filteredCollection.queryer(expectedResults);
+					var filteredResults = queryer(expectedResults);
 					assert.equal(filteredResults.length, 2);
 					assert.deepEqual(filteredResults[0], expectedResults[0]);
 					assert.deepEqual(filteredResults[1], expectedResults[2]);
 
 					sortedCollection = filteredCollection.sort('id', true);
+					assert.strictEqual(sortedCollection.queryLog.length, 2);
+
 					return sortedCollection.fetch();
 				}).then(function (results) {
 					mockRequest.assertQueryParams({ 'sort(-id)': '' });
 					assert.strictEqual(results.length, expectedResults.length);
 
-					var sortedFilteredResults = sortedCollection.queryer(expectedResults);
+					var queryLogEntry = getTopQueryLogEntry(sortedCollection);
+					assert.property(queryLogEntry, 'queryer');
+					// TODO: Clean this up and simplify or reuse
+					queryer = (function () {
+						var existingQueryer = queryer,
+							newQueryer = queryLogEntry.queryer;
+						return function (data) {
+							return newQueryer(existingQueryer(data));
+						};
+					})();
+
+					var sortedFilteredResults = queryer(expectedResults);
 					assert.equal(sortedFilteredResults.length, 2);
 					assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
 					assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
 
 					rangeCollection = sortedCollection.range(0, 25);
+					assert.strictEqual(rangeCollection.queryLog.length, 3);
+
 					return rangeCollection.fetch();
 				}).then(function (results) {
 					mockRequest.assertQueryParams({

@@ -6,7 +6,7 @@ define([
 	'dojo/io-query',
 	'dojo/_base/declare',
 	'./Store'
-], function (request, lang, array, JSON, ioQuery, declare, Store) {
+], function (request, lang, arrayUtil, JSON, ioQuery, declare, Store) {
 
 	return declare(Store, {
 		// summary:
@@ -104,6 +104,7 @@ define([
 					return results;
 				});
 				this.total = response.response.then(function (response) {
+					// TODO: response.data isn't existing in the Request tests. Fix it.
 					var total = response.data.total;
 					if (total > -1) {
 						// if we have a valid positive number from the data,
@@ -124,47 +125,52 @@ define([
 			return this.data;
 		},
 
-		_renderFilterParams: function () {
+		_renderFilterParams: function (filter) {
 			// summary:
 			//		Constructs filter-related params to be inserted into the query string
 			// returns: String
 			//		Filter-related params to be inserted in the query string
-			return this.filtered && array.map(this.filtered, function (filter) {
-				return typeof filter === 'object' ? ioQuery.objectToQuery(filter) : filter;
-			}).join('&');
+			return [ typeof filter === 'object' ? ioQuery.objectToQuery(filter) : filter ];
 		},
-
-		_renderSortParams: function () {
+		_renderSortParams: function (sort) {
 			// summary:
 			//		Constructs sort-related params to be inserted in the query string
 			// returns: String
 			//		Sort-related params to be inserted in the query string
-			var sortString = '';
 
-			if (this.sorted) {
-				sortString = array.map(this.sorted, function (sortOption) {
-					var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-					return prefix + encodeURIComponent(sortOption.property);
-				}, this).join(',');
+			var sortString = arrayUtil.map(sort, function (sortOption) {
+				var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+				return prefix + encodeURIComponent(sortOption.property);
+			}, this);
+
+			var params = [];
+			if (sortString) {
+				params.push(this.sortParam
+					? encodeURIComponent(this.sortParam) + '=' + sortString
+					: 'sort(' + sortString + ')'
+				);
 			}
-
-			return sortString && (this.sortParam
-				? encodeURIComponent(this.sortParam) + '=' + sortString
-				: 'sort(' + sortString + ')'
-			);
+			return params;
 		},
-		_renderRangeParams: function () {
+		_renderRangeParams: function (range) {
 			// summary:
 			//		Constructs range-related params to be inserted in the query string
 			// returns: String
 			//		Range-related params to be inserted in the query string
-			if (this.ranged && !this.useRangeHeaders) {
-				var start = this.ranged.start;
-				var end = this.ranged.end;
-				return this.rangeStartParam
-					? this.rangeStartParam + '=' + start + '&' + this.rangeCountParam + '=' + (end - start)
-					: 'limit(' + (end - start) + (start ? (',' + start) : '') + ')';
+			var params = [];
+			if (!this.useRangeHeaders) {
+				var start = range.start;
+				var end = range.end;
+				if (this.rangeStartParam) {
+					params.push(
+						this.rangeStartParam + '=' + start,
+						this.rangeCountParam + '=' + (end - start)
+					);
+				} else {
+					params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
+				}
 			}
+			return params;
 		},
 
 		_renderUrl: function () {
@@ -172,29 +178,25 @@ define([
 			//		Constructs the URL used to fetch the data.
 			// returns: String
 			//		The URL of the data
-			var filterParamString = this._renderFilterParams(),
-				sortParamString = this._renderSortParams(),
-				rangeParamString = this._renderRangeParams();
 
-			var query = '';
-			var paramsAdded;
-			if (filterParamString || sortParamString || rangeParamString) {
-				query += '?';
+			var queryParams = [],
+				push = queryParams.push;
+			arrayUtil.forEach(this.queryLog, function (entry) {
+				var type = entry.type,
+					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
 
-				if (filterParamString) {
-					query += filterParamString;
-					paramsAdded = true;
+				if (this[renderMethod]) {
+					push.apply(queryParams, this[renderMethod](entry.value));
+				} else {
+					console.warn('Unable to render query params for "' + type + '" query', entry);
 				}
-				if (sortParamString) {
-					query += (paramsAdded ? '&' : '') + sortParamString;
-					paramsAdded = true;
-				}
-				if (rangeParamString) {
-					query += (paramsAdded ? '&' : '') + rangeParamString;
-				}
+			}, this);
+
+			var url = this.target;
+			if (queryParams.length > 0) {
+				url += '?' + queryParams.join('&');
 			}
-
-			return this.target + query;
+			return url;
 		}
 	});
 

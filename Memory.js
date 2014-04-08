@@ -1,11 +1,23 @@
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQuery' /*=====, './api/Store' =====*/],
-		function (declare, lang, arrayUtil, SimpleQuery /*=====, Store =====*/) {
+define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', './simpleQueryEngine' /*=====, './api/Store' =====*/],
+		// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
+		function (declare, lang, arrayUtil, StoreBase, simpleQueryEngine /*=====, Store =====*/) {
+
+	function createQuery(updateTotal) {
+		return function query () {
+			var newCollection = this.inherited(arguments),
+				queryer = newCollection.queryLog[newCollection.queryLog.length - 1].queryer;
+
+			var data = newCollection.data = queryer(this.data);
+			newCollection.total = updateTotal ? data.length : this.total;
+			return newCollection;
+		};
+	}
 
 	// module:
 	//		dstore/Memory
 	/* jshint proto: true */
 	var hasProto = !!{}.__proto__;
-	return declare(SimpleQuery, {
+	return declare(StoreBase, {
 		constructor: function () {
 			// summary:
 			//		Creates a memory object store.
@@ -15,6 +27,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 
 			this.setData(this.data || []);
 		},
+
+		queryEngine: simpleQueryEngine,
 
 		// data: Array
 		//		The array of all the objects in the memory store
@@ -147,24 +161,12 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './SimpleQu
 				index[this.getIdentity(object)] = i;
 			}
 		},
-		filter: function () {
-			var newCollection = this.inherited(arguments);
-			var data = newCollection.data = newCollection.queryer(this.data);
-			newCollection.total = data.length;
-			return newCollection;
-		},
-		sort: function () {
-			var newCollection = this.inherited(arguments);
-			var data = newCollection.data = newCollection.queryer(this.data);
-			newCollection.total = data.length;
-			return newCollection;
-		},
-		range: function (start, end) {
-			var newCollection = this.inherited(arguments);
-			newCollection.data = this.data.slice(start || 0, end || Infinity);
-			newCollection.total = this.data.length;
-			return newCollection;
-		},
+
+		filter: createQuery(true),
+		sort: createQuery(),
+		// TODO: Implement range as queryer
+		range: createQuery(),
+
 		fetch: function () {
 			if (!this.hasOwnProperty('data')) {
 				this.data = this.queryer(this.data);

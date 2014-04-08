@@ -9,6 +9,37 @@ define([
 	'dojo/Evented'
 ], function (lang, aspect, has, when, Deferred, declare, Model, Evented) {
 
+	// TODO: Remove this comment
+	// * create log
+	// * add queryer based on log
+	// * create new collection with updated log and queryer
+	// * run store-specific query logic
+
+	function queryMethod(queryName, args) {
+		args = args || {};
+
+		return function () {
+			// TODO: Test calling log
+			var logValue = args.log ? args.log.apply(this, arguments) : arguments[0],
+				logEntry = {
+					type: queryName,
+					value: logValue,
+					// Should the default case be null instead?
+					queryer: this.queryEngine
+						? this.queryEngine[queryName](logValue)
+						: function (data) { return data; }
+				},
+				newCollection = this._createSubCollection({
+					queryLog: this.queryLog.concat([ logEntry ]),
+					queryLogTop: logEntry
+				});
+
+			// TODO: Test calling implementation
+			return args.implementation ? args.implementation(logEntry, newCollection) : newCollection;
+		};
+	}
+
+
 	// module:
 	//		dstore/Store
 	/* jshint proto: true */
@@ -200,58 +231,37 @@ define([
 			return lang.mixin(newCollection, kwArgs);
 		},
 
-		filter: function (filter) {
-			if (this.ranged) {
-				throw new Error('Can not filter a ranged collection');
-			}
-			if (this.sorted) {
-				throw new Error('Can not filter a sorted collection');
-			}
-			return this._createSubCollection({
-				filtered: (this.filtered || []).concat(filter)
-			});
-		},
+		queryLog: [],
 
-		sort: function (property, descending) {
-			if (this.ranged) {
-				throw new Error('Can not sort a ranged collection');
-			}
-			var sorted;
+		filter: queryMethod('filter'),
 
-			if (typeof property === 'function') {
-				sorted = property;
-			} else if (property instanceof Array) {
-				sorted = property.slice(0);
-			} else if (typeof property === 'object') {
-				sorted = [].slice.call(arguments, 0);
-			} else {
-				sorted = [{
-					property: property,
-					descending: !!descending
-				}];
-			}
-
-			return this._createSubCollection({ sorted: sorted });
-		},
-
-		range: function (start, end) {
-			if (this.ranged) {
-				var base = this.ranged.start,
-					cap = this.ranged.end;
-				// TODO: Should we quietly cap start and end? Should we warn or throw an error instead?
-				if (isFinite(cap)) {
-					start = Math.min(base + start, cap);
-					end = isFinite(end) ? Math.min(base + end, cap) : cap;
+		sort: queryMethod('sort', {
+			log: function (property, descending) {
+				var sorted;
+				if (typeof property === 'function') {
+					sorted = property;
+				} else if (property instanceof Array) {
+					sorted = property.slice(0);
+				} else if (typeof property === 'object') {
+					sorted = [].slice.call(arguments, 0);
 				} else {
-					start = base + start;
-					end = isFinite(end) ? base + end : undefined;
+					sorted = [{
+						property: property,
+						descending: !!descending
+					}];
 				}
+				return sorted;
 			}
+		}),
 
-			return this._createSubCollection({
-				ranged: { start: start, end: end }
-			});
-		}
+		range: queryMethod('range', {
+			log: function (start, end) {
+				return {
+					start: start,
+					end: end
+				};
+			}
+		})
 /*====,
 		get: function (id) {
 			// summary:
