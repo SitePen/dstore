@@ -8,8 +8,8 @@ define([
 	'dstore/Memory',
 	'dstore/Store',
 	'dstore/Observable',
-	'dstore/SimpleQuery'
-], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, SimpleQuery) {
+	'dstore/simpleQueryEngine'
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, simpleQueryEngine) {
 
 	var MyStore = declare([Memory, Observable], {
 		get: function () {
@@ -39,12 +39,14 @@ define([
 	}
 
 	// A store for testing Observable with only partial in-memory data
-	var ObservablePartialDataStore = declare([ Store, Observable, SimpleQuery ], (function () {
+	var ObservablePartialDataStore = declare([ Store, Observable ], (function () {
 		var proto = {
 			constructor: function (kwArgs) {
 				delete this.data;
 				this.backingMemoryStore = new MyStore(kwArgs);
-			}
+			},
+
+			queryEngine: simpleQueryEngine
 		};
 
 		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove'], function (method) {

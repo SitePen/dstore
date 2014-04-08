@@ -165,13 +165,26 @@ define([
 				};
 			}
 
+			var queryExecutor;
+			if (this.queryEngine) {
+				arrayUtil.forEach(this.queryLog, function (entry) {
+					// TODO: This isn't extensible for new query types. How can this be generic? How is a range query different from filter and sort?
+					if (entry.type !== 'range') {
+						var existingQueryer = queryExecutor,
+							queryer = entry.queryer;
+						queryExecutor = existingQueryer
+							? function (data) { return queryer(existingQueryer(data)); }
+							: queryer;
+					}
+				});
+			}
+
 			function notify(type, target, event) {
 				revision++;
 				event = lang.delegate(event);
 				when(observed.hasOwnProperty('data') ? observed.data :
 						observed.partialData, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
-					var queryExecutor = observed.queryer;
 					var i, j, l, range;
 					/*if(++queryRevision != revision){
 						throw new Error('Query is out of date, you must observe() the' +
