@@ -146,6 +146,8 @@ define([
 			store.add(object);
 			assert.isTrue(!!object.id);
 		}
+
+		// TODO: Add tests with dojo/store/Observable
 	});
 	var store;
 	var sortTests = sorting(function before(data) {
