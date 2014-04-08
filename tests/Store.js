@@ -14,6 +14,21 @@ define([
 			store = new Store();
 		},
 
+		'getIdentity and _setIdentity': function () {
+			var object = { id: 'default', 'custom-id': 'custom' };
+
+			assert.strictEqual(store.getIdentity(object), 'default');
+			assert.strictEqual(store._setIdentity(object, 'assigned-id'), 'assigned-id');
+			assert.strictEqual(object.id, 'assigned-id');
+			assert.strictEqual(store.getIdentity(object), 'assigned-id');
+
+			store.idProperty = 'custom-id';
+			assert.strictEqual(store.getIdentity(object), 'custom');
+			assert.strictEqual(store._setIdentity(object, 'assigned-id'), 'assigned-id');
+			assert.strictEqual(object['custom-id'], 'assigned-id');
+			assert.strictEqual(store.getIdentity(object), 'assigned-id');
+		},
+
 		'filter': function () {
 			var expectedFilter1 = { prop1: 'one' },
 				expectedFilter2 = function filterFunc() {},

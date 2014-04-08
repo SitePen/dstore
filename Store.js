@@ -82,7 +82,7 @@ define([
 			//		The target object
 			// identityArg:
 			//		The argument used to set the identity
-			object[this.idProperty] = identityArg;
+			return object[this.idProperty] = identityArg;
 		},
 
 		map: function (callback, thisObject) {
@@ -122,7 +122,7 @@ define([
 		parse: null,
 
 		// stringify: Function
-		//		For stores that serialize data (to send to a server, for example) the stringify 
+		//		For stores that serialize data (to send to a server, for example) the stringify
 		//		function can be specified to control how objects are serialized to strings
 		stringify: null,
 
@@ -323,8 +323,8 @@ define([
 		// summary:
 		//		This is an abstract API for a collection of objects, which can be filtered,
 		//		sorted, and sliced to create new collections. This is considered to be base
-		//		interface for all stores and  query results in dstore. Note that the objects in the 
-		//		collection may not be immediately retrieved from the underlying data 
+		//		interface for all stores and  query results in dstore. Note that the objects in the
+		//		collection may not be immediately retrieved from the underlying data
 		//		storage until they are actually accessed through forEach() or fetch().
 
 		filter: function (query) {
@@ -381,7 +381,7 @@ define([
 			// summary:
 			//		This can be called to materialize and request the data behind this collection.
 			//		Often collections may be lazy, and won't retrieve their underlying data until
-			//		forEach or fetch is called. This returns an array, or for asynchronous stores, 
+			//		forEach or fetch is called. This returns an array, or for asynchronous stores,
 			//		this will return a promise, resolving to an array of objects, once the
 			//		operation is complete.
 			//	returns Array|Promise
