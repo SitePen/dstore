@@ -33,7 +33,7 @@ define([
 			if (cacheable && this._collectionCache[serialized]) {
 				return this._collectionCache[serialized];
 			} else {
-				var cachingStore = this.cachingStore,
+				var self = this,
 					subCollection;
 
 				if (this.allLoaded) {
@@ -44,7 +44,8 @@ define([
 
 					// wait for it to finish loading
 					subCollection.allLoaded = subCollection.data = when(this.allLoaded, function () {
-						var subCachingStore = cachingStore[method].apply(cachingStore, args);
+						var cachingStore = self.cachingStore,
+							subCachingStore = cachingStore[method].apply(cachingStore, args);
 						subCollection.cachingStore = subCachingStore;
 
 						var data = subCachingStore.fetch();
