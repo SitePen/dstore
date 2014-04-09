@@ -48,6 +48,7 @@ define([
 			// create an object store query and query options based on current collection
 			// information
 			var queryOptions = {};
+			var self = this;
 			var sorted = this.sorted;
 			// if it is an array, setup the attribute property that object stores expect
 			if (sorted) {
@@ -66,11 +67,13 @@ define([
 			}
 			var filtered = this.filtered;
 			var results = (this.store || this).query(filtered && filtered[0], queryOptions);
-			if (results) {
-				// apply the object restoration
-				results = results.map(this._restore, this);
+			if (results.then) {
+				return results.then(function (results) {
+					return results.map(self._restore, self);
+				});
 			}
-			return results;
+
+			return results.map(this._restore, this);
 		}
 	});
 
