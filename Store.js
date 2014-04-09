@@ -15,6 +15,11 @@ define([
 	// detect __proto__
 	has.add('object-proto', !!{}.__proto__);
 	var hasProto = has('object-proto');
+	var excludePropertiesOnCopy = {
+		data: true,
+		total: true
+	};
+
 	return /*==== Store= ====*/declare(Evented, /*==== [Collection] ====*/{
 		constructor: function (options) {
 			// perform the mixin
@@ -28,9 +33,11 @@ define([
 				// give a reference back to the store for saving, etc.
 				this.model.prototype._store = this;
 			}
+			// the object the store can use for holding any local data or events
+			this.storage = new Evented();
+			var store = this;
 			if (this.autoEmitEvents) {
 				// emit events when modification operations are called
-				var store = this;
 				aspect.after(this, 'add', function (result) {
 					when(result, function (result) {
 						store.emit('add', {target: result});
@@ -104,15 +111,12 @@ define([
 			});
 		},
 		on: function (type, listener) {
-			if (type !== 'refresh' && this.store && this.store !== this) {
-				return this.store.on(type, listener);
-			}
-			return this.inherited(arguments);
+			return this.storage.on(type, listener);
 		},
 		emit: function (type, event) {
 			event = event || {};
 			event.type = type;
-			return this.inherited(arguments);
+			return this.storage.emit(type, event);
 		},
 
 		// parse: Function
@@ -132,15 +136,6 @@ define([
 		//		to null if you don't want any methods to decorate the returned
 		//		objects (this can improve performance by avoiding prototype setting)
 		model: Model,
-
-		// excludePropertiesOnCopy: Object
-		//		This contains a hash of objects that should be excluded when properties are copied to new
-		//		sub collections.
-		excludePropertiesOnCopy: {
-			data: true,
-			index: true,
-			total: true
-		},
 
 		_restore: function (object) {
 			// summary:
@@ -195,11 +190,10 @@ define([
 
 		_createSubCollection: function (kwArgs) {
 			var store = this.store || this,
-				excluded = this.excludePropertiesOnCopy,
 				newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }));
 
 			for (var i in this) {
-				if (this.hasOwnProperty(i) && !excluded.hasOwnProperty(i)) {
+				if (this.hasOwnProperty(i) && !excludePropertiesOnCopy.hasOwnProperty(i)) {
 					newCollection[i] = this[i];
 				}
 			}

@@ -64,7 +64,7 @@ define([
 			var id = ('id' in options) ? options.id : this.getIdentity(object);
 			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
-			var store = this.store || this;
+			var store = this;
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
@@ -103,7 +103,7 @@ define([
 			// options: __HeaderOptions?
 			//		HTTP headers.
 			options = options || {};
-			var store = this.store || this;
+			var store = this;
 			return request(this.target + id, {
 				method: 'DELETE',
 				headers: lang.mixin({}, this.headers, options.headers)
