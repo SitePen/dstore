@@ -5,40 +5,10 @@ define([
 	'dojo/when',
 	'dojo/Deferred',
 	'dojo/_base/declare',
+	'./QueryMethod',
 	'./Model',
 	'dojo/Evented'
-], function (lang, aspect, has, when, Deferred, declare, Model, Evented) {
-
-	// TODO: Remove this comment
-	// * create log
-	// * add queryer based on log
-	// * create new collection with updated log and queryer
-	// * run store-specific query logic
-
-	function queryMethod(queryName, args) {
-		args = args || {};
-
-		return function () {
-			// TODO: Test calling log
-			var logValue = args.log ? args.log.apply(this, arguments) : arguments[0],
-				logEntry = {
-					type: queryName,
-					value: logValue,
-					// Should the default case be null instead?
-					queryer: this.queryEngine
-						? this.queryEngine[queryName](logValue)
-						: function (data) { return data; }
-				},
-				newCollection = this._createSubCollection({
-					queryLog: this.queryLog.concat([ logEntry ]),
-					queryLogTop: logEntry
-				});
-
-			// TODO: Test calling implementation
-			return args.implementation ? args.implementation(logEntry, newCollection) : newCollection;
-		};
-	}
-
+], function (lang, aspect, has, when, Deferred, declare, QueryMethod, Model, Evented) {
 
 	// module:
 	//		dstore/Store
@@ -233,9 +203,9 @@ define([
 
 		queryLog: [],
 
-		filter: queryMethod('filter'),
+		filter: new QueryMethod('filter'),
 
-		sort: queryMethod('sort', {
+		sort: new QueryMethod('sort', {
 			log: function (property, descending) {
 				var sorted;
 				if (typeof property === 'function') {
@@ -254,7 +224,7 @@ define([
 			}
 		}),
 
-		range: queryMethod('range', {
+		range: new QueryMethod('range', {
 			log: function (start, end) {
 				return {
 					start: start,
