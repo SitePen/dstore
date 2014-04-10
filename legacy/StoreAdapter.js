@@ -9,9 +9,9 @@ define([
 
 	var modifyDelegate = function (name) {
 		return function () {
-			var store = this.store;
-			if (store && store !== this) {
-				return store[name].apply(store, arguments);
+			var root = this.root;
+			if (root && root !== this) {
+				return root[name].apply(root, arguments);
 			}
 			return this.inherited(arguments);
 		}
@@ -26,9 +26,9 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			var self = this;
-			var store = this.store;
-			if (store && store !== this) {
-				return this.get.apply(this, arguments);
+			var root = this.root;
+			if (root && root !== this) {
+				return this.get.apply(root, arguments);
 			}
 			return when(this.inherited(arguments), function (object) {
 				return self._restore(object);
@@ -65,13 +65,28 @@ define([
 				queryOptions.count = ranged.end - ((queryOptions.start = ranged.start) || 0);
 			}
 			var filtered = this.filtered;
-			var results = (this.store || this).query(filtered && filtered[0], queryOptions);
+			var results = (this.root || this).query(filtered && filtered[0], queryOptions);
 			if (results) {
+				var total = results.total;
+				// if it is resolved, return the array
+				if (results.then && results.isResolved()) {
+					var resolvedResults;
+					results.then(function (results) {
+						resolvedResults = results;
+					});
+					results = resolvedResults;
+				}
 				// apply the object restoration
 				results = results.map(this._restore, this);
+				results.total = total;
 			}
 			return results;
-		}
+		},
+		_createSubCollection: function() {
+			var collection = Store.prototype._createSubCollection.apply(this, arguments);
+			collection.root = this.root || this;
+			return collection;
+		}		
 	});
 
 	StoreAdapter.adapt = function (obj, config) {
