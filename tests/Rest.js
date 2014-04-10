@@ -103,7 +103,7 @@ define([
 			var expectedObject = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(expectedObject));
 			return store.get('anything').then(function (object) {
-				expectedObject.scenario = 'update';
+				expectedObject._scenario = 'update';
 				expectedObject.saved = true;
 				mockRequest.setResponseText(store.stringify(expectedObject));
 				return object.save().then(function (result) {

@@ -116,12 +116,12 @@ define([
 		//		defined in the schema.
 		additionalProperties: true,
 
-		//	scenario: string
+		//	_scenario: string
 		//		The scenario that is used to determine which validators should
-		//		apply to this model. There are two standard values for scenario,
+		//		apply to this model. There are two standard values for _scenario,
 		//		"insert" and "update", but it can be set to any arbitrary value
 		//		for more complex validation scenarios.
-		scenario: 'update',
+		_scenario: 'update',
 
 		constructor: function (options) {
 			this.init(options);
@@ -129,7 +129,7 @@ define([
 
 		init: function (options) {
 			// if we are being constructed, we default to the insert scenario
-			this.scenario = 'insert';
+			this._scenario = 'insert';
 			// copy in the default values
 			for (var key in this.schema) {
 				var definition = this.schema[key];
@@ -155,14 +155,14 @@ define([
 				if (!isValid) {
 					throw object.validateError();
 				}
-				var scenario = object.scenario;
+				var scenario = object._scenario;
 				// suppress any non-date from serialization output
 				object.prepareForSerialization();
 				return object._store && when(object._store[scenario === 'insert' ? 'add' : 'put'](object),
 						function (returned) {
 					// receive any updates from the server
 					object.set(returned);
-					object.scenario = 'update';
+					object._scenario = 'update';
 					return object;
 				});
 			});
@@ -177,7 +177,7 @@ define([
 			//	summary:
 			//		This method is responsible for cleaing up any properties on the instance
 			//		object to ensure it can easily be serialized (by JSON.stringify at least)
-			this.scenario = undefined;
+			this._scenario = undefined;
 			if (this._inherited) {
 				this._inherited.toJSON = toJSONHidden;
 			}
