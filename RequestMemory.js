@@ -4,7 +4,7 @@ define([
 	'./Cache',
 	'./SimpleQuery'
 ], function(declare, Request, Cache, SimpleQuery) {
-	return declare([ Request, Cache, SimpleQuery ], {
+	return declare([ Request, Cache ], {
 		postscript: function () {
 			this.inherited(arguments);
 			this.fetch();

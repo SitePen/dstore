@@ -8,9 +8,8 @@ define([
 	'dstore/Memory',
 	'dstore/Request',
 	'./mockRequest',
-	'dojo/when',
 	'dstore/Cache'
-], function (registerSuite, assert, Deferred, JSON, declare, Store, Memory, Request, mockRequest, when, Cache) {
+], function (registerSuite, assert, Deferred, JSON, declare, Store, Memory, Request, mockRequest, Cache) {
 
 	/* jshint newcap: false */
 	var cachingStore = new Memory();
@@ -151,33 +150,6 @@ define([
 				testDef.resolve(true);
 			});
 			return testDef;
-		},
-		'like RequestMemory': function () {
-			var store = new declare([Request, Cache], {
-				constructor: function () {
-					this.fetch();
-				}
-			})({
-				target: require.toUrl('dstore/tests/data/treeTestRoot')
-			});
-			store.get('node3').then(function (object) {
-				assert.strictEqual(JSON.stringify(object), JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC'}));
-			});
-			var results = [];
-			return store.filter({name: 'node2'}).forEach(function (object) {
-				results.push(object);
-			}).then(function () {
-				assert.strictEqual(JSON.stringify(results), JSON.stringify([{ id: 'node2', name:'node2', someProperty:'somePropertyB'}]));
-				return store.get('node3').then(function (object) {
-					object.changed = true;
-					return when(store.put(object), function () {
-						return when(store.get('node3'), function (object) {
-							assert.strictEqual(JSON.stringify(object),
-								JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC', changed: true}));
-						});
-					});
-				});
-			});
 		}
 	});
 });
