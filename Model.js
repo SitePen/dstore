@@ -165,7 +165,7 @@ define([
 			var object = this;
 			return when((options && options.skipValidation) ? true : this.validate(), function (isValid) {
 				if (!isValid) {
-					throw object.validateError();
+					throw object.createValidationError(object.errors);
 				}
 				var scenario = object._scenario;
 				// suppress any non-date from serialization output
@@ -195,10 +195,12 @@ define([
 			}
 		},
 
-		validationError: function () {
+		createValidationError: function (errors) {
 			//	summary:
 			//		This is called when a save is attempted and a validation error was found.
 			//		This can be overriden with locale-specific messages
+			//	errors:
+			//		Errors that were found in validation
 			return new Error('Validation error');
 		},
 
