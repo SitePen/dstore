@@ -30,46 +30,49 @@ define([
 		},
 
 		'filter': function () {
-			var expectedFilter1 = { prop1: 'one' },
-				expectedFilter2 = function filterFunc() {},
+			var filter1 = { prop1: 'one' },
+				expectedQueryLog1 = [ { type: 'filter', argument: filter1 } ],
+				filter2 = function filterFunc() {},
+				expectedQueryLog2 = expectedQueryLog1.concat({ type: 'filter', argument: filter2 }),
 				filteredCollection;
 
-			filteredCollection = store.filter(expectedFilter1);
-			assert.deepEqual(filteredCollection.filtered, [ expectedFilter1 ]);
+			filteredCollection = store.filter(filter1);
+			assert.deepEqual(filteredCollection.queryLog, expectedQueryLog1);
 
-			filteredCollection = filteredCollection.filter(expectedFilter2);
-			assert.deepEqual(filteredCollection.filtered, [ expectedFilter1, expectedFilter2 ]);
+			filteredCollection = filteredCollection.filter(filter2);
+			assert.deepEqual(filteredCollection.queryLog, expectedQueryLog2);
 		},
 
 		'sort': function () {
 			var sortObject = { property: 'prop1', descending: true },
 				sortObjectArray = [ sortObject, { property: 'prop2', descending: false } ],
 				comparator = function comparator() {},
+				expectedQueryLog1 = [ { type: 'sort', argument: [ sortObject ] } ],
+				expectedQueryLog2 = expectedQueryLog1.concat({ type: 'sort', argument: sortObjectArray }),
+				expectedQueryLog3 = expectedQueryLog2.concat({ type: 'sort', argument: comparator }),
 				sortedCollection;
 
 			sortedCollection = store.sort(sortObject.property, sortObject.descending);
-			assert.deepEqual(sortedCollection.sorted, [ sortObject ]);
+			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog1);
 
 			sortedCollection = store.sort(sortObject);
-			assert.deepEqual(sortedCollection.sorted, [ sortObject ]);
+			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog1);
 
 			sortedCollection = sortedCollection.sort(sortObjectArray);
-			assert.deepEqual(sortedCollection.sorted, sortObjectArray);
+			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog2);
 
 			sortedCollection = sortedCollection.sort(comparator);
-			assert.deepEqual(sortedCollection.sorted, comparator);
+			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog3);
 		},
 
 		'range': function () {
-			var rangedCollection = store.range(100);
-			assert.deepEqual(rangedCollection.ranged, { start: 100, end: undefined });
-			rangedCollection = rangedCollection.range(25, 50);
-			assert.deepEqual(rangedCollection.ranged, { start: 125, end: 150 });
+			var rangedCollection = store.range(100),
+				expectedQueryLog1 = [ { type: 'range', argument: { start: 100, end: undefined } } ];
+			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog1);
 
-			rangedCollection = store.range(100, 200);
-			assert.deepEqual(rangedCollection.ranged, { start: 100, end: 200 });
-			rangedCollection = rangedCollection.range(25);
-			assert.deepEqual(rangedCollection.ranged, { start: 125, end: 200 });
+			rangedCollection = rangedCollection.range(25, 50);
+			var expectedQueryLog2 = expectedQueryLog1.concat({ type: 'range', argument: { start: 25, end: 50 } });
+			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog2);
 		},
 
 		'restore': function () {
