@@ -168,7 +168,7 @@ define([
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
-					// TODO: This isn't extensible for new query types. How can this be generic? How is a range query different from filter and sort?
+					// TODO: This isn't extensible for new query types. How we can we make a general determination to not include a query type as we do for 'range'?
 					if (entry.type !== 'range') {
 						var existingQueryer = queryExecutor,
 							queryer = entry.queryer;
