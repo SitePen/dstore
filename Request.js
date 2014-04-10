@@ -82,11 +82,8 @@ define([
 			if (!this.hasOwnProperty('data')) {
 				// perform the actual query
 				var headers = lang.delegate(this.headers, { Accept: this.accepts });
-				var ranged = this.ranged;
-				if (ranged && this.useRangeHeaders) {
-					// use range headers
-					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
-						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
+				if (this.useRangeHeaders) {
+					this._applyRangeHeader(headers);
 				}
 				var response = request(this._renderUrl(), {
 					method: 'GET',
@@ -197,6 +194,30 @@ define([
 				url += '?' + queryParams.join('&');
 			}
 			return url;
+		},
+
+		_applyRangeHeader: function (headers) {
+			// summary:
+			//		Applies a Range header if this collection incorporates a range query
+			// headers: Object
+			//		The headers to which a Range property is added
+
+			var rangeQueries = arrayUtil.filter(this.queryLog, function (entry) {
+				return entry.type = 'range';
+			});
+			arrayUtil.forEach(rangeQueries, function (rangeQuery) {
+				if (!headers.Range) {
+					var ranged = rangeQuery.value;
+					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
+						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
+				} else {
+					console.warn(
+						'There is already a Range header for this request.' +
+						'This range query is being discarded:',
+						rangeQuery
+					);
+				}
+			});
 		}
 	});
 
