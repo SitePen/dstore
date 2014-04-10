@@ -1,9 +1,10 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
+	'dojo/_base/array',
 	'dojo/when',
 	'../Store'
-], function (declare, lang, when, Store) {
+], function (declare, lang, arrayUtil, when, Store) {
 // module:
 //		An adapter mixin that makes a legacy Dojo object store look like a dstore object.
 
@@ -48,24 +49,44 @@ define([
 			// create an object store query and query options based on current collection
 			// information
 			var queryOptions = {};
-			var sorted = this.sorted;
-			// if it is an array, setup the attribute property that object stores expect
+
+			// take the last sort since multiple sorts are not supported by dojo/store
+			var sorted = arrayUtil.filter(this.queryLog, function (entry) {
+				return entry.type === 'sort';
+			}).pop();
 			if (sorted) {
 				queryOptions.sort = sorted;
-				if (typeof sorted === 'object') {
+
+				if (sorted instanceof Array) {
+					// object stores expect an attribute property
 					for (var i = 0; i < sorted.length; i++) {
 						var sortSegment = sorted[i];
 						sortSegment.attribute = sortSegment.property;
 					}
 				}
 			}
-			var ranged = this.ranged;
+
+			var ranged = arrayUtil.filter(this.queryLog, function (entry) {
+				return entry.type === 'range';
+			});
+			if (ranged.length > 1) {
+				console.warn(
+					'Chaining multiple ranges is not supported for dojo/store. Only the first range will be used.'
+				);
+			}
+			ranged = ranged.shift();
 			if (ranged) {
 				// set the range
 				queryOptions.count = ranged.end - ((queryOptions.start = ranged.start) || 0);
 			}
-			var filtered = this.filtered;
-			var results = (this.root || this).query(filtered && filtered[0], queryOptions);
+
+			var filtered = arrayUtil.filter(this.queryLog, function (entry) {
+				return entry.type === 'filter';
+			});
+			// TODO: It seems strange to just use the first filter without a warning we are discarding the others.
+			//		Maybe we should try to compose multiple filters into a single filter?
+			//		Though it may be an inaccurate composition if more than one filter mentions the same property.
+			var results = (this.root || this).query(filtered[0] || {}, queryOptions);
 			if (results) {
 				var total = results.total;
 				// apply the object restoration
@@ -78,7 +99,7 @@ define([
 			var collection = Store.prototype._createSubCollection.apply(this, arguments);
 			collection.root = this.root || this;
 			return collection;
-		}		
+		}
 	});
 
 	StoreAdapter.adapt = function (obj, config) {
