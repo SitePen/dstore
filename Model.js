@@ -193,10 +193,11 @@ define([
 		property: function (/*String...*/ key, nextKey) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
-			//		of the provided property. You can optionally provide a listener, to be notified
-			//		of the value of this property, now and in the future
+			//		of the provided property. The returned property object gives access to methods for changing,
+			//		retrieving, and observing the property value, any validation errors, and property metadata.
 			//	key: String...
-			//		The name of the property to retrieve
+			//		The name of the property to retrieve. Multiple key arguments can be provided
+			//		nested property access.
 
 			// create the properties object, if it doesn't exist yet
 			var properties = this.hasOwnProperty('_properties') ? this._properties :
