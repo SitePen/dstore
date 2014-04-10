@@ -127,17 +127,29 @@ define([
 			this.init(options);
 		},
 
-		init: function (options) {
+		init: function (values) {
 			// if we are being constructed, we default to the insert scenario
 			this._scenario = 'insert';
 			// copy in the default values
+			values = this._setValues(values);
+
+			// set any defaults
 			for (var key in this.schema) {
 				var definition = this.schema[key];
-				if (definition && typeof definition === 'object' && 'default' in definition) {
-					this[key] = definition['default'];
+				if (definition && typeof definition === 'object' && 'default' in definition &&
+						!values.hasOwnProperty(key)) {
+					values[key] = definition['default'];
 				}
 			}
-			lang.mixin(this, options);
+			
+		},
+
+		_setValues: function (values) {
+			return lang.mixin(this, values);
+		},
+
+		_getValues: function () {
+			return this;
 		},
 
 		save: function (/*Object*/ options) {
@@ -250,7 +262,7 @@ define([
 				return property.valueOf();
 			}
 			// default action of just retrieving the property value
-			return this[key];
+			return this._getValues()[key];
 		},
 
 		set: function (/*string*/ key, /*any?*/ value) {
@@ -294,7 +306,7 @@ define([
 					value = definition.coerce(value);
 				}
 				// we can shortcut right to just setting the object property
-				this[key] = value;
+				this._getValues()[key] = value;
 				// check to see if we should do validation
 				if (definition && definition.validateOnSet !== false) {
 					validate(this, key);
@@ -533,11 +545,13 @@ define([
 					// we will iterate through the properties recording the changes
 					var changes = {};
 					if (hasOldObject) {
+						oldValue = oldValue._getValues ? oldValue._getValues() : oldValue;
 						for (key in oldValue) {
 							changes[key] = {old: oldValue[key]};
 						}
 					}
 					if (hasNewObject) {
+						value = value._getValues ? value._getValues() : value;
 						for (key in value) {
 							(changes[key] = changes[key] || {}).value = value[key];
 						}
@@ -720,13 +734,13 @@ define([
 		},
 
 		_get: function () {
-			return this._parent[this.name];
+			return this._parent._getValues()[this.name];
 		},
 		_has: function () {
-			return this.name in this._parent;
+			return this.name in this._parent._getValues();
 		},
 		setValue: function (value, parent) {
-			parent[this.name] = value;
+			parent._getValues()[this.name] = value;
 		}
 	});
 	var simplePropertyValueOf = Property.prototype.valueOf;
