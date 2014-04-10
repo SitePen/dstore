@@ -197,7 +197,7 @@ define([
 				return runCollectionTest(rangeCollection, {
 					queryParams: {
 						'start': '15',
-						'count': '25'
+						'count': '10'
 					}
 				});
 			},

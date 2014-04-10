@@ -162,7 +162,7 @@ define([
 				var start = this.ranged.start;
 				var end = this.ranged.end;
 				return this.rangeStartParam
-					? this.rangeStartParam + '=' + start + '&' + this.rangeCountParam + '=' + (end || '')
+					? this.rangeStartParam + '=' + start + '&' + this.rangeCountParam + '=' + (end - start)
 					: 'limit(' + (end - start) + (start ? (',' + start) : '') + ')';
 			}
 		},
