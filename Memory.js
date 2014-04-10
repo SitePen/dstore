@@ -57,7 +57,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			var storage = this.storage,
 				index = storage.index,
 				data = storage.fullData;
-			
+
 			var id = this.getIdentity(object);
 			if (id == null) {
 				id = this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
@@ -138,6 +138,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			}
 			var storage = this.storage;
 			storage.fullData = this.data = data;
+			this.total = data.length;
 			this._reindex();
 			this.emit('refresh');
 		},
