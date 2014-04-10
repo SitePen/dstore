@@ -189,8 +189,7 @@ define([
 		},
 
 		_createSubCollection: function (kwArgs) {
-			var store = this.store || this,
-				newCollection = lang.delegate(store.constructor.prototype, lang.mixin({ store: store }));
+			var newCollection = lang.delegate(this.constructor.prototype);
 
 			for (var i in this) {
 				if (this.hasOwnProperty(i) && !excludePropertiesOnCopy.hasOwnProperty(i)) {
