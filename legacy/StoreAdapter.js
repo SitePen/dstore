@@ -68,14 +68,6 @@ define([
 			var results = (this.root || this).query(filtered && filtered[0], queryOptions);
 			if (results) {
 				var total = results.total;
-				// if it is resolved, return the array
-				if (results.then && results.isResolved()) {
-					var resolvedResults;
-					results.then(function (results) {
-						resolvedResults = results;
-					});
-					results = resolvedResults;
-				}
 				// apply the object restoration
 				results = results.map(this._restore, this);
 				results.total = total;

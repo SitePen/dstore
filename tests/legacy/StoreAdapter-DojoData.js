@@ -11,6 +11,13 @@ define([
 	'../data/testData'
 ], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, sorting, StoreAdapter, testData) {
 
+	function getResultsArray(store) {
+		var results = [];
+		store.forEach(function (data) {
+			results.push(data);
+		});
+		return results;
+	}
 	var store;
 
 	registerSuite({
@@ -38,31 +45,31 @@ define([
 		'model': function () {
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
-			var results = store.filter({even: true}).fetch();
+			var results = getResultsArray(store.filter({even: true}));
 			assert.strictEqual(results.length, 2, 'The length is 2');
 			assert.strictEqual(results[1].describe(), 'four is not a prime');
 		},
 
 		'filter': function () {
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
-			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
+			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
+			assert.strictEqual(getResultsArray(store.filter({even: true}))[1].name, 'four');
 		},
 
 		'filter with string': function () {
-			assert.strictEqual(store.filter({name: 'two'}).fetch().length, 1);
-			assert.strictEqual(store.filter({name: 'two'}).fetch()[0].name, 'two');
+			assert.strictEqual(getResultsArray(store.filter({name: 'two'})).length, 1);
+			assert.strictEqual(getResultsArray(store.filter({name: 'two'}))[0].name, 'two');
 		},
 
 		'filter with regexp': function () {
-			assert.strictEqual(store.filter({name: /^t/}).fetch().length, 2);
-			assert.strictEqual(store.filter({name: /^t/}).fetch()[1].name, 'three');
-			assert.strictEqual(store.filter({name: /^o/}).fetch().length, 1);
-			assert.strictEqual(store.filter({name: /o/}).fetch().length, 3);
+			assert.strictEqual(getResultsArray(store.filter({name: /^t/})).length, 2);
+			assert.strictEqual(getResultsArray(store.filter({name: /^t/}))[1].name, 'three');
+			assert.strictEqual(getResultsArray(store.filter({name: /^o/})).length, 1);
+			assert.strictEqual(getResultsArray(store.filter({name: /o/})).length, 3);
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(store.filter({prime: true}).range(1, 2).fetch().length, 1);
-			assert.strictEqual(store.filter({even: true}).range(1, 2).fetch()[0].name, 'four');
+			assert.strictEqual(getResultsArray(store.filter({prime: true}).range(1, 2)).length, 1);
+			assert.strictEqual(getResultsArray(store.filter({even: true}).range(1, 2))[0].name, 'four');
 		},
 
 		'put new': function () {
