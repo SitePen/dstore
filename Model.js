@@ -406,6 +406,7 @@ define([
 			//		just future updates. If this is true, it also won't return
 			//		a new reactive object
 			
+			var reactive;
 			if (typeof listener === 'string') {
 				// a property key was provided, use the Model's method
 				return this.inherited(arguments);
@@ -413,7 +414,7 @@ define([
 			if (!options || !options.onlyFutureUpdates) {
 				// create a new reactive to contain the results of the execution
 				// of the provided function
-				var reactive = new Reactive();
+				reactive = new Reactive();
 				if (this._has()) {
 					// we need to notify of the value of the present (as well as future)
 					reactive.value = listener(this.valueOf());
