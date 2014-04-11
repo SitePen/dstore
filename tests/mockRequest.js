@@ -30,7 +30,8 @@ define([
 		responseDfd.resolve({
 			getHeader: function (name) {
 				return responseHeaders[name.toLowerCase()];
-			}
+			},
+			data: responseText
 		});
 
 		return lang.delegate(dfd.promise, {
