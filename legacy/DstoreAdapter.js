@@ -1,8 +1,8 @@
 define([
 	'dojo/_base/declare',
-	'dojo/_base/lang'
+	'dojo/_base/array',
 	/*=====, "dstore/api/Store" =====*/
-], function (declare, lang /*=====, Store =====*/) {
+], function (declare, arrayUtil /*=====, Store =====*/) {
 // module:
 //		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
@@ -10,7 +10,15 @@ define([
 	var base = null;
 	/*===== base = Store; =====*/
 
-	var DstoreAdapter = declare(base, {
+	var adapterPrototype = {
+
+		// store:
+		//		The dstore store that is wrapped as a Dojo object store
+		store: null,
+
+		constructor: function (kwArgs) {
+			declare.safeMixin(this, kwArgs);
+		},
 
 		query: function (query, options) {
 			// summary:
@@ -31,7 +39,7 @@ define([
 			//	|	store.query({ prime: true }).forEach(function(object){
 			//	|		// handle each object
 			//	|	});
-			var results = this.filter(query);
+			var results = this.store.filter(query);
 
 			if (options) {
 				// Apply sorting
@@ -55,22 +63,15 @@ define([
 				return object;
 			});
 		}
-	});
-
-	DstoreAdapter.adapt = function (obj, config) {
-		// summary:
-		//		Adapts an existing dstore object to behave like a dstore object.
-		// obj: Object
-		//		A dstore object that will have an adapter applied to it.
-		// config: Object?
-		//		An optional configuration object that will be mixed into the adapted object.
-		//
-		obj = declare.safeMixin(obj, DstoreAdapter.prototype);
-		if (config) {
-			obj = lang.mixin(obj, config);
-		}
-		return obj;
 	};
 
-	return DstoreAdapter;
+	var delegatedMethods = [ 'get', 'put', 'add', 'remove', 'getIdentity' ];
+	arrayUtil.forEach(delegatedMethods, function (methodName) {
+		adapterPrototype[methodName] = function () {
+			var store = this.store;
+			return store[methodName].apply(store, arguments);
+		};
+	});
+
+	return declare(base, adapterPrototype);
 });
