@@ -15,8 +15,8 @@ define([
 				return root[name].apply(root, arguments);
 			}
 			return this.inherited(arguments);
-		}
-	}
+		};
+	};
 	var StoreAdapter = declare(Store, {
 
 		get: function () {
@@ -48,12 +48,19 @@ define([
 
 			// create an object store query and query options based on current collection
 			// information
-			var queryOptions = {};
+			var queryOptions = {},
+				queryLog = this.queryLog,
+				getQueryArguments = function (type) {
+					return arrayUtil.map(
+						arrayUtil.filter(queryLog, function (entry) { return entry.type === type; }),
+						function (entry) {
+							return entry.argument;
+						}
+					);
+				};
 
 			// take the last sort since multiple sorts are not supported by dojo/store
-			var sorted = arrayUtil.filter(this.queryLog, function (entry) {
-				return entry.type === 'sort';
-			}).pop();
+			var sorted = getQueryArguments('sort').pop();
 			if (sorted) {
 				queryOptions.sort = sorted;
 
@@ -66,9 +73,7 @@ define([
 				}
 			}
 
-			var ranged = arrayUtil.filter(this.queryLog, function (entry) {
-				return entry.type === 'range';
-			});
+			var ranged = getQueryArguments('range');
 			if (ranged.length > 1) {
 				console.warn(
 					'Chaining multiple ranges is not supported for dojo/store. Only the first range will be used.'
@@ -80,9 +85,7 @@ define([
 				queryOptions.count = ranged.end - ((queryOptions.start = ranged.start) || 0);
 			}
 
-			var filtered = arrayUtil.filter(this.queryLog, function (entry) {
-				return entry.type === 'filter';
-			});
+			var filtered = getQueryArguments('filter');
 			// TODO: It seems strange to just use the first filter without a warning we are discarding the others.
 			//		Maybe we should try to compose multiple filters into a single filter?
 			//		Though it may be an inaccurate composition if more than one filter mentions the same property.
