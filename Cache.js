@@ -21,6 +21,9 @@ define([
 			if (!this.cachingStore) {
 				this.cachingStore = new Memory();
 			}
+			if (!this.queryEngine) {
+				this.queryEngine = this.cachingStore.queryEngine;
+			}
 			this.cachingStore.model = this.model;
 			this.cachingStore.idProperty = this.idProperty;
 			this._collectionCache = {};

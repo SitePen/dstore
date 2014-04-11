@@ -150,6 +150,15 @@ define([
 				testDef.resolve(true);
 			});
 			return testDef;
+		},
+
+		'defaults to queryEngine of the cachingStore': function () {
+			var store = new (declare([ Store, Cache ]))({
+				cachingStore: new Memory()
+			});
+
+			assert.property(store.cachingStore, 'queryEngine');
+			assert.strictEqual(store.queryEngine, store.cachingStore.queryEngine);
 		}
 	});
 });
