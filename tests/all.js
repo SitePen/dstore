@@ -1,6 +1,7 @@
 define([
 	'./Store',
 	'./Model',
+	'./objectQueryEngine',
 	'./Memory',
 	// TODO: Examing the following has!host-browser checks to see if the tests can be made to run outside of a browser
 	'intern/node_modules/dojo/has!host-browser?./Request',
