@@ -7,8 +7,6 @@ define([
 	'dstore/legacy/StoreAdapter'
 ], function (declare, registerSuite, assert, Memory, sorting, StoreAdapter) {
 
-	var AdaptedStore = declare([Memory, StoreAdapter]);
-
 	function getResultsArray(store) {
 		var results = [];
 		store.forEach(function (data) {
@@ -17,26 +15,26 @@ define([
 		return results;
 	}
 
-	var legacyStore;
 	var store;
 
 	registerSuite({
 		name: 'legacy dstore adapter - Memory',
 
 		beforeEach: function () {
-			store = new AdaptedStore({
-				data: [
-					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
-					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
-					{id: 3, name: 'three', prime: true, mappedTo: 'C'},
-					{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
-					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
-				]
+			store = new StoreAdapter({
+				objectStore: new Memory({
+					data: [
+						{id: 1, name: 'one', prime: false, mappedTo: 'E'},
+						{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
+						{id: 3, name: 'three', prime: true, mappedTo: 'C'},
+						{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
+						{id: 5, name: 'five', prime: true, mappedTo: 'A'}
+					]
+				})
 			});
 			store.model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};
-			
 		},
 
 		'get': function () {
@@ -163,7 +161,7 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = StoreAdapter.adapt(anotherLegacy);
+			var anotherStore = new StoreAdapter({ objectStore: anotherLegacy });
 
 			assert.strictEqual(anotherStore.get('one').name, 'one');
 			assert.strictEqual(anotherStore.getIdentity(anotherStore.get('one')), 'one');
@@ -182,8 +180,7 @@ define([
 	var sortTests = sorting(function before(data) {
 		return function before() {
 			var legacyStore = new Memory({data: data});
-			store = StoreAdapter.adapt(legacyStore, {
-			});
+			store = new StoreAdapter({ objectStore: legacyStore });
 		};
 	}, function sort() {
 		return store.sort.apply(store, arguments).fetch();

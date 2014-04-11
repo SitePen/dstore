@@ -19,21 +19,21 @@ define([
 			});
 		}
 	});
-	var adaptedStore = StoreAdapter.adapt(legacyStore, {
-	});
+	var adaptedStore = new StoreAdapter({ objectStore: legacyStore });
 	adaptedStore.model.prototype.describe = function () {
 		return 'name is ' + this.name;
 	};
 
-
-	var	store  = new (declare([JsonRest, StoreAdapter]))({
-		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
-		remove: function () {
-			var result = this.inherited(arguments);
-			return result.then(function (response) {
-				return response && JSON.parse(response);
-			});
-		}
+	var	store  = new StoreAdapter({
+		objectStore: new JsonRest({
+			target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
+			remove: function () {
+				var result = this.inherited(arguments);
+				return result.then(function (response) {
+					return response && JSON.parse(response);
+				});
+			}
+		})
 	});
 	store.model.prototype.describe = function () {
 		return 'name is ' + this.name;

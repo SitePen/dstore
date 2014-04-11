@@ -29,7 +29,7 @@ define([
 					data: testData
 				})
 			});
-			store = StoreAdapter.adapt(dataStore);
+			store = new StoreAdapter({ objectStore: dataStore });
 			store.model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};
