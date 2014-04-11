@@ -8,7 +8,7 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Request',
-	'dstore/simpleQueryEngine',
+	'dstore/objectQueryEngine',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
 
@@ -22,7 +22,7 @@ define([
 	when,
 	whenAll,
 	Request,
-	simpleQueryEngine,
+	objectQueryEngine,
 	mockRequest,
 	treeTestRootData
 ) {
@@ -235,7 +235,7 @@ define([
 			'composition with client-side query engine': function () {
 				var RestWithSimpleQueryEngine = declare(Store, {
 					target: '/mockRequest/',
-					queryEngine: simpleQueryEngine
+					queryEngine: objectQueryEngine
 				});
 
 				var store = new RestWithSimpleQueryEngine(),
