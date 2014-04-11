@@ -29,7 +29,7 @@ define([
 		'.put': function () {
 			var updatedItem;
 			return when(store.get('node5')).then(function (item) {
-				item.name = 'nodeFIVE';
+				item.changed = true;
 				updatedItem = item;
 
 				return store.put(updatedItem);
@@ -106,29 +106,8 @@ define([
 			return when(results, function (data) {
 				assert.deepEqual(data, [ 'node3', 'node1' ]);
 			});
-		},
-		// TODO: Add tests for all permutations of filter, sort, range queries
-
-		'like RequestMemory': function () {
-			store.get('node3').then(function (object) {
-				assert.strictEqual(JSON.stringify(object), JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC'}));
-			});
-			var results = [];
-			return store.filter({name: 'node2'}).forEach(function (object) {
-				results.push(object);
-			}).then(function () {
-				assert.strictEqual(JSON.stringify(results), JSON.stringify([{ id: 'node2', name:'node2', someProperty:'somePropertyB'}]));
-				return store.get('node3').then(function (object) {
-					object.changed = true;
-					return when(store.put(object), function () {
-						return when(store.get('node3'), function (object) {
-							assert.strictEqual(JSON.stringify(object),
-								JSON.stringify({ id: 'node3', name:'node3', someProperty:'somePropertyC', changed: true}));
-						});
-					});
-				});
-			});
 		}
+		// TODO: Add tests for all permutations of filter, sort, range queries
 	});
 });
 
