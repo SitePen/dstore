@@ -5,6 +5,8 @@ define([
 	return declare(null, {
 		// summary:
 		// 		This is a mixin or base class that allows us to use RQL for querying/filtering
+
+		// TODO: Is `options` really part of the filter interface? Currently, they are not logged
 		filter: function (query, options) {
 			var q = [],
 				prop;
