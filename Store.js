@@ -24,7 +24,7 @@ define([
 	return /*==== Store= ====*/declare(Evented, /*==== [Collection] ====*/{
 		constructor: function (options) {
 			// perform the mixin
-			declare.safeMixin(this, options);
+			options && declare.safeMixin(this, options);
 			if (!this.hasOwnProperty('model') && this.model) {
 				// we need a distinct model for each store, so we can
 				// save the reference back to this store on it
