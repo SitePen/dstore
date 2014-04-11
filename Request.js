@@ -183,7 +183,7 @@ define([
 					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
 
 				if (this[renderMethod]) {
-					push.apply(queryParams, this[renderMethod](entry.value));
+					push.apply(queryParams, this[renderMethod](entry.argument));
 				} else {
 					console.warn('Unable to render query params for "' + type + '" query', entry);
 				}
@@ -207,7 +207,7 @@ define([
 			});
 			arrayUtil.forEach(rangeQueries, function (rangeQuery) {
 				if (!headers.Range) {
-					var ranged = rangeQuery.value;
+					var ranged = rangeQuery.argument;
 					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
 						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
 				} else {
