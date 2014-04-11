@@ -17,7 +17,7 @@ define([], function () {
 			}
 
 			var newCollection = this._createSubCollection({
-				queryLog: this.queryLog.concat([ logEntry ])
+				queryLog: this.queryLog.concat(logEntry)
 			});
 
 			// TODO: Test calling implementation
