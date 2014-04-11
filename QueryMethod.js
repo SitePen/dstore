@@ -1,4 +1,6 @@
 define([], function () {
+	// TODO: Add documentation
+	// TODO: Add QueryMethod tests
 	// TODO: Convert to a single argument w/ queryName as the type
 	return function QueryMethod(queryName, args) {
 		args = args || {};

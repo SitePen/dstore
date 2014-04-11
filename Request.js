@@ -101,7 +101,6 @@ define([
 					return results;
 				});
 				this.total = response.response.then(function (response) {
-					// TODO: response.data isn't existing in the Request tests. Fix it.
 					var total = response.data.total;
 					if (total > -1) {
 						// if we have a valid positive number from the data,

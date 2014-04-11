@@ -165,7 +165,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 
 		filter: createQuery(true),
 		sort: createQuery(),
-		// TODO: Implement range as queryer
 		range: createQuery(),
 
 		fetch: function () {
