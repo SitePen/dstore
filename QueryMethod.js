@@ -15,7 +15,9 @@ define([], function () {
 				};
 
 			if (this.queryEngine) {
-				logEntry.queryer = this.queryEngine[queryName](queryArgument);
+				// Call the query factory in store context to support things like
+				// mapping a string argument for a filter query to a custom filter method on the store
+				logEntry.queryer = this.queryEngine[queryName].call(this, queryArgument);
 			}
 
 			var newCollection = this._createSubCollection({

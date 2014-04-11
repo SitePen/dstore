@@ -233,12 +233,12 @@ define([
 			},
 
 			'composition with client-side query engine': function () {
-				var RestWithSimpleQueryEngine = declare(Store, {
+				var RestWithQueryEngine = declare(Store, {
 					target: '/mockRequest/',
 					queryEngine: objectQueryEngine
 				});
 
-				var store = new RestWithSimpleQueryEngine(),
+				var store = new RestWithQueryEngine(),
 					expectedResults = [
 						{ id: 1, name: 'one', odd: true },
 						{ id: 2, name: 'two', odd: false },
