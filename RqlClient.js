@@ -1,26 +1,31 @@
 define([
-	'rql/js-array',
 	'dojo/_base/declare',
+	'dojo/_base/lang',
+	'rql/js-array',
+	'./simpleQueryEngine',
 	'./Memory'
-], function (arrayEngine, declare, Memory) {
-	return declare([Memory], {
+], function (declare, lang, arrayEngine, simpleQueryEngine, Memory) {
+	return declare(Memory, {
 		// summary:
 		// 		This is a mixin or base class that allows us to use RQL for querying/filtering for client stores
 
-		filter: function (q, options) {
-			// strip the leading '?' since rql doesn't like it
-			if (typeof q === 'string') {
-				// the RQL engine doesn't understand our sort, start, and count properties,
-				// so we apply those constraints after running the RQL query
-				var subCollection = this._createSubCollection({
-					filtered: (this.filtered || []).concat(q)
-				});
-				this._addQueryer(subCollection, arrayEngine.query(q, options));
-				var data = subCollection.data = subCollection.queryer(this.data);
-				subCollection.total = data.length;
-				return subCollection;
+		queryEngine: lang.delegate(simpleQueryEngine, {
+			// TODO: What to do about options? Currently this is not supported by QueryMethod
+			filter: function (filter, options) {
+				return typeof filter === 'string'
+					? arrayEngine.query(filter, options)
+					: simpleQueryEngine.filter(filter, options);
 			}
-			return this.inherited(arguments);
+		}),
+
+		filter: function () {
+			var subCollection = this.inherited(arguments),
+				queryLog = subCollection.queryLog;
+
+			var data = subCollection.data = queryLog[queryLog.length - 1].queryer(this.data);
+			subCollection.total = data.length;
+
+			return subCollection;
 		}
 	});
 });
