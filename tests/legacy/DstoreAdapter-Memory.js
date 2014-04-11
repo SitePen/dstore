@@ -9,20 +9,20 @@ define([
 
 	var store;
 
-	var AdaptedDstoreMemory = declare([Memory, DstoreAdapter]);
-
 	registerSuite({
 		name: 'legacy dstore adapter - Memory',
 
 		beforeEach: function () {
-			store = new AdaptedDstoreMemory({
-				data: [
-					{id: 1, name: 'one', prime: false, mappedTo: 'E'},
-					{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D'},
-					{id: 3, name: 'three', prime: true, mappedTo: 'C'},
-					{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
-					{id: 5, name: 'five', prime: true, mappedTo: 'A'}
-				]
+			store = new DstoreAdapter({
+				store: new Memory({
+					data: [
+						{ id: 1, name: 'one', prime: false, mappedTo: 'E' },
+						{ id: 2, name: 'two', even: true, prime: true, mappedTo: 'D' },
+						{ id: 3, name: 'three', prime: true, mappedTo: 'C' },
+						{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
+						{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
+					]
+				})
 			});
 		},
 
@@ -135,7 +135,7 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = DstoreAdapter.adapt(dstoreObj);
+			var anotherStore = new DstoreAdapter({ store: dstoreObj });
 			assert.strictEqual(anotherStore.get('one').name, 'one');
 			assert.strictEqual(anotherStore.query({name: 'one'})[0].name, 'one');
 		},
@@ -153,7 +153,7 @@ define([
 	var sortTests = sorting(function before(data) {
 		return function before() {
 			var dstoreObj = new Memory({data: data});
-			store = DstoreAdapter.adapt(dstoreObj);
+			store = new DstoreAdapter({ store: dstoreObj });
 		};
 	}, function sort() {
 		var sort = [];
