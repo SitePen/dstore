@@ -122,12 +122,16 @@ define([
 			// if everything is being loaded, we always wait for that to finish
 			return when(this.allLoaded, function () {
 				return when(cachingStore.get(id), function (result) {
-					return result || when(masterGet.call(masterStore, id, directives), function (result) {
-						if (result) {
-							cachingStore.put(result, {id: id});
-						}
+					if (result !== undefined) {
 						return result;
-					});
+					} else if (masterGet) {
+						return when(masterGet.call(masterStore, id, directives), function (result) {
+							if (result) {
+								cachingStore.put(result, {id: id});
+							}
+							return result;
+						});
+					}
 				});
 			});
 		},
