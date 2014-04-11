@@ -279,7 +279,6 @@ define([
 
 					var queryLogEntry = getTopQueryLogEntry(sortedCollection);
 					assert.property(queryLogEntry, 'queryer');
-					// TODO: Clean this up and simplify or reuse
 					queryer = (function () {
 						var existingQueryer = queryer,
 							newQueryer = queryLogEntry.queryer;
