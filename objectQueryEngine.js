@@ -3,7 +3,7 @@ define([
 ], function (arrayUtil) {
 
 	// module:
-	//		dstore/simpleQueryEngine
+	//		dstore/objectQueryEngine
 
 	return {
 		filter: function (query) {

@@ -8,8 +8,8 @@ define([
 	'dstore/Memory',
 	'dstore/Store',
 	'dstore/Observable',
-	'dstore/simpleQueryEngine'
-], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, simpleQueryEngine) {
+	'dstore/objectQueryEngine'
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, objectQueryEngine) {
 
 	var MyStore = declare([Memory, Observable], {
 		get: function () {
@@ -46,7 +46,7 @@ define([
 				this.backingMemoryStore = new MyStore(kwArgs);
 			},
 
-			queryEngine: simpleQueryEngine
+			queryEngine: objectQueryEngine
 		};
 
 		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove'], function (method) {
