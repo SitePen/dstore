@@ -207,6 +207,7 @@ define([
 			arrayUtil.forEach(rangeQueries, function (rangeQuery) {
 				if (!headers.Range) {
 					var ranged = rangeQuery.argument;
+					// TODO: Update this to remove defaults since we are requiring both start and end for dstore 1.0 with the option to loosen the restriction in the future.
 					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
 						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
 				} else {
