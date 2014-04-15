@@ -108,7 +108,7 @@ define([
 					}
 				} // End of inner loop (delimited parts)
 				
-				if (!numquotes) {
+				if (numquotes === 0) {
 					// Line ended cleanly, push values and reset.
 					if (!fieldNames) {
 						// We don't know any field names yet, so pick them up from the
