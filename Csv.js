@@ -44,11 +44,8 @@ define([
 		trim: false,
 		
 		parse: function (str) {
-			// summary:
-			//		Populates the store based on a CSV-formatted string.
-			// str: String
-			//		A CSV-formatted string to be parsed.
-			
+			// handles the parsing of the incoming data as CSV.			
+
 			var data = [],
 				lines = str.split(this.newline),
 				fieldNames = this.fieldNames,
