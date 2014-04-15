@@ -78,7 +78,7 @@ define([
 					
 					if (numquotes % 2 === 0) {
 						// Even number of quotes: we're done with this value.
-						if (numquotes) {
+						if (numquotes > 0) {
 							match = quoteRx.exec(value);
 							if (match) {
 								// Good quoted string; unescape any quotes within.
