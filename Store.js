@@ -202,11 +202,14 @@ define([
 			return lang.mixin(newCollection, kwArgs);
 		},
 
-		queryLog: [],
+		// queryLog: __QueryLogEntry[]
+		//		The query operations represented by this collection
+		queryLog: [],	// NOTE: It's ok to define this on the prototype because the array instance is never modified
 
-		filter: new QueryMethod('filter'),
+		filter: new QueryMethod({ type: 'filter' }),
 
-		sort: new QueryMethod('sort', {
+		sort: new QueryMethod({
+			type: 'sort',
 			normalizeArguments: function (property, descending) {
 				var sorted;
 				if (typeof property === 'function') {
@@ -233,7 +236,8 @@ define([
 			}
 		}),
 
-		range: new QueryMethod('range', {
+		range: new QueryMethod({
+			type: 'range',
 			normalizeArguments: function (start, end) {
 				return [ {
 					start: start,
@@ -472,4 +476,15 @@ define([
 			//		or failure of the abort.
 		}
 	});
+
+	var __QueryLogEntry = {
+		type: String
+			The query type
+		arguments: Array
+			The original query arguments
+		normalizedArguments: Array
+			The normalized query arguments
+		queryer: Function?
+			A client-side implementation of the query that takes an item array and returns an item array
+	};
 ====*/
