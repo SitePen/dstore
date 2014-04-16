@@ -8,16 +8,20 @@ define([], function () {
 		return function () {
 			// TODO: Test calling log
 			// TODO: What is a better name than `log`? `createQueryArgument`?
-			var queryArgument = args.log ? args.log.apply(this, arguments) : arguments[0],
+			var originalArguments = Array.prototype.slice.call(arguments),
+				normalizedArguments = args.normalizeArguments
+					? args.normalizeArguments.apply(this, originalArguments)
+					: originalArguments,
 				logEntry = {
 					type: queryName,
-					argument: queryArgument,
+					arguments: originalArguments,
+					normalizedArguments: normalizedArguments
 				};
 
 			if (this.queryEngine) {
 				// Call the query factory in store context to support things like
 				// mapping a string argument for a filter query to a custom filter method on the store
-				logEntry.queryer = this.queryEngine[queryName].call(this, queryArgument);
+				logEntry.queryer = this.queryEngine[queryName].apply(this, normalizedArguments);
 			}
 
 			var newCollection = this._createSubCollection({

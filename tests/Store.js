@@ -2,9 +2,10 @@ define([
 	'../Store',
 	'../Model',
 	'dojo/_base/declare',
+	'dojo/_base/lang',
 	'intern!object',
 	'intern/chai!assert'
-], function (Store, Model, declare, registerSuite, assert) {
+], function (Store, Model, declare, lang, registerSuite, assert) {
 
 	var store;
 	registerSuite({
@@ -31,9 +32,13 @@ define([
 
 		'filter': function () {
 			var filter1 = { prop1: 'one' },
-				expectedQueryLog1 = [ { type: 'filter', argument: filter1 } ],
+				expectedQueryLog1 = [ {
+					type: 'filter', arguments: [ filter1 ], normalizedArguments: [ filter1 ]
+				} ],
 				filter2 = function filterFunc() {},
-				expectedQueryLog2 = expectedQueryLog1.concat({ type: 'filter', argument: filter2 }),
+				expectedQueryLog2 = expectedQueryLog1.concat({
+					type: 'filter', arguments: [ filter2 ], normalizedArguments: [ filter2 ]
+				}),
 				filteredCollection;
 
 			filteredCollection = store.filter(filter1);
@@ -45,33 +50,52 @@ define([
 
 		'sort': function () {
 			var sortObject = { property: 'prop1', descending: true },
-				sortObjectArray = [ sortObject, { property: 'prop2', descending: false } ],
+				sortObjectArray = [ sortObject, { property: 'prop2' } ],
 				comparator = function comparator() {},
-				expectedQueryLog1 = [ { type: 'sort', argument: [ sortObject ] } ],
-				expectedQueryLog2 = expectedQueryLog1.concat({ type: 'sort', argument: sortObjectArray }),
-				expectedQueryLog3 = expectedQueryLog2.concat({ type: 'sort', argument: comparator }),
+				expectedQueryLog1 = [ {
+					type: 'sort',
+					arguments: [ sortObject.property, sortObject.descending ],
+					normalizedArguments: [ [ sortObject ] ]
+				} ],
+				expectedQueryLog2 = [ {
+					type: 'sort',
+					arguments: [ sortObject ],
+					normalizedArguments: [ [ sortObject ] ]
+				} ],
+				expectedQueryLog3 = expectedQueryLog2.concat({
+					type: 'sort',
+					arguments: [ sortObjectArray ],
+					normalizedArguments: [ [ sortObject, lang.mixin({ descending: false }, sortObjectArray[1]) ] ]
+				}),
+				expectedQueryLog4 = expectedQueryLog3.concat({
+					type: 'sort', arguments: [ comparator ], normalizedArguments: [ comparator ]
+				}),
 				sortedCollection;
 
 			sortedCollection = store.sort(sortObject.property, sortObject.descending);
 			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog1);
 
 			sortedCollection = store.sort(sortObject);
-			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog1);
-
-			sortedCollection = sortedCollection.sort(sortObjectArray);
 			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog2);
 
-			sortedCollection = sortedCollection.sort(comparator);
+			sortedCollection = sortedCollection.sort(sortObjectArray);
 			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog3);
+
+			sortedCollection = sortedCollection.sort(comparator);
+			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog4);
 		},
 
 		'range': function () {
-			var rangedCollection = store.range(100),
-				expectedQueryLog1 = [ { type: 'range', argument: { start: 100, end: undefined } } ];
+			var rangedCollection = store.range(100, 200),
+				expectedQueryLog1 = [ {
+					type: 'range', arguments: [ 100, 200 ], normalizedArguments: [ { start: 100, end: 200 } ]
+				} ];
 			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog1);
 
 			rangedCollection = rangedCollection.range(25, 50);
-			var expectedQueryLog2 = expectedQueryLog1.concat({ type: 'range', argument: { start: 25, end: 50 } });
+			var expectedQueryLog2 = expectedQueryLog1.concat({
+				type: 'range', arguments: [ 25, 50 ], normalizedArguments: [ { start: 25, end: 50 } ]
+			});
 			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog2);
 		},
 
