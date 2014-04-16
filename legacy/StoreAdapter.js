@@ -64,7 +64,7 @@ define([
 					return arrayUtil.map(
 						arrayUtil.filter(queryLog, function (entry) { return entry.type === type; }),
 						function (entry) {
-							return entry.argument;
+							return entry.normalizedArguments[0];
 						}
 					);
 				};

@@ -1,5 +1,6 @@
 define([
 	'dojo/_base/lang',
+	'dojo/_base/array',
 	'dojo/aspect',
 	'dojo/has',
 	'dojo/when',
@@ -8,7 +9,7 @@ define([
 	'./QueryMethod',
 	'./Model',
 	'dojo/Evented'
-], function (lang, aspect, has, when, Deferred, declare, QueryMethod, Model, Evented) {
+], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Model, Evented) {
 
 	// module:
 	//		dstore/Store
@@ -206,30 +207,38 @@ define([
 		filter: new QueryMethod('filter'),
 
 		sort: new QueryMethod('sort', {
-			log: function (property, descending) {
+			normalizeArguments: function (property, descending) {
 				var sorted;
 				if (typeof property === 'function') {
-					sorted = property;
-				} else if (property instanceof Array) {
-					sorted = property.slice(0);
-				} else if (typeof property === 'object') {
-					sorted = [].slice.call(arguments, 0);
+					sorted = [ property ];
 				} else {
-					sorted = [{
-						property: property,
-						descending: !!descending
-					}];
+					if (property instanceof Array) {
+						sorted = property.slice();
+					} else if (typeof property === 'object') {
+						sorted = [].slice.call(arguments);
+					} else {
+						sorted = [{ property: property, descending: descending }];
+					}
+
+					sorted = arrayUtil.map(sorted, function (sort) {
+						// copy the sort object to avoid mutating the original arguments
+						sort = lang.mixin({}, sort);
+						sort.descending = !!sort.descending;
+						return sort;
+					});
+					// wrap in array because sort objects are a single array argument
+					sorted = [ sorted ];
 				}
 				return sorted;
 			}
 		}),
 
 		range: new QueryMethod('range', {
-			log: function (start, end) {
-				return {
+			normalizeArguments: function (start, end) {
+				return [ {
 					start: start,
 					end: end
-				};
+				} ];
 			}
 		})
 /*====,
