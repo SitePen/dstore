@@ -29,7 +29,7 @@ define([
 			if (!this.hasOwnProperty('model') && this.model) {
 				// we need a distinct model for each store, so we can
 				// save the reference back to this store on it
-				this.model = declare(Model, {});
+				this.model = declare(this.model, {});
 			}
 			if (this.model) {
 				// give a reference back to the store for saving, etc.
