@@ -90,6 +90,7 @@ define([
 
 		'filter with paging': function () {
 			assert.strictEqual(store.filter({prime: true}).range(1, 2).data.length, 1);
+			assert.strictEqual(store.filter({prime: true}).range(1, 2).total, 3);
 			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
 		},
 
