@@ -10,7 +10,7 @@ define([
 	'./Observable',
 	'intern/node_modules/dojo/has!host-browser?./Cache',
 	'intern/node_modules/dojo/has!host-browser?./Csv',
-	'intern/node_modules/dojo/has!host-browser?./rql',
+	'./extensions/rqlQueryEngine',
 	'./validating',
 	'./extensions/validating-jsonSchema',
 	'./validators',
