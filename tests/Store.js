@@ -138,10 +138,8 @@ define([
 			store.on('add', function (event) {
 				events.push(event.type);
 			});
-			store.on('update', function (event) {
-				events.push(event.type);
-			});
-			store.on('remove', function (event) {
+			// test comma delimited as well
+			store.on('update, remove', function (event) {
 				events.push(event.type);
 			});
 			store.put({});
