@@ -5,9 +5,9 @@ The dstore package includes several store implementations that can be used for t
 * Memory - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
 * Rest - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
 * Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
+* RequestMemory - This is a Memory based store that will retrieve its contents from a server/URL.
 * Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
 * Observable - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
-* RqlServer, RqlClient - These are mixins for adding RQL querying capabilities to stores.
 * SimpleQuery - This is a base store with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 
 ## Constructing Stores
@@ -54,33 +54,25 @@ This is the base class used for all stores, providing basic functionality for tr
 
 This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation TypeError will be thrown, with an `errors` property that lists any validation errors.
 
-## SimplyQuery
+## RequestMemory
 
-This base/mixin store provides client-side querying functionality. This provides the querying functionality for the Memory store, and can be used as a mixin with the Rest store for performing client-side queries in combination with server-side queries.
-
-To combine the `SimpleQuery` with the `Rest` store, we could create a new store:
-
-    // define a store based on Rest with SimpleQuery as a mixin
-    var RestWithClientQuerying = declare([Rest, SimplyQuery]);
-    // create a store instance
-    var myStore = new RestWithClientQuerying({
-        target: '/PathToData/'
-    });
-    // define a query
-    var importantItems = myStore.filter({priority: 'high'});
-    // request the data, this will trigger the server-side query
-    importantItems.fetch().then(function(){
-        // once this is complete, we can now query, and it will
-        // be performed on the client side
-        var firstItems = importantItems.range(0, 10);
-    });
+This store provides client-side querying functionality, but will load its data from the server, using the provided URL. This is
+an asynchronous store since queries and data retrieval may be made before the data has been retrieved from the server.
 
 ## Resource Query Language
 
-[Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages includes mixins for adding RQL support to stores.
+[Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages includes an alternate query engine for using
+RQL as the query language. This can be enabled by setting the <code>queryEngine</code> property:
 
-* RqlServer - This adds support for converting basic object filters, sort parameters, and range requests to URLs with RQL queries to send to the server. This can be used as a mixin with the `dstore/Rest` store.
-* RqlClient - This adds support for interpreting RQL queries provided as a filter argument, for filtering, ordering, and manipulating in-memory data sets, using the RQL query engine.
+    require(['dstore/extensions/rqlQueryEngine'], function (rqlQueryEngine) {
+        var rqlStore = new Memory({
+            queryEngine: rqlQueryEngine,
+            ...
+        });
 
-Make sure you have installed/included the [rql](https://github.com/persvr/rql) package if you are using either of these mixins.
+        rqlStore.filter('price<10|rating>3').forEach(function (product) {
+            // return each product that has a price less than 10 or a rating greater than 3
+        });
+    }};
 
+Make sure you have installed/included the [rql](https://github.com/persvr/rql) package if you are using the RQL query engine.

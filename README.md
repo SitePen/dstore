@@ -17,7 +17,6 @@ The dstore package includes several store implementations that can be used for t
 * Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
 * Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
 * Observable - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
-* RqlServer, RqlClient - These are mixins for adding RQL querying capabilities to stores.
 * SimpleQuery - This is a base store with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 
 See the [Stores section](./docs/Stores.md) for more information these stores.
