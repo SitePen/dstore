@@ -1,7 +1,8 @@
 define(['intern/chai!assert'], function (assert) {
-	return function createSortTests(before, sort) {
+	return function createSortTests(name, before, sort) {
 		return {
-			before: before([
+			name: name,
+			beforeEach: before([
 				{id: 1, field1: 'one', field2: '1'},
 				{id: 2, field1: 'one', field2: '2'},
 				{id: 3, field1: 'two', field2: '5'},

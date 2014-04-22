@@ -145,28 +145,24 @@ define([
 			};
 			store.add(object);
 			assert.isTrue(!!object.id);
-		}
-
+		},
+		nestedSuite: sorting('legacy dstore adapter sorting - dstore/Memory', function before(data) {
+			return function before() {
+				var dstoreObj = new Memory({data: data});
+				store = new DstoreAdapter({ store: dstoreObj });
+			};
+		}, function sort() {
+			var sort = [];
+			for (var i = 0; i < arguments.length; i++) {
+				sort[i] = {
+					attribute: arguments[i].property,
+					descending: arguments[i].descending
+				};
+			}
+			return store.query({}, {
+					sort: sort
+				});
+		})
 		// TODO: Add tests with dojo/store/Observable
 	});
-	var store;
-	var sortTests = sorting(function before(data) {
-		return function before() {
-			var dstoreObj = new Memory({data: data});
-			store = new DstoreAdapter({ store: dstoreObj });
-		};
-	}, function sort() {
-		var sort = [];
-		for (var i = 0; i < arguments.length; i++) {
-			sort[i] = {
-				attribute: arguments[i].property,
-				descending: arguments[i].descending
-			};
-		}
-		return store.query({}, {
-				sort: sort
-			});
-	});
-	sortTests.name = 'legacy dstore adapter sorting - dstore/Memory';
-	registerSuite(sortTests);
 });

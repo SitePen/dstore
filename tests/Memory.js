@@ -248,16 +248,13 @@ define([
 			var rangedCollection = store.range(0, 3);
 			assert.strictEqual(rangedCollection.total, 5);
 			assert.strictEqual(rangedCollection.data.length, 3);
-		}
+		},
+		nestedSuite: sorting('dstore Memory sorting', function before(data) {
+			return function before() {
+				store = new Memory({data: data});
+			};
+		}, function sort() {
+			return store.sort.apply(store, arguments).fetch();
+		})
 	});
-	var store;
-	var sortTests = sorting(function before(data) {
-		return function before() {
-			store = new Memory({data: data});
-		};
-	}, function sort() {
-		return store.sort.apply(store, arguments).fetch();
-	});
-	sortTests.name = 'dstore Memory sorting';
-	registerSuite(sortTests);
 });
