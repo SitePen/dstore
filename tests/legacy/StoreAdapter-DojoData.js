@@ -7,10 +7,9 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'dojo/_base/lang',
-	'../sorting',
 	'dstore/legacy/StoreAdapter',
 	'../data/testData'
-], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, sorting, StoreAdapter, testData) {
+], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, StoreAdapter, testData) {
 
 	function getResultsArray(store) {
 		var results = [];
@@ -93,7 +92,6 @@ define([
 
 
 		'add duplicate': function () {
-			var threw;
 			store.add({
 				id: 5,
 				perfect: true

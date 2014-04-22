@@ -174,17 +174,15 @@ define([
 			};
 			store.add(object);
 			assert.isTrue(!!object.id);
-		}
+		},
+
+		nestedSuite: sorting('legacy dstore adapter sorting - dojo/store/Memory', function before(data) {
+			return function before() {
+				var legacyStore = new Memory({data: data});
+				store = new StoreAdapter({ objectStore: legacyStore });
+			};
+		}, function sort() {
+			return store.sort.apply(store, arguments).fetch();
+		})
 	});
-	var store;
-	var sortTests = sorting(function before(data) {
-		return function before() {
-			var legacyStore = new Memory({data: data});
-			store = new StoreAdapter({ objectStore: legacyStore });
-		};
-	}, function sort() {
-		return store.sort.apply(store, arguments).fetch();
-	});
-	sortTests.name = 'legacy dstore adapter sorting - dojo/store/Memory';
-	registerSuite(sortTests);
 });
