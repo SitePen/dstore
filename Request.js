@@ -1,5 +1,5 @@
 define([
-	'dojo/request/registry',
+	'dojo/request',
 	'dojo/_base/lang',
 	'dojo/_base/array',
 	'dojo/json',
