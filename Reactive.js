@@ -211,7 +211,7 @@ define([
 			var validators = this.validators;
 			var value = this.valueOf();
 			var totalErrors = [];
-			var validations = [];
+			var asyncValidations;
 
 			// iterator through any validators (if we have any)
 			if (validators) {
@@ -222,14 +222,14 @@ define([
 			// check our own validation
 			addValidation(property.checkForErrors(value, property, model));
 
-			if (validations) {
-				return all(validations).then(handleErrors);
+			if (asyncValidations) {
+				return all(asyncValidations).then(handleErrors);
 			}
-			handleErrors();
+			return handleErrors();
 
 			function addValidation(validation) {
 				if (validation.then) {
-					(validations || []).push(validation.then(addErrors));
+					(asyncValidations || (asyncValidations = [])).push(validation.then(addErrors));
 				} else{
 					addErrors(validation);
 				}
@@ -253,7 +253,7 @@ define([
 		}
 	},
 	{
-		exports: exports	
+		exports: exports
 	});
 
 });
