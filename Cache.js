@@ -14,10 +14,8 @@ define([
 	return declare(Store, {
 		cachingStore: null,
 		constructor: function (options) {
-			for (var i in options) {
-				// mixin the options
-				this[i] = options[i];
-			}
+			declare.safeMixin(options);
+
 			if (!this.cachingStore) {
 				this.cachingStore = new Memory();
 			}
