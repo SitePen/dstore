@@ -47,11 +47,15 @@ define({
 	// Configuration options for the module loader; any AMD configuration options supported by the Dojo loader can be
 	// used here
 	loader: {
+		baseUrl: typeof process === 'undefined' ? '..' : './node_modules',
+
 		// Packages that should be registered with the loader in each testing environment
 		requestProvider: 'dojo/request/registry',
 		packages: [
 			{ name: 'dojo', location: 'dojo' },
-			{ name: 'dstore', location: 'dstore' }
+			{ name: 'dstore', location: '..' },
+			{ name: 'rql', location: 'rql' },
+			{ name: 'json-schema', location: 'json-schema' }
 		]
 	},
 
