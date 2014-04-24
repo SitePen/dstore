@@ -1,8 +1,9 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/array',
+	'dojo/store/util/QueryResults',
 	/*=====, "dstore/api/Store" =====*/
-], function (declare, arrayUtil /*=====, Store =====*/) {
+], function (declare, arrayUtil, QueryResults /*=====, Store =====*/) {
 // module:
 //		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
@@ -59,9 +60,9 @@ define([
 				var end = start != null && options.count && (start + options.count);
 				results = results.range(start, end);
 			}
-			return results.map(function (object) {
+			return new QueryResults(results.map(function (object) {
 				return object;
-			});
+			}));
 		}
 	};
 
