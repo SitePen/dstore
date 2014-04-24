@@ -87,15 +87,6 @@ define([
 			model.set('boolean', []);
 			assert.strictEqual(model.get('boolean'), false, 'setting an empty array to boolean property should set it to false');
 
-			model.set('object', 'foo');
-			assert.instanceOf(model.get('object'), Object,
-				'Object schema properties should still be Objects even if passed a non-Object value');
-			// Object('string') doesn't really seem to convert properly in IE8
-			if (Object('test')[0]) {
-				assert.deepEqual(model.get('object'), { 0: 'f', 1: 'o', 2: 'o' },
-					'Object schema properties should still be set even if passed a non-Object value');
-			}
-
 			model.set('array', 'foo');
 			assert.instanceOf(model.get('array'), Array, 'Array schema properties should still be Arrays even if passed a non-Array value');
 			assert.deepEqual(model.get('array'), [ 'foo' ], 'Array schema properties should still be set even if passed a non-Array value');
