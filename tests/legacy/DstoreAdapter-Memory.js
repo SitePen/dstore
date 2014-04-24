@@ -73,6 +73,11 @@ define([
 			assert.strictEqual(store.query({prime: true}, {start: 1, count: 1}).length, 1);
 			assert.strictEqual(store.query({even: true}, {start: 1, count: 1})[0].name, 'four');
 		},
+		'query result includes `total` property': function () {
+			var results = store.query();
+			assert.property(results, 'total');
+			assert.strictEqual(results.total, results.length);
+		},
 		'put update': function () {
 			var four = store.get(4);
 			four.square = true;
