@@ -202,7 +202,7 @@ define([
 			//		The headers to which a Range property is added
 
 			var rangeQueries = arrayUtil.filter(this.queryLog, function (entry) {
-				return entry.type = 'range';
+				return entry.type === 'range';
 			});
 			arrayUtil.forEach(rangeQueries, function (rangeQuery) {
 				if (!headers.Range) {
