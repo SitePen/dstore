@@ -1,7 +1,7 @@
 {
 	"asi": false,
 	"bitwise": false,
-	"boss": true,
+	"boss": false,
 	"browser": true,
 	"camelcase": true,
 	"couch": false,
