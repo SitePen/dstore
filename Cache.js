@@ -90,7 +90,6 @@ define([
 		fetch: function () {
 			var cachingStore = this.cachingStore;
 			var store = this;
-			/* jshint boss: true */
 			return this.allLoaded || (this.allLoaded = when(this.inherited(arguments), function (results) {
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
