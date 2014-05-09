@@ -519,7 +519,7 @@ define([
 					value = result;
 				}
 				// notify listeners
-				if(property.onchange){
+				if (property.onchange) {
 					// queue the callback
 					property._queueChange(property.onchange, oldValue);
 				}
@@ -648,15 +648,15 @@ define([
 				return true;
 			});
 		},
-		_queueChange: function(callback, oldValue){
+		_queueChange: function (callback, oldValue) {
 			// queue up a notification callback
-			if(!callback._queued){
+			if (!callback._queued) {
 				// make sure we only queue up once before it is called by flagging it
 				callback._queued = true;
 				var reactive = this;
 				// define a function for when it is called that will clear the flag
 				// and provide the correct args
-				var dispatch = function(){
+				var dispatch = function () {
 					callback._queued = false;
 					callback.call(reactive, reactive._get(), oldValue);
 				};
@@ -672,9 +672,9 @@ define([
 						// create the queue (starting with this callback)
 						callbackQueue = [dispatch];
 						// define the callback executor for the next turn
-						Model.nextTurn(function (){
+						Model.nextTurn(function () {
 							// pull out all the callbacks
-							for (var i = 0; i < callbackQueue.length; i++){
+							for (var i = 0; i < callbackQueue.length; i++) {
 								// call each one
 								callbackQueue[i]();
 							}
