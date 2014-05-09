@@ -37,7 +37,7 @@ define([
 		_has: function () {
 			return true;
 		},
-		_addListener: function(listener){
+		_addListener: function (listener) {
 			// TODO: do we want to wait on computed properties that return a promise?
 			var property = this;
 			var dependsOn = this.dependsOn || [this.name];
