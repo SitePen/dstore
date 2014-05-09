@@ -258,13 +258,17 @@ define([
 			//		Only allows setting keys that are defined in the schema,
 			//		and remove any error conditions for the given key when
 			//		its value is set.
-
 			if (typeof key === 'object') {
-				for (var i in key) {
-					value = key[i];
-					if (key.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
-						this.set(i, value);
+				startOperation();
+				try {
+					for (var i in key) {
+						value = key[i];
+						if (key.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
+							this.set(i, value);
+						}
 					}
+				} finally {
+					endOperation();
 				}
 				return;
 			}
@@ -383,6 +387,32 @@ define([
 			return isValid;
 		}
 	});
+
+	// define the start and end markers of an operation, so we can
+	// fire notifications at the end of the operation, by default
+	function startOperation() {
+		setCallDepth++;
+	}
+	function endOperation() {
+		// if we are ending this operation, start executing the queue
+		if (setCallDepth < 2 && onEnd) {
+			onEnd();
+			onEnd = null;
+		}
+		setCallDepth--;
+	}
+	var setCallDepth = 0;
+	var callbackQueue;
+	var onEnd;
+	// the default nextTurn executes at the end of the current operation
+	// The intent with this function is that it could easily be replaced
+	// with something like setImmediate, setTimeout, or nextTick to provide
+	// next turn handling
+	(Model.nextTurn = function (callback) {
+		// set the callback for the end of the current operation
+		onEnd = callback;
+	}).atEnd = true;
+
 	var Reactive = declare([Model], {
 		//	summary:
 		//		A reactive object is a data model that can contain a value,
@@ -482,14 +512,18 @@ define([
 			}
 			var property = this;
 			// call the setter and wait for it
+			startOperation();
 			return when(this.setValue(value, this._parent), function (result) {
 				if (result !== undefined) {
 					// allow the setter to change the value
 					value = result;
 				}
 				// notify listeners
-				property.onchange && property.onchange(value, oldValue);
-				// if this was set to an object (or was an object), we need to notify
+				if(property.onchange){
+					// queue the callback
+					property._queueChange(property.onchange, oldValue);
+				}
+				// if this was set to an object (or was an object), we need to notify.
 				// update all the sub-property objects, so they can possibly notify their
 				// listeners
 				var key,
@@ -517,7 +551,7 @@ define([
 				if (property.validateOnSet) {
 					property.validate();
 				}
-
+				endOperation();
 			});
 		},
 
@@ -613,6 +647,46 @@ define([
 				property.set('errors', undefined);
 				return true;
 			});
+		},
+		_queueChange: function(callback, oldValue){
+			// queue up a notification callback
+			if(!callback._queued){
+				// make sure we only queue up once before it is called by flagging it
+				callback._queued = true;
+				var reactive = this;
+				// define a function for when it is called that will clear the flag
+				// and provide the correct args
+				var dispatch = function(){
+					callback._queued = false;
+					callback.call(reactive, reactive._get(), oldValue);
+				};
+
+				if (callbackQueue) {
+					// we already have a waiting queue of callbacks, add our callback
+					callbackQueue.push(dispatch);
+				}
+				if (!callbackQueue) {
+					// no waiting queue, check to see if we have a custom nextTurn
+					// or we are in an operation
+					if (!Model.nextTurn.atEnd || setCallDepth > 0) {
+						// create the queue (starting with this callback)
+						callbackQueue = [dispatch];
+						// define the callback executor for the next turn
+						Model.nextTurn(function (){
+							// pull out all the callbacks
+							for (var i = 0; i < callbackQueue.length; i++){
+								// call each one
+								callbackQueue[i]();
+							}
+							// clear it
+							callbackQueue = null;
+						});
+					} else {
+						// no set call depth, so just immediately execute
+						dispatch();
+					}
+				}
+			}
 		}
 	});
 	// a function that returns a function, to stop JSON serialization of an

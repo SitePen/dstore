@@ -37,15 +37,14 @@ define([
 		_has: function () {
 			return true;
 		},
-		_addListener: function (listener) {
+		_addListener: function(listener){
 			// TODO: do we want to wait on computed properties that return a promise?
-			// TODO: Do we want to queue changes so we don't double compute when multiple dependencies change?
 			var property = this;
 			var dependsOn = this.dependsOn || [this.name];
 			var handles = [];
 			function changeListener() {
 				// recompute the value of this property. we could use when() here to wait on promised results
-				listener(property._get());
+				property._queueChange(listener);
 			}
 			for (var i = 0; i < dependsOn.length; i++) {
 				// listen to each dependency
@@ -58,7 +57,7 @@ define([
 						// setup the default listener for our own name
 						this.inherited(arguments, [changeListener]) :
 						// otherwise get the other property and listen
-						this._parent.property(dependsOn[i]).observe(changeListener, true));
+						this._parent.property(dependsOn[i]).observe(changeListener, {onlyFutureUpdates: true}));
 			}
 			return {
 				remove: function () {
