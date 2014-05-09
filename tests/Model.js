@@ -251,12 +251,16 @@ define([
 			});
 			var updatedName;
 			var nameProperty = model.property('name');
+			var nameUpdateCount = 0;
 			nameProperty.observe(function (name) {
 				updatedName = name;
+				nameUpdateCount++;
 			});
 			assert.strictEqual(nameProperty.valueOf(), 'John Doe');
+			assert.strictEqual(nameUpdateCount, 1);
 			model.set('firstName', 'Jane');
 			assert.strictEqual(updatedName, 'Jane Doe');
+			assert.strictEqual(nameUpdateCount, 2);
 			var updatedName2;
 			var handle = model.observe('name', function (name) {
 				updatedName2 = name;
@@ -266,12 +270,21 @@ define([
 			model.set('lastName', 'Smith');
 			assert.strictEqual(updatedName, 'Jane Smith');
 			assert.strictEqual(updatedName2, 'Jane Smith');
+			assert.strictEqual(nameUpdateCount, 3);
 			handle.remove();
 
+			model.set({
+				firstName: 'John',
+				lastName: 'Doe'
+			});
+			assert.strictEqual(updatedName, 'John Doe');
+			assert.strictEqual(updatedName2, 'Jane Smith');
+			assert.strictEqual(nameUpdateCount, 4);
 			model.set('name', 'Adam Smith');
 			assert.strictEqual(updatedName, 'Adam Smith');
 			assert.strictEqual(model.get('firstName'), 'Adam');
 			assert.strictEqual(model.get('lastName'), 'Smith');
+			assert.strictEqual(nameUpdateCount, 5);
 			assert.strictEqual(updatedName2, 'Jane Smith');
 			var then = new Date(1000000);
 			model.set('birthDate', then);
