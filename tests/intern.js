@@ -1,6 +1,7 @@
 // Learn more about configuring this file at <https://github.com/theintern/intern/wiki/Configuring-Intern>.
 // These default settings work OK for most people. The options that *must* be changed below are the
 // packages, suites, excludeInstrumentation, and (if you want functional tests) functionalSuites.
+
 define({
 	// The port on which the instrumenting proxy will listen
 	proxyPort: 9000,
@@ -47,13 +48,17 @@ define({
 	// Configuration options for the module loader; any AMD configuration options supported by the Dojo loader can be
 	// used here
 	loader: {
-		baseUrl: typeof process === 'undefined' ? '..' : './node_modules',
+		baseUrl: typeof process === 'undefined' ?
+				// if we are using the full path to dstore, we assume we are running
+				// in a sibling path configuration
+				location.search.indexOf('config=dstore') > -1 ? '../..' : '..' :
+			'./node_modules',
 
 		// Packages that should be registered with the loader in each testing environment
 		requestProvider: 'dojo/request/registry',
 		packages: [
 			{ name: 'dojo', location: 'dojo' },
-			{ name: 'dstore', location: '..' },
+			{ name: 'dstore', location: location.search.indexOf('config=dstore') > -1 ? 'dstore' : '..' },
 			{ name: 'rql', location: 'rql' },
 			{ name: 'json-schema', location: 'json-schema' }
 		]
