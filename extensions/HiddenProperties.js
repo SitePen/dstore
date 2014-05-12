@@ -26,7 +26,7 @@ define([
 		},
 
 		toJSON: function () {
-			return JSON.stringify(this._values);
+			return this._values;
 		}
 	});
 });

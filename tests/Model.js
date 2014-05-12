@@ -3,12 +3,14 @@ define([
 	'intern/chai!assert',
 	'dojo/json',
 	'dojo/_base/declare',
+	'dojo/_base/lang',
 	'dojo/Deferred',
 	'../Model',
 	'../Property',
 	'../ComputedProperty',
+	'../extensions/HiddenProperties',
 	'../Memory'
-], function (registerSuite, assert, JSON, declare, Deferred, Model, Property, ComputedProperty, Memory) {
+], function (registerSuite, assert, JSON, declare, lang, Deferred, Model, Property, ComputedProperty, HiddenProperties, Memory) {
 	function createPopulatedModel() {
 		var model = new (declare(Model, {
 			schema: {
@@ -46,7 +48,7 @@ define([
 	}
 
 
-	registerSuite({
+	var modelTests = {
 		name: 'Model',
 
 		'#get and #set': function () {
@@ -155,7 +157,8 @@ define([
 
 			model.prepareForSerialization();
 			assert.strictEqual(JSON.stringify(model), '{"string":"1234","number":5,' +
-				'"boolean":true,"object":{"foo":"foo"},"array":["foo","bar"],"any":"foo","_accessor":"foo"}');
+				'"boolean":true,"object":{"foo":"foo"},"array":["foo","bar"],"any":"foo"' +
+				(model instanceof HiddenProperties ? '' : ',"_accessor":"foo"') + '}');
 		},
 
 		'property definitions': function () {
@@ -440,5 +443,13 @@ define([
 			assert.strictEqual(myObject.get('num'), 5);
 		}
 
-	});
+	};
+	registerSuite(modelTests);
+	registerSuite(lang.mixin({}, modelTests, {
+		name: 'HiddenProperties',
+		setup: function(){
+			Model = HiddenProperties;
+		}
+	}));
+	
 });
