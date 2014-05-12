@@ -200,3 +200,18 @@ Models can be defined through JSON Schema (v3). A Model based on a JSON Schema c
                 }
             })
         })
+
+### Queue Notifications
+
+dstore will queue notifications so that multiple changes to a property can be delivered in a single notification. For example, if we had the computed property for `fullName` as described above, and we change multiple properties in a single `set()`:
+
+	person.set({
+		firstName: 'John',
+		lastName: 'Doe'
+	});
+
+Any computed property listener for `fullName` would only be called once, for the resulting change.
+
+However, dstore can be configured to use different strategies for when the queued notifications will be fired. By default, the notifications will be fired after the highest level `set()` operation completes. However, we can alternately configure dstore to wait for the next event turn to fire notifications. This can be done by setting the `Model.nextTurn` property to another function that can defer the callback. For example, in NodeJS, we could use `process.nextTick`, or in the browser we could set it to `setImmediate` or `setTimeout`:
+
+	Model.nextTurn = window.setImmediate || setTimeout;
