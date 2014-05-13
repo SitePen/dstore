@@ -173,7 +173,7 @@ define([
 				});
 			},
 
-			'cached filter': function () {
+			'cached filtered data from all': function () {
 				return when(store.fetch()).then(function () { // should result in everything being cached
 					masterFilterCalled = false;
 					return store.filter({prime: true}).fetch();
@@ -181,6 +181,10 @@ define([
 					assert.strictEqual(results.length, 3);
 					assert.isFalse(masterFilterCalled);
 				});
+			},
+			'cached collections': function () {
+				assert.strictEqual(store.filter({prime: true}), store.filter({prime: true}));
+				assert.strictEqual(store.sort('prime'), store.sort('prime'));
 			},
 			'defaults to queryEngine of the cachingStore': function () {
 				var store = new (declare([ Store, Cache ]))({
