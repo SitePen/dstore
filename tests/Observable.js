@@ -429,24 +429,36 @@ define([
 					addEvent = event;
 				});
 
-				// a new item with a default index within a known range has a known index
-				var expectedNewItem = store._restore({ id: 200, name: 'item-200', order: Infinity });
-				store.add(expectedNewItem);
-				assert.isDefined(addEvent);
-				assert.deepEqual(addEvent.target, expectedNewItem);
-				assert.propertyVal(addEvent, 'index', 0);
-
-				// choose a defaultIndex outside requested, known range
-				store.defaultIndex = 50;
-				addEvent = null;
-				expectedNewItem = store._restore({ id: 201, name: 'item-201', order: Infinity });
-
+				// add a new item with the default of bottom
 				// a new item with a default index outside a known range is treated as if it has no known index
+				var expectedNewItem = store._restore({ id: 200, name: 'item-200', order: Infinity });
 				store.add(expectedNewItem);
 				assert.isNotNull(addEvent);
 				assert.deepEqual(addEvent.target, expectedNewItem);
 				assert.isTrue('index' in addEvent);
 				assert.isUndefined(addEvent.index);
+
+				// choose a defaultIndex at the top (in known range)
+				store.defaultToTop = true;
+				// a new item with a default index within a known range has a known index
+				addEvent = null;
+				expectedNewItem = store._restore({ id: 201, name: 'item-201', order: Infinity });
+
+				store.add(expectedNewItem);
+				assert.isDefined(addEvent);
+				assert.deepEqual(addEvent.target, expectedNewItem);
+				assert.propertyVal(addEvent, 'index', 0);
+
+				store.defaultToTop = false;
+				return trackedStore.range(25, 100).fetch().then(function () {
+					// now add to the bottom, where it is in range
+					expectedNewItem = store._restore({ id: 202, name: 'item-202', order: Infinity });
+
+					store.add(expectedNewItem);
+					assert.isDefined(addEvent);
+					assert.deepEqual(addEvent.target, expectedNewItem);
+					assert.propertyVal(addEvent, 'index', 100);
+				});
 			});
 		},
 
