@@ -272,15 +272,19 @@ define([
 								insertedInto = removedFrom;
 								insertionRangeIndex = removalRangeIndex;
 							} else {
-								// TODO: A way to specify at-the-end would be useful. Possibly defaultIndex === Infinity
-								// a new object
-								insertedInto = store.defaultIndex || 0;
-
-								for (i = 0; insertionRangeIndex === -1 && i < ranges.length; ++i) {
-									range = ranges[i];
-									if (range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
-										insertionRangeIndex = i;
-									}
+								var possibleRangeIndex;
+								if (store.defaultToTop) {
+									insertedInto = 0;
+									possibleRangeIndex = 0;
+								} else {
+									// default to the bottom
+									insertedInto = resultsArray.length;
+									possibleRangeIndex = ranges.length - 1;
+									
+								}
+								var range = ranges[possibleRangeIndex];
+								if (range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
+									insertionRangeIndex = possibleRangeIndex;
 								}
 							}
 						}
