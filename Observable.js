@@ -204,6 +204,9 @@ define([
 							range = ranges[i];
 							for (j = range.start, l = j + range.count; j < l; ++j) {
 								var object = resultsArray[j];
+								// often ids can be converted strings (if they are used as keys in objects),
+								// so we do a coercive equality check
+								/* jshint eqeqeq: false */
 								if (store.getIdentity(object) == targetId) {
 									removedFrom = event.previousIndex = j;
 									removalRangeIndex = i;
