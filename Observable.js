@@ -204,7 +204,7 @@ define([
 							range = ranges[i];
 							for (j = range.start, l = j + range.count; j < l; ++j) {
 								var object = resultsArray[j];
-								if (store.getIdentity(object) === targetId) {
+								if (store.getIdentity(object) == targetId) {
 									removedFrom = event.previousIndex = j;
 									removalRangeIndex = i;
 									resultsArray.splice(removedFrom, 1);
