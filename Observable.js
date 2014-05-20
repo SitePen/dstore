@@ -286,7 +286,7 @@ define([
 									
 								}
 								var range = ranges[possibleRangeIndex];
-								if (range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
+								if (range && range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
 									insertionRangeIndex = possibleRangeIndex;
 								}
 							}
@@ -304,6 +304,8 @@ define([
 							}
 						}
 					}
+					// update the total
+					observed.total = resultsArray && resultsArray.length;
 
 					// TODO: Eventually we will want to aggregate all the listener events
 					// in an event turn, but we will wait until we have a reliable, performant queueing
