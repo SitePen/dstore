@@ -450,14 +450,14 @@ define([
 				assert.propertyVal(addEvent, 'index', 0);
 
 				store.defaultToTop = false;
-				return trackedStore.range(25, 100).fetch().then(function () {
+				return trackedStore.range(25, 102).fetch().then(function () {
 					// now add to the bottom, where it is in range
 					expectedNewItem = store._restore({ id: 202, name: 'item-202', order: Infinity });
 
 					store.add(expectedNewItem);
 					assert.isDefined(addEvent);
 					assert.deepEqual(addEvent.target, expectedNewItem);
-					assert.propertyVal(addEvent, 'index', 100);
+					assert.propertyVal(addEvent, 'index', 102);
 				});
 			});
 		},
