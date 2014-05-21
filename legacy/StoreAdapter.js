@@ -47,7 +47,7 @@ define([
 		getIdentity: modifyDelegate('getIdentity'),
 		// TODO: Test _setIdentity
 		_setIdentity: function (object, identityArg) {
-			return object[this.objectStore.idProperty] = identityArg;
+			return (object[this.objectStore.idProperty] = identityArg);
 		},
 
 		fetch: function () {
@@ -103,8 +103,8 @@ define([
 			if (results) {
 				var total = results.total;
 				// apply the object restoration
-				results = results.map(this._restore, this);
-				results.total = total;
+				this.data = results = results.map(this._restore, this);
+				this.total = results.total = total;
 			}
 			return results;
 		}
