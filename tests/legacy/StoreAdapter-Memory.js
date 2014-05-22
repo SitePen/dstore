@@ -184,5 +184,7 @@ define([
 		}, function sort() {
 			return store.sort.apply(store, arguments).fetch();
 		})
+
+		// TODO: Test that fetch adds .data and .total properties to the collection
 	});
 });
