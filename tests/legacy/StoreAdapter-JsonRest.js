@@ -69,6 +69,8 @@ define([
 				assert.strictEqual(object.name, 'node' + i);
 			}));
 		}
+
+		// TODO: Test that fetch adds .data and .total properties to the collection
 	});
 
 	registerSuite({
