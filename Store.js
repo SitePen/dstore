@@ -194,7 +194,8 @@ define([
 			var newCollection = lang.delegate(this.constructor.prototype);
 
 			for (var i in this) {
-				if (this.hasOwnProperty(i) && !excludePropertiesOnCopy.hasOwnProperty(i)) {
+				if ((!(i in newCollection) || newCollection[i] !== this[i])
+					&& !excludePropertiesOnCopy.hasOwnProperty(i)) {
 					newCollection[i] = this[i];
 				}
 			}
