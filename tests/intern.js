@@ -58,7 +58,12 @@ define({
 		requestProvider: 'dojo/request/registry',
 		packages: [
 			{ name: 'dojo', location: 'dojo' },
-			{ name: 'dstore', location: location.search.indexOf('config=dstore') > -1 ? 'dstore' : '..' },
+			{
+				name: 'dstore',
+				location: typeof process === 'undefined' ?
+					location.search.indexOf('config=dstore') > -1 ? 'dstore' : '..' :
+					'..'
+			},
 			{ name: 'rql', location: 'rql' },
 			{ name: 'json-schema', location: 'json-schema' }
 		]
