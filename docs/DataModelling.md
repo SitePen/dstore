@@ -29,7 +29,7 @@ Property objects actually extend the data model class, so the methods listed for
 
 Method | Description
 ------ | -----------
-`observe(listener, options)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes. The optional `options` object argument may include a `onlyFutureUpdates` set to true if the callback should not be called for the current value (only future updates).
+`observe(listener, options)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes. The optional `options` object argument may include a `onlyFutureUpdates` set to true if the callback should not be called for the current value (only future updates). This will return an observe handle, with a remove() that can be used to stop listening. The listener will be called with the the new value as the first argument, and the old value as the second argument.
 `put(value)` | This requests a change in the value of this property. This may be coerced before being stored, and/or validated.
 `valueOf()` | This returns the current value of the property object.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property being set, if any errors were found in the validation process, and `errors` property being cleared (to null) if no errors were found.
@@ -37,8 +37,8 @@ Method | Description
 
 Property | Description
 ------ | -----------
-`type` | This indicates the primitive type of the property value (string, number, boolean, or object).
-`required` | This indicates whether a (non-empty) value is required for this property.
+`type` | This is a string that indicates the primitive type of the property value (string, number, boolean, or object).
+`required` | This is a boolean that indicates whether a (non-empty) value is required for this property.
 `errors` | This is an array of errors from the last validation of this property. This may be null to indicate no errors.
 `name` | This is the name of the property.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
@@ -73,7 +73,7 @@ You can also define your own methods, to override the normal validation, access,
 
 Method | Description
 ------ | -----------
-`checkForErrors(valueToValidate)` | This method can be overriden to provide custom validation functionality. This method should return an array of errors property. This can be return an empty array to indicate no errors were foudn.
+`checkForErrors(valueToValidate)` | This method can be overriden to provide custom validation functionality. This method should return an array of errors property. This can return an empty array to indicate no errors were found.
 `coerce(value)` | This method is responsible for coercing input values. The default implementation coerces to the provided type (for example, if the type was a `string`, any input values would be converted to a string).
 `setValue(value, parent)` | This method can be called by a put() method to set the value of the underlying property. This can be overriden to define a custom setter.
 
