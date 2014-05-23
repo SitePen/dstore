@@ -59,7 +59,7 @@ Type | Description
 `add` | This indicates that a new object was added to the store. The new object is available on the `target` property.
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `remove` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
-`refresh` | This indicates that the entire collection has changed, and the user interface should iterate over the collection again to retrieve the latest list of objects.
+`refresh` | This indicates that the collection has changed substantially such that the user interface should iterate over the collection again to retrieve the latest list of objects. This event is issued in lieu of individual updates, and doesn't guarantee any specific change or update to any specific item.
 
 #### `fetch()`
 
@@ -67,4 +67,22 @@ Normally collections may defer the execution (like making an HTTP request) requi
 
 #### `track()`
 
-This method will create a new collection that will be tracked and updated as the parent collection changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`.
+This method will create a new collection that will be tracked and updated as the parent collection changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`. For example, you can create an observable store class, by using `dstore/Observable` as a mixin:
+
+	var ObservableMemory = declare([Memory, Observable]);
+
+Once we have created a new instance from this store, we can track a collection, which could be the top level store itself, or a downstream filtered or sorted collection:
+
+	var store = new ObservableMemory({data: ...});
+	var filteredSorted = store.filter({inStock: true}).sort('price');
+	var tracked = filteredSorted.track();
+
+And then we could listen for notifications:
+
+	tracked.on('add, update, remove', function(event){
+		var newIndex = event.index;
+		var oldIndex = index.previousIndex;
+		var object = index.target;
+	});
+
+If you will be calling `range()`, to retrieve pages of data, that should be called on the tracked query (tracked notifications, and their index position will be based on the total collection tracked, and not relative to the individual pages).
