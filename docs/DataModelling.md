@@ -17,8 +17,8 @@ Method | Description
 `set(name, value)` | This sets the value of a property.
 `property(name)` | This returns a property object instance for the given name.
 `observe(name, listener, options)` | This will listen for any changes to the value of the given property. See the Property's observe for the options.
-`validate()` | This will validate the object, determining if there are any errors on the object.
-`save()` | This will save the object, validating and then storing the object in the store.
+`validate()` | This will validate the object, determining if there are any errors on the object. The errors can be checked on the `errors` property.
+`save()` | This will save the object, validating and then storing the object in the store. This will return the saved object (or a promise if it is saved asynchronously).
 `remove()` | This will delete the object from the object store.
 
 ## Property Objects

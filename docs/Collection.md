@@ -48,7 +48,7 @@ Iterates over the query results.  Note that this may executed asynchronously. Th
 
 #### `map(callback, thisObject)`
 
-Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns.
+Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns. This will return a new array (or a promise for an array) for the mapped results.
 
 #### `on(type, listener)`
 
