@@ -15,12 +15,12 @@ Property | Description
 
 Method | Description
 ------ | -------------
-`get(id)` | This retrieves an object by its identity, return the object or a promise to the object.
-`getIdentity(object)` | This returns an object's identity (always synchronously).
-`put(object, [directives])` | This stores an object. It can be used to update or create an object. This may return the object, or a promise if the operation will be completed asynchronously.
-`add(object, [directives])` | This creates an object, and throws an error if the object already exists.
-`remove(id)` | This deletes an object, using the identity to indicate which object to delete.
+`get(id)` | This retrieves an object by its identity. This returnr the object or a promise to the object that was retrieved. If no object was found, this should return undefined.
+`getIdentity(object)` | This returns an object's identity (note, this should always execute synchronously).
+`put(object, [directives])` | This stores an object. It can be used to update or create an object. This may return the object after it has been saved, or a promise (that resolves to the object) if the operation will be completed asynchronously.
+`add(object, [directives])` | This creates an object, and throws an error if the object already exists. This should return the newly created object (or promise to it).
+`remove(id)` | This deletes an object, using the identity to indicate which object to delete. This should return true (or a promise) if an object by the id was successfully removed, or false if an object by that id didn't exist.
 `transaction()` | Starts a transaction and returns a transaction object. The transaction object should include a `commit()` and `abort()` to commit and abort transactions, respectively. Note, that a store user might not call `transaction()` prior to using put, delete, etc. in which case these operations effectively could be thought of as “auto-commit” style actions. 
 `create(properties)` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object.
-`getChildren(parent)` | This retrieves the children of the provided parent object.
+`getChildren(parent)` | This retrieves the children of the provided parent object. This should return a new collection representing the children.
 `mayHaveChildren(parent)` | This should return true or false indicating whether or not a parent might have children. This should always return synchronously, as a way of checking if children might exist before actually retrieving all the children.
