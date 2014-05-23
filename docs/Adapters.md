@@ -2,22 +2,14 @@
 
 ## StoreAdapter
 
-The `dstore/legacy/StoreAdapter` module allows a `dstore` object store to be used as a dstore object store.  There are two ways to use this adapter.
-
-Combine the `StoreAdapter` mixin with a `dstore` class to create a new class.
+The `dstore/legacy/StoreAdapter` module allows a Dojo object store to be used as a dstore store. Create an adapted version of an existing `dstore` object store by calling `new StoreAdapter({objectStore: objectStore})`.
 ```js
 require([
-    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/StoreAdapter'
-], function(declare, Memory, StoreAdapter) {
-    var AdaptedMemory = declare([Memory, StoreAdapter]);
-});
-```
-Create an adapted version of an existing `dstore` object store by calling `StoreAdapter.adapt()`.
-```js
-require([
-    'dstore/legacy/StoreAdapter'
+    'dstore/legacy/StoreAdapter',
+    'dojo/store/Memory'
 ], function(StoreAdapter) {
-    var adaptedStore = StoreAdapter.adapt(store);
+    var objectStore = new Memory({...});
+    var adaptedStore = new StoreAdapter({objectStore: objectStore});
 });
 ``` 
 
@@ -31,31 +23,17 @@ Method | Description
 
 ## DstoreAdapter
 
-The `dstore/legacy/DstoreAdapter` module allows a dstore object store to be used as `dstore` object stores.  There are two ways to use this adapter.
-
-Combine the `DstoreAdapter` mixin with a dstore object store class to create a new class.
+The `dstore/legacy/DstoreAdapter` module allows a dstore store to be used as a legacy Dojo object stores. Create an adapted version of an existing dstore store by creating a `DstoreAdapter` instance with the `store` property referencing the dstore:
 ```js
 require([
-    'dojo/_base/declare', 'dstore/Memory', 'dstore/legacy/DstoreAdapter'
-], function(declare, Memory, DstoreAdapter) {
-    var AdaptedMemory = declare([Memory, DstoreAdapter]);
+    'dstore/legacy/DstoreAdapter',
+    'dstore/Memory'
+], function(DstoreAdapter, Memory) {
+    var store = new Memory({...});
+    var adaptedStore = new DstoreAdapter({store: store});
 });
 ```
-Create an adapted version of an existing dstore object store by calling `DstoreAdapter.adapt()`.
-```js
-require([
-    'dstore/legacy/DstoreAdapter'
-], function(DstoreAdapter) {
-    var adaptedStore = DstoreAdapter.adapt(store);
-});
-```
-In addition to the methods and properties inherited from `dstore/api/Store`, the `DstoreAdapter` module also exposes the following method.
 
-### Method Summary
-
-Method | Description
------- | -------------
-`DstoreAdapter.adapt()` | Adapts an existing dstore object to behave like a `dstore` object.
 
 ## StoreSeries
 

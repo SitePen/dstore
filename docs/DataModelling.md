@@ -32,7 +32,7 @@ Method | Description
 `observe(listener, options)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes. The optional `options` object argument may include a `onlyFutureUpdates` set to true if the callback should not be called for the current value (only future updates).
 `put(value)` | This requests a change in the value of this property. This may be coerced before being stored, and/or validated.
 `valueOf()` | This returns the current value of the property object.
-`validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property being set, if any errors were found in the validation process.
+`validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property being set, if any errors were found in the validation process, and `errors` property being cleared (to null) if no errors were found.
 `addError(error)` | This can be called to add an error to the list of validation errors for a property.
 
 Property | Description
@@ -40,7 +40,6 @@ Property | Description
 `type` | This indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This indicates whether a (non-empty) value is required for this property.
 `errors` | This is an array of errors from the last validation of this property. This may be null to indicate no errors.
-`_parent` | This is the parent object for the property.
 `name` | This is the name of the property.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
 `validators` | This is an array of validators that can be applied on validation.
@@ -68,7 +67,7 @@ Property | Description
 `type` | This indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This indicates whether a (non-empty) value is required for this property.
 
-The property definition is used as the basis for the property object instances for each model instance's properties. If the property definition object is an instance of `dstore/Property`, it will be used as the direct prototype for the instance property objects. If not, the property definition will be used to construct a `dstore/Property` instance, (properties are copied over), to use as the prototype of the instance property objects.
+The property definition defines the type, structure, metadata, and behavior of the properties on the model. If the property definition object is an instance of `dstore/Property`, it will be used as the direct prototype for the instance property objects, as well. If not, the property definition will be used to construct a `dstore/Property` instance, (properties are copied over), to use as the prototype of the instance property objects.
 
 You can also define your own methods, to override the normal validation, access, and modification functionality of properties, by subclassing `dstore/Property` or by directly defining methods in the property definition. The following methods can be defined or overriden:
 
@@ -186,7 +185,7 @@ Or we can use the validators array to provide a set of validators that should be
 
 #### JSON Schema Based Models
 
-Models can be defined through JSON Schema (v3). A Model based on a JSON Schema can be created with the `dstore/extensions/jsonSchema` module. For example:
+Models can be defined through [JSON Schema](http://json-schema.org/) (v3). A Model based on a JSON Schema can be created with the `dstore/extensions/jsonSchema` module. For example:
 
     define(['dstore/extensions/jsonSchema', ...], function (jsonSchema, ...) {
         var myStore = new Memory({
@@ -203,15 +202,20 @@ Models can be defined through JSON Schema (v3). A Model based on a JSON Schema c
 
 ### Queue Notifications
 
-dstore will queue notifications so that multiple changes to a property can be delivered in a single notification. For example, if we had the computed property for `fullName` as described above, and we change multiple properties in a single `set()`:
+dstore will queue notifications so that multiple changes to a property can be delivered in a single notification. This is done for you automatically, to provide efficient notification of changes to listeners.
+
+The queuing mechanism is beneficial in that it avoids repetitive or intermediate notifications that occur during multiple changes to a model object. For example, if we had the computed property for `fullName` as described above, and we change multiple properties in a single `set()`:
 
 	person.set({
 		firstName: 'John',
 		lastName: 'Doe'
 	});
 
-Any computed property listener for `fullName` would only be called once, for the resulting change.
+
+Without notification queuing, the notification listener might be called for each intermediate step in the process (once for the change to `firstName`, once for the change to `lastName`), but the queuing means that the computed property listener for `fullName` would only be called once, for the resulting change, after both the dependent properties have changed.
 
 However, dstore can be configured to use different strategies for when the queued notifications will be fired. By default, the notifications will be fired after the highest level `set()` operation completes. However, we can alternately configure dstore to wait for the next event turn to fire notifications. This can be done by setting the `Model.nextTurn` property to another function that can defer the callback. For example, in NodeJS, we could use `process.nextTick`, or in the browser we could set it to `setImmediate` or `setTimeout`:
 
 	Model.nextTurn = window.setImmediate || setTimeout;
+
+This would queue up all the notifications that occur before the next event turn, before calling the callbacks.
