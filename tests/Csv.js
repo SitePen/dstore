@@ -14,7 +14,7 @@ define([
 	var CsvMemory = declare([Memory, Csv]);
 	var xhrBase = require.toUrl('dstore/tests/data');
 	var csvs = {}; // holds retrieved raw CSV data
-	var stores = window.stores = {}; // holds stores created after CSV data is retrieved
+	var stores = {}; // holds stores created after CSV data is retrieved
 	csvs.noQuote = noquote;
 	stores.noQuoteNoHeader = new CsvMemory({
 		data: noquote,
