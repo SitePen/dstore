@@ -219,3 +219,7 @@ However, dstore can be configured to use different strategies for when the queue
 	Model.nextTurn = window.setImmediate || setTimeout;
 
 This would queue up all the notifications that occur before the next event turn, before calling the callbacks.
+
+### HiddenProperties Model
+
+The `dstore/extensions/HiddenProperties` module provides an extension of `dstore/Model` where all the model properties are stored on a separate objects, rather than the model instance itself. This can provide a couple of advantages. First, model instances can be restored from persistence quicker since, the model instance simply needs to be instantiated with a reference to an existing object, rather than modifying the prototype chain. Second, this can be useful if you wish to protect properties from being directly accessed on the model object. Since the property values are stored on a separate object, this encourages property access through `get`, `set`, and `property`. This can be used as a model for stores, although you may want to use a custom query engine, depending on how you want property access to function.
