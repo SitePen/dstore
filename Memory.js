@@ -58,11 +58,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 				index = storage.index,
 				data = storage.fullData;
 
-			var id = this.getIdentity(object);
-			if (id == null) {
-				this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
-				id = this.getIdentity(object);
-			}
 			var model = this.model;
 			if (model && !(object instanceof model)) {
 				var prototype = model.prototype;
@@ -73,6 +68,11 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 					// create a new object with the correct prototype
 					object = lang.delegate(prototype, object);
 				}
+			}
+			var id = this.getIdentity(object);
+			if (id == null) {
+				this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
+				id = this.getIdentity(object);
 			}
 			if (id in index) {
 				// object exists
