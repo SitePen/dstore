@@ -7,6 +7,10 @@ define([
 // module:
 //		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
+	function passthrough(data) {
+		return data;
+	}
+
 	// No base class, but for purposes of documentation, the base class is dstore/api/Store
 	var base = null;
 	/*===== base = Store; =====*/
@@ -19,6 +23,37 @@ define([
 
 		constructor: function (kwArgs) {
 			declare.safeMixin(this, kwArgs);
+
+			if (this.store.queryEngine) {
+				var queryEngine = this.store.queryEngine;
+				this.queryEngine = function (query, options) {
+					options = options || {};
+
+					var filter = queryEngine.filter(query);
+					var sort = passthrough;
+					var range = passthrough;
+
+					if (queryEngine.sort && options.sort) {
+						sort = queryEngine.sort(arrayUtil.map(options.sort, function (criteria) {
+							return {
+								property: criteria.attribute,
+								descending: criteria.descending
+							};
+						}));
+					}
+
+					if (!isNaN(options.start) || !isNaN(options.count)) {
+						range = queryEngine.range({
+							start: options.start,
+							end: (options.start || 0) + (isNaN(options.count) ? Infinity : options.count)
+						});
+					}
+
+					return function (data) {
+						return range(sort(filter(data)));
+					};
+				};
+			}
 		},
 
 		query: function (query, options) {
