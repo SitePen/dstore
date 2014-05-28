@@ -60,7 +60,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 
 			var id = this.getIdentity(object);
 			if (id == null) {
-				id = this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
+				this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
+				id = this.getIdentity(object);
 			}
 			var model = this.model;
 			if (model && !(object instanceof model)) {

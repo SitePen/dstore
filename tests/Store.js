@@ -15,19 +15,46 @@ define([
 			store = new Store();
 		},
 
-		'getIdentity and _setIdentity': function () {
-			var object = { id: 'default', 'custom-id': 'custom' };
+		'getIdentity and _setIdentity': {
+			'direct property access and assignment': function () {
+				var object = { id: 'default', 'custom-id': 'custom' };
 
-			assert.strictEqual(store.getIdentity(object), 'default');
-			assert.strictEqual(store._setIdentity(object, 'assigned-id'), 'assigned-id');
-			assert.strictEqual(object.id, 'assigned-id');
-			assert.strictEqual(store.getIdentity(object), 'assigned-id');
+				assert.strictEqual(store.getIdentity(object), 'default');
+				store._setIdentity(object, 'assigned-id');
+				assert.strictEqual(object.id, 'assigned-id');
+				assert.strictEqual(store.getIdentity(object), object.id);
 
-			store.idProperty = 'custom-id';
-			assert.strictEqual(store.getIdentity(object), 'custom');
-			assert.strictEqual(store._setIdentity(object, 'assigned-id'), 'assigned-id');
-			assert.strictEqual(object['custom-id'], 'assigned-id');
-			assert.strictEqual(store.getIdentity(object), 'assigned-id');
+				store.idProperty = 'custom-id';
+				assert.strictEqual(store.getIdentity(object), 'custom');
+				store._setIdentity(object, 'assigned-id');
+				assert.strictEqual(object['custom-id'], 'assigned-id');
+				assert.strictEqual(store.getIdentity(object), object['custom-id']);
+			},
+			'getter and setter': function () {
+				var object = {
+						_properties: {
+							id: 'default',
+							'custom-id': 'custom',
+						},
+						get: function (name) {
+							return this._properties[name];
+						},
+						set: function (name, value) {
+							this._properties[name] = value;
+						}
+					};
+
+				assert.strictEqual(store.getIdentity(object), 'default');
+				store._setIdentity(object, 'assigned-id');
+				assert.strictEqual(object._properties.id, 'assigned-id');
+				assert.strictEqual(store.getIdentity(object), object._properties.id);
+
+				store.idProperty = 'custom-id';
+				assert.strictEqual(store.getIdentity(object), 'custom');
+				store._setIdentity(object, 'assigned-id');
+				assert.strictEqual(object._properties['custom-id'], 'assigned-id');
+				assert.strictEqual(store.getIdentity(object), object._properties['custom-id']);
+			}
 		},
 
 		'filter': function () {
