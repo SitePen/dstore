@@ -20,10 +20,10 @@ define([
 							var required = queryObject[key];
 							if (required && required.test) {
 								// an object can provide a test method, which makes it work with regex
-								if (!required.test(object[key], object)) {
+								if (!required.test(object.get ? object.get(key) : object[key], object)) {
 									return false;
 								}
-							} else if (required !== object[key]) {
+							} else if (required !== (object.get ? object.get(key) : object[key])) {
 								return false;
 							}
 						}
@@ -58,8 +58,11 @@ define([
 						} else {
 							var property = sorted[i].property;
 							var descending = sorted[i].descending;
-							var aValue = a[property];
-							var bValue = b[property];
+							var aValue = a.get ? a.get(property) : a[property];
+							var bValue = b.get ? b.get(property) : b[property];
+
+							aValue.valueOf && (aValue = aValue.valueOf());
+							bValue.valueOf && (bValue = bValue.valueOf());
 
 							comparison = aValue === bValue
 								? 0
