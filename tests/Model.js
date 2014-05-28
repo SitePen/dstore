@@ -154,10 +154,11 @@ define([
 			number.put('5');
 
 			assert.deepEqual(order, [0, 1, 2, 3, 4, 5]);
+			model.property('object').set('foo', 'bar');
 
 			model.prepareForSerialization();
 			assert.strictEqual(JSON.stringify(model), '{"string":"1234","number":5,' +
-				'"boolean":true,"object":{"foo":"foo"},"array":["foo","bar"],"any":"foo"' +
+				'"boolean":true,"object":{"foo":"bar"},"array":["foo","bar"],"any":"foo"' +
 				(model instanceof HiddenProperties ? '' : ',"_accessor":"foo"') + '}');
 		},
 
@@ -419,6 +420,9 @@ define([
 				data: [
 					{id: 1, num: 1, str: 'hi', bool: true}
 				],
+				getIdentity: function(object){
+					return object.get('id');
+				},
 				model: declare(Model, {
 					schema: {
 						str: {

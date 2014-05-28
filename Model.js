@@ -149,7 +149,7 @@ define([
 		},
 
 		_getValues: function () {
-			return this;
+			return this._values || this;
 		},
 
 		save: function (/*Object*/ options) {
@@ -539,9 +539,9 @@ define([
 				// update all the sub-property objects, so they can possibly notify their
 				// listeners
 				var key,
-					hasOldObject = oldValue && typeof oldValue === 'object',
-					hasNewObject = value && typeof value === 'object';
-				if (hasOldObject ||  hasNewObject) {
+					hasOldObject = oldValue && typeof oldValue === 'object' && !(oldValue instanceof Array),
+					hasNewObject = value && typeof value === 'object' && !(value instanceof Array);
+				if (hasOldObject || hasNewObject) {
 					// we will iterate through the properties recording the changes
 					var changes = {};
 					if (hasOldObject) {
@@ -556,10 +556,15 @@ define([
 							(changes[key] = changes[key] || {}).value = value[key];
 						}
 					}
+					property._values = hasNewObject && value;
 					for (key in changes) {
 						// now for each change, we can notify the property object
 						var change = changes[key];
-						property.set(key, change.value, change.old);
+						var subProperty = property._properties && property._properties[key];
+						if (subProperty && subProperty.onchange) {
+							// queue the callback
+							subProperty._queueChange(subProperty.onchange, change.old);
+						}
 					}
 				}
 				if (property.validateOnSet) {
@@ -614,7 +619,7 @@ define([
 			//		other validators to perform validation
 			//	value:
 			//		This is the value to validate.
-			var errors = this.errors = [];
+			var errors = [];
 			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) :
 				(this.type === typeof value))) {
 				errors.push(value + ' is not a ' + this.type);
@@ -657,8 +662,10 @@ define([
 					property.set('errors', totalErrors);
 					return false;
 				}
-				// no errors, valid value
-				property.set('errors', undefined);
+				// no errors, valid value, if there were errors before, remove them
+				if(property.get('errors') !== undefined){
+					property.set('errors', undefined);
+				}
 				return true;
 			});
 		},
@@ -701,6 +708,9 @@ define([
 					}
 				}
 			}
+		},
+		toJSON: function () {
+			return this._values || this;
 		}
 	});
 	// a function that returns a function, to stop JSON serialization of an
