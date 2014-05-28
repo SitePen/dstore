@@ -179,12 +179,33 @@ define([
 				});
 			}
 
+			var defaultEventProps = {
+				'add': { index: undefined },
+				'update': { previousIndex: undefined, index: undefined },
+				'remove': { previousIndex: undefined }
+			};
 			function notify(type, target, event) {
 				revision++;
-				event = lang.delegate(event);
+				event = lang.delegate(event, defaultEventProps[type]);
 				when(observed.hasOwnProperty('data') ? observed.data :
 						observed.partialData, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
+
+					function emitEvent() {
+						// TODO: Eventually we will want to aggregate all the listener events
+						// in an event turn, but we will wait until we have a reliable, performant queueing
+						// mechanism for this (besides setTimeout)
+						var method = observed['on_tracked' + type];
+						method && method.call(observed, event);
+					}
+
+					if (!resultsArray) {
+						// without data, we have no way to determine the indices effected by the change,
+						// so just pass along the event and return.
+						emitEvent();
+						return;
+					}
+
 					var i, j, l, range;
 					/*if(++queryRevision != revision){
 						throw new Error('Query is out of date, you must observe() the' +
@@ -197,8 +218,6 @@ define([
 						insertedInto = -1,
 						insertionRangeIndex = -1;
 					if (type === 'remove' || type === 'update') {
-						event.previousIndex = undef;
-
 						// remove the old one
 						for (i = 0; removedFrom === -1 && i < ranges.length; ++i) {
 							range = ranges[i];
@@ -224,8 +243,6 @@ define([
 					}
 
 					if (type === 'add' || type === 'update') {
-						event.index = undef;
-
 						if (queryExecutor) {
 							// with a queryExecutor, we can determine the correct sorted index for the change
 
@@ -283,7 +300,7 @@ define([
 									// default to the bottom
 									insertedInto = resultsArray.length;
 									possibleRangeIndex = ranges.length - 1;
-									
+
 								}
 								var range = ranges[possibleRangeIndex];
 								if (range && range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
@@ -305,13 +322,9 @@ define([
 						}
 					}
 					// update the total
-					observed.total = resultsArray && resultsArray.length;
+					observed.total = resultsArray.length;
 
-					// TODO: Eventually we will want to aggregate all the listener events
-					// in an event turn, but we will wait until we have a reliable, performant queueing
-					// mechanism for this (besides setTimeout)
-					type = 'on_tracked' + type;
-					observed[type] && observed[type](event);
+					emitEvent();
 				});
 			}
 

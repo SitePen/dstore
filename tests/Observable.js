@@ -69,10 +69,6 @@ define([
 			this.backingMemoryStore = this.backingMemoryStore.track(function () {});
 			return this.inherited(arguments);
 		};
-		// Make events go to backing store
-		proto.on = function (type, listener) {
-			return this.backingMemoryStore.on(type, listener);
-		};
 
 		proto.fetch = function () {
 			this.data = when(this.backingMemoryStore.fetch());
