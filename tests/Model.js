@@ -420,9 +420,6 @@ define([
 				data: [
 					{id: 1, num: 1, str: 'hi', bool: true}
 				],
-				getIdentity: function(object){
-					return object.get('id');
-				},
 				model: declare(Model, {
 					schema: {
 						str: {
