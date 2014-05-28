@@ -56,13 +56,19 @@ define([
 					}
 				}
 				// Apply a range
-				var start = options.start;
-				var end = start != null && options.count && (start + options.count);
-				results = results.range(start, end);
+				if ('start' in options) {
+					var start = options.start || 0;
+					results = results.range(
+						start,
+						options.count ? (start + options.count) : Infinity
+					);
+				}
 			}
-			return new QueryResults(results.map(function (object) {
+			var queryResults = new QueryResults(results.map(function (object) {
 				return object;
 			}));
+			queryResults.total = results.total;
+			return queryResults;
 		}
 	};
 
