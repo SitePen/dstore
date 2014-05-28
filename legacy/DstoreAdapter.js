@@ -1,7 +1,7 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/array',
-	'dojo/store/util/QueryResults',
+	'dojo/store/util/QueryResults'
 	/*=====, "dstore/api/Store" =====*/
 ], function (declare, arrayUtil, QueryResults /*=====, Store =====*/) {
 // module:
