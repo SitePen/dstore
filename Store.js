@@ -78,7 +78,8 @@ define([
 			// object: Object
 			//		The object to get the identity from
 			// returns: String|Number
-			return object[this.idProperty];
+
+			return object.get ? object.get(this.idProperty) : object[this.idProperty];
 		},
 
 		_setIdentity: function (object, identityArg) {
@@ -91,7 +92,12 @@ define([
 			//		The target object
 			// identityArg:
 			//		The argument used to set the identity
-			return object[this.idProperty] = identityArg;
+
+			if (object.set) {
+				object.set(this.idProperty, identityArg);
+			} else {
+				object[this.idProperty] = identityArg;
+			}
 		},
 
 		map: function (callback, thisObject) {
