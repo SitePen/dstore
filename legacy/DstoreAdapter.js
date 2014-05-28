@@ -63,6 +63,19 @@ define([
 						options.count ? (start + options.count) : Infinity
 					);
 				}
+ 			}
+
+			if (results.track && this.notify) {
+				var self = this;
+				results.on('add', function (event) {
+					self.notify(event.target);
+				});
+				results.on('update', function (event) {
+					self.notify(event.target, self.store.getIdentity(event.target));
+				});
+				results.on('remove', function (event) {
+					self.notify(null, event.id);
+				});
 			}
 			var queryResults = new QueryResults(results.map(function (object) {
 				return object;
