@@ -169,9 +169,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 		range: createQuery(),
 
 		fetch: function () {
-			if (!this.hasOwnProperty('data')) {
-				this.data = this.queryer(this.data);
-			}
 			return this.data;
 		}
 	});
