@@ -61,8 +61,8 @@ define([
 							var aValue = a.get ? a.get(property) : a[property];
 							var bValue = b.get ? b.get(property) : b[property];
 
-							aValue.valueOf && (aValue = aValue.valueOf());
-							bValue.valueOf && (bValue = bValue.valueOf());
+							aValue != null && (aValue = aValue.valueOf());
+							bValue != null && (bValue = bValue.valueOf());
 
 							comparison = aValue === bValue
 								? 0
