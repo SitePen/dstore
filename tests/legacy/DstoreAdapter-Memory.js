@@ -169,5 +169,6 @@ define([
 				});
 		})
 		// TODO: Add tests with dojo/store/Observable
+		// TODO: Add tests that verify correct adaptation of dstore queryEngine to dojo/store queryEngine
 	});
 });
