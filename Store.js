@@ -22,7 +22,12 @@ define([
 		total: true
 	};
 
-	return /*==== Store= ====*/declare(Evented, /*==== [Collection] ====*/{
+	var base = Evented;
+	/*=====
+	base = [ Evented, Collection ];
+	=====*/
+
+	return /*==== Store= ====*/declare(base, {
 		constructor: function (options) {
 			// perform the mixin
 			options && declare.safeMixin(this, options);
@@ -368,7 +373,7 @@ define([
 			//		Function that is called for each object in the query results
 			// thisObject:
 			//		The object to use as |this| in the callback.
-			// returns: dstore/Store.Collection
+			// returns: Array|Promise
 		},
 		fetch: function () {
 			// summary:
