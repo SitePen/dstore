@@ -11,6 +11,7 @@ define([
 	'./Cache',
 	'./Tree',
 	'./Csv',
+	'./Tree',
 	'./extensions/rqlQueryEngine',
 	'./validating',
 	'./extensions/validating-jsonSchema',
