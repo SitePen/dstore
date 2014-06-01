@@ -94,22 +94,10 @@ define([
 			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
 			var tracked = results.track();
-			tracked.on('update', function (event) {
+			tracked.on('add, update, remove', function (event) {
 				changes.push(event);
 			});
-			tracked.on('remove', function (event) {
-				changes.push(event);
-			});
-			tracked.on('add', function (event) {
-				changes.push(event);
-			});
-			var secondObserverUpdate = tracked.on('update', function (event) {
-				secondChanges.push(event);
-			});
-			var secondObserverRemove = tracked.on('remove', function (event) {
-				secondChanges.push(event);
-			});
-			var secondObserverAdd = tracked.on('add', function (event) {
+			var secondListeners = tracked.on('add, update, remove', function (event) {
 				secondChanges.push(event);
 			});
 			var expectedChanges = [],
@@ -126,9 +114,7 @@ define([
 				previousIndex: 0
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
-			secondObserverUpdate.remove();
-			secondObserverRemove.remove();
-			secondObserverAdd.remove();
+			secondListeners.remove();
 			var one = store.get(1);
 			one.prime = true;
 			store.put(one); // should add it

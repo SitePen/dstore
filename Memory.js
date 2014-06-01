@@ -1,6 +1,13 @@
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', './objectQueryEngine' /*=====, './api/Store' =====*/],
-		// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
-		function (declare, lang, arrayUtil, StoreBase, objectQueryEngine /*=====, Store =====*/) {
+define([
+	'dojo/_base/declare',
+	'dojo/_base/lang',
+	'dojo/_base/array',
+	'./Store',
+	'./objectQueryEngine',
+	'./QueryResults'
+	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
+	/*=====, './api/Store' =====*/
+], function (declare, lang, arrayUtil, StoreBase, objectQueryEngine, QueryResults/*=====, Store =====*/) {
 
 	function createQuery(updateTotal) {
 		return function query () {
@@ -149,7 +156,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			var index = storage.index = {};
 			var data = storage.fullData;
 			var model = this.model;
-			var prototype = model && model.prototype;
 			for (var i = 0, l = data.length; i < l; i++) {
 				var object = data[i];
 				if (model && !(object instanceof model)) {
@@ -166,10 +172,23 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 
 		filter: createQuery(true),
 		sort: createQuery(),
-		range: createQuery(),
 
 		fetch: function () {
-			return this.data;
+			return new QueryResults(this.data);
+		},
+
+		fetchRange: function (kwArgs) {
+			var data = this.data,
+				start = kwArgs.start,
+				end = kwArgs.end;
+			return new QueryResults(
+				data.splice(start, end),
+				{
+					totalLength: data.length,
+					start: start,
+				    end: end
+				}
+			);
 		}
 	});
 

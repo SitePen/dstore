@@ -5,8 +5,11 @@ define([
 	'dojo/json',
 	'dojo/io-query',
 	'dojo/_base/declare',
-	'./Store'
-], function (request, lang, arrayUtil, JSON, ioQuery, declare, Store) {
+	'./Store',
+	'./QueryResults'
+], function (request, lang, arrayUtil, JSON, ioQuery, declare, Store, QueryResults) {
+
+	var push = [].push;
 
 	return declare(Store, {
 		// summary:
@@ -79,28 +82,69 @@ define([
 		//		included with a RQL style limit() parameter
 
 		fetch: function () {
-			if (!this.hasOwnProperty('data')) {
-				// perform the actual query
-				var headers = lang.delegate(this.headers, { Accept: this.accepts });
-				if (this.useRangeHeaders) {
-					this._applyRangeHeader(headers);
-				}
-				var response = request(this._renderUrl(), {
-					method: 'GET',
-					headers: headers
+			var results = this._request();
+			return results.data.then(function (data) {
+				return new QueryResults(data);
+			});
+		},
+
+		fetchRange: function (kwArgs) {
+			var start = kwArgs.start,
+				end = kwArgs.end,
+				requestArgs = {};
+			if (this.useRangeHeaders) {
+				requestArgs.headers = this._renderRangeHeaders(start, end);
+			} else {
+				requestArgs.params = this._renderRangeParams(start, end);
+			}
+
+			var results = this._request(requestArgs);
+			return results.data.then(function (data) {
+				return new QueryResults(data, {
+					availableLength: results.total,
+					start: start,
+					end: end
 				});
-				var parse = this.parse;
-				var collection = this;
-				this.data = response.then(function (response) {
-					var results = parse(response);
+			});
+		},
+
+		_request: function (kwArgs) {
+			kwArgs = kwArgs || {};
+
+			// perform the actual query
+			var headers = lang.delegate(this.headers, { Accept: this.accepts });
+
+			if ('headers' in kwArgs) {
+				lang.mixin(headers, kwArgs.headers);
+			}
+
+			var queryParams = this._renderQueryParams(),
+				requestUrl = this.target;
+
+			if ('queryParams' in kwArgs) {
+				push.apply(queryParams, kwArgs.queryParams);
+			}
+
+			if (queryParams.length > 0) {
+				requestUrl += '?' + queryParams.join('&');
+			}
+
+			var response = request(requestUrl, {
+				method: 'GET',
+				headers: headers
+			});
+			var collection = this;
+			return {
+				data: response.then(function (response) {
+					var results = collection.parse(response);
 					// support items in the results
 					results = results.items || results;
 					for (var i = 0, l = results.length; i < l; i++) {
 						results[i] = collection._restore(results[i]);
 					}
 					return results;
-				});
-				this.total = response.response.then(function (response) {
+				}),
+				total: response.response.then(function (response) {
 					var total = response.data.total;
 					if (total > -1) {
 						// if we have a valid positive number from the data,
@@ -109,16 +153,8 @@ define([
 					}
 					var range = response.getHeader('Content-Range');
 					return range && (range = range.match(/\/(.*)/)) && +range[1];
-				});
-				this.data.then(null, function () {
-					// if there was an error, reset the data, so we could
-					// potentially try it again. This could include
-					// cancelation
-					delete collection.data;
-					delete collection.total;
-				});
-			}
-			return this.data;
+				})
+			};
 		},
 
 		_renderFilterParams: function (filter) {
@@ -148,35 +184,26 @@ define([
 			}
 			return params;
 		},
-		_renderRangeParams: function (range) {
+		_renderRangeParams: function (start, end) {
 			// summary:
 			//		Constructs range-related params to be inserted in the query string
 			// returns: String
 			//		Range-related params to be inserted in the query string
 			var params = [];
-			if (!this.useRangeHeaders) {
-				var start = range.start;
-				var end = range.end;
-				if (this.rangeStartParam) {
-					params.push(
-						this.rangeStartParam + '=' + start,
-						this.rangeCountParam + '=' + (end - start)
-					);
-				} else {
-					params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
-				}
+			if (this.rangeStartParam) {
+				params.push(
+					this.rangeStartParam + '=' + start,
+					this.rangeCountParam + '=' + (end - start)
+				);
+			} else {
+				params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
 			}
 			return params;
 		},
 
-		_renderUrl: function () {
-			// summary:
-			//		Constructs the URL used to fetch the data.
-			// returns: String
-			//		The URL of the data
+		_renderQueryParams: function () {
+			var queryParams = [];
 
-			var queryParams = [],
-				push = queryParams.push;
 			arrayUtil.forEach(this.queryLog, function (entry) {
 				var type = entry.type,
 					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
@@ -188,6 +215,16 @@ define([
 				}
 			}, this);
 
+			return queryParams;
+		},
+
+		_renderUrl: function () {
+			// summary:
+			//		Constructs the URL used to fetch the data.
+			// returns: String
+			//		The URL of the data
+
+			var queryParams = this._renderQueryParams();
 			var url = this.target;
 			if (queryParams.length > 0) {
 				url += '?' + queryParams.join('&');
@@ -195,29 +232,17 @@ define([
 			return url;
 		},
 
-		_applyRangeHeader: function (headers) {
+		_renderRangeHeaders: function (start, end) {
 			// summary:
 			//		Applies a Range header if this collection incorporates a range query
 			// headers: Object
 			//		The headers to which a Range property is added
 
-			var rangeQueries = arrayUtil.filter(this.queryLog, function (entry) {
-				return entry.type === 'range';
-			});
-			arrayUtil.forEach(rangeQueries, function (rangeQuery) {
-				if (!headers.Range) {
-					var ranged = rangeQuery.normalizedArguments[0];
-					// TODO: Update this to remove defaults since we are requiring both start and end for dstore 1.0 with the option to loosen the restriction in the future.
-					headers.Range = headers['X-Range'] //set X-Range for Opera since it blocks "Range" header
-						= 'items=' + (ranged.start || '0') + '-' + ((ranged.end || Infinity) - 1);
-				} else {
-					console.warn(
-						'There is already a Range header for this request.' +
-						'This range query is being discarded:',
-						rangeQuery
-					);
-				}
-			});
+			var value = 'items=' + start + '-' + end;
+			return {
+				'Range': value,
+				'X-Range': value //set X-Range for Opera since it blocks "Range" header
+			};
 		}
 	});
 

@@ -104,25 +104,6 @@ define([
 				object[this.idProperty] = identityArg;
 			}
 		},
-
-		map: function (callback, thisObject) {
-			var results = [];
-			// like forEach, except we collect results
-			return when(this.forEach(function (object, i, collection) {
-				results.push(callback.call(thisObject, object, i, collection));
-			}, thisObject), function () {
-				return results;
-			});
-		},
-		forEach: function (callback, thisObject) {
-			var collection = this;
-			return when(this.fetch(), function (data) {
-				for (var i = 0, l = data.length; i < l; i++) {
-					callback.call(thisObject, data[i], i, collection);
-				}
-				return data;
-			});
-		},
 		on: function (type, listener) {
 			return this.storage.on(type, listener);
 		},
@@ -245,16 +226,6 @@ define([
 					sorted = [ sorted ];
 				}
 				return sorted;
-			}
-		}),
-
-		range: new QueryMethod({
-			type: 'range',
-			normalizeArguments: function (start, end) {
-				return [ {
-					start: start,
-					end: end
-				} ];
 			}
 		})
 /*====,

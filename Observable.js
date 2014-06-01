@@ -5,9 +5,10 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dojo/_base/array',
-	'dojo/on'
+	'dojo/on',
+	'dojo/when'
 	/*=====, './api/Store' =====*/
-], function (lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/) {
+], function (lang, declare, aspect, when, whenAll, arrayUtil, on, when /*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Observable
@@ -99,12 +100,63 @@ define([
 			// If we use _createSubCollection, it will return a new collection that may exclude
 			// important, defining properties from the tracked collection.
 			var observed = lang.delegate(this, {
-				// TODO: The fact that we have to remember `store` here might indicate the need to adjust our approach to _createSubCollection and perhaps allow for not excluding existing properties
-				store: this.store || this,
+				_collection: this,
 
-				// Any sub-collections created from the tracked collection should be based on this
-				// parent collection instead
-				_createSubCollection: lang.hitch(this, '_createSubCollection'),
+				_ranges: [],
+
+				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
+				fetch: function () {
+					var self = this,
+						collection = this._collection;
+
+					return when(self._results = collection.fetch.apply(collection, arguments), function (results) {
+						self._results = results;
+
+						self._ranges = [];
+						registerRange(self._ranges, 0, results.length);
+
+						return results;
+					});
+				},
+
+				fetchRange: function () {
+					var self = this,
+						collection = this._collection;
+					return when(collection.fetchRange.apply(collection, arguments), function (results) {
+						return when(results.totalLength, function (totalLength) {
+							var partialResults = self._partialResults || (self._partialResults = []),
+								start = results.start,
+								end = results.end;
+
+							partialResults.length = totalLength;
+
+							// copy the new ranged data into the parent partial data set
+							var spliceArgs = [ start, end - start ].concat(results);
+							partialResults.splice.apply(partialResults, spliceArgs);
+							registerRange(self._ranges, start, end);
+
+							return partialResults;
+						});
+					});
+				},
+
+				releaseRange: function (start, end) {
+					if (this._partialResults) {
+						unregisterRange(this._ranges, start, end);
+
+						for (var i = start; i < end; ++i) {
+							delete this._partialResults[i];
+						}
+					}
+				},
+				on: function (type, listener) {
+					var self = this;
+					return on.parse(observed, type, listener, function (target, type) {
+						return type in eventTypes ?
+							aspect.after(observed, 'on_tracked' + type, listener, true) :
+							self._collection.on(observed, type, listener);
+					});
+				},
 
 				tracking: {
 					remove: function () {
@@ -117,65 +169,14 @@ define([
 				}
 			});
 
-			var originalOn = this.on;
-			// now setup our own event scope, for tracked events
-			observed.on = function (type, listener) {
-				return on.parse(observed, type, listener, function (target, type) {
-					return type in eventTypes ?
-						aspect.after(observed, 'on_tracked' + type, listener, true) :
-						originalOn.call(observed, type, listener);
-				});
-			};
-
-			var ranges = [];
-			if (this.data) {
-				observed.data = this.data.slice(0); // make local copy
-				// Treat in-memory data as one range to allow a single code path for all stores
-				registerRange(ranges, 0, observed.data.length);
-
-				observed.releaseRange = function () {};
-			} else {
-				var originalRange = observed.range;
-				observed.range = function (start, end) {
-					// trigger a request
-					var rangeCollection = originalRange.apply(this, arguments),
-						partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
-
-					// Wait for total in addition to data so updated objects sorted to
-					// the end of the list have a known index
-					whenAll({
-						data: rangeCollection.fetch(),
-						total: rangeCollection.total
-					}).then(function (result) {
-						partialData.length = result.total;
-
-						// copy the new ranged data into the parent partial data set
-						var spliceArgs = [ start, end - start ].concat(result.data);
-						partialData.splice.apply(partialData, spliceArgs);
-						registerRange(ranges, start, end);
-					});
-					return rangeCollection;
-				};
-				observed.releaseRange = function (start, end) {
-					unregisterRange(ranges, start, end);
-
-					for (var i = start; i < end; ++i) {
-						delete this.partialData[i];
-					}
-				};
-			}
-
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
-					// TODO: This isn't extensible for new query types. How we can we make a general determination to not include a query type as we do for 'range'?
-					if (entry.type !== 'range') {
-						var existingQueryer = queryExecutor,
-							queryer = entry.queryer;
-						queryExecutor = existingQueryer
-							? function (data) { return queryer(existingQueryer(data)); }
-							: queryer;
-					}
+					var existingQueryer = queryExecutor,
+						queryer = entry.queryer;
+					queryExecutor = existingQueryer
+						? function (data) { return queryer(existingQueryer(data)); }
+						: queryer;
 				});
 			}
 
@@ -187,8 +188,7 @@ define([
 			function notify(type, target, event) {
 				revision++;
 				event = lang.delegate(event, defaultEventProps[type]);
-				when(observed.hasOwnProperty('data') ? observed.data :
-						observed.partialData, function (resultsArray) {
+				when(observed._results || observed._partialResults, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
 
 					function emitEvent() {
@@ -206,7 +206,7 @@ define([
 						return;
 					}
 
-					var i, j, l, range;
+					var i, j, l, ranges = observed._ranges, range;
 					/*if(++queryRevision != revision){
 						throw new Error('Query is out of date, you must observe() the' +
 						' query prior to any data modifications');
