@@ -28,6 +28,36 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			this.setData(this.data || []);
 		},
 
+
+		_moveElement: function(from, to) {
+			// summary:
+			//	  Move an element, updating the index
+			// from: number
+			//		The index of the item to be moved
+			// to: number
+			//		The index where the item will be shifted to
+			// returns: nothing
+
+			var storage = this.storage,
+				data = storage.fullData,
+				index = storage.index,
+				idProperty = this.idProperty;
+
+			if( to == from ) return;
+
+			var target = data[from];
+			var increment = to < from ? -1 : 1;
+
+			for(var k = from; k != to; k += increment){
+				data[k] = data[k + increment];
+				index[data[k][idProperty]] = k;
+			}
+
+			data[to] = target;
+			index[data[to][idProperty]] = k;
+		},
+
+
 		queryEngine: objectQueryEngine,
 
 		// data: Array
@@ -74,6 +104,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 				this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
 				id = this.getIdentity(object);
 			}
+
+			var eventType;
 			if (id in index) {
 				// object exists
 				if (options && options.overwrite === false) {
@@ -81,12 +113,33 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 				}
 				// replace the entry in data
 				data[index[id]] = object;
-				this.emit('update', {target: object});
+				eventType = 'update';
 			} else {
 				// add the new object
 				index[id] = data.push(object) - 1;
-				this.emit('add', {target: object});
+				eventType = 'add';
 			}
+
+
+			// If options.before is set, and there is an element in that spot in the array...
+			if( options && options.before ){
+
+				// Work out `from` and `to`, depending on options.before
+				var from = index[ object[ this.idProperty ] ];
+				var to = options.before === null ? data.length : index[options.before[this.idProperty]];
+				if(to > from) to --;
+
+				// Only perform the move if `from` and `to` both exist
+				if(typeof(from) !== 'undefined' && typeof(to) !== 'undefined'){
+					// Move the element from the last spot to where it should go
+					this._moveElement(from, to);
+					//console.log("DATA, INDEX: ", data, index );
+				}
+			}
+
+			// Now that the item has been placed, it's time to emit the event
+			this.emit(eventType, {target: object});
+
 			return object;
 		},
 		add: function (object, options) {

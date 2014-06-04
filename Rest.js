@@ -65,6 +65,13 @@ define([
 			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
 			var store = this;
+
+			// Add `before` header so that the REST server can work out
+			// where to place the item
+			if(typeof(options.before) !== 'undefined'){
+				options.headers['X-rest-before'] = options.before === null ? 'null' : this.getIdentity(options.before);
+			}
+
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
