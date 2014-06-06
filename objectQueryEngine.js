@@ -9,6 +9,7 @@ define([
 		filter: function (query) {
 			// create our matching query function
 			var queryer = query;
+			var queryAccessors = this.queryAccessors;
 			switch (typeof query) {
 				default:
 					throw new Error('Can not query with a ' + typeof query);
@@ -20,10 +21,10 @@ define([
 							var required = queryObject[key];
 							if (required && required.test) {
 								// an object can provide a test method, which makes it work with regex
-								if (!required.test(object.get ? object.get(key) : object[key], object)) {
+								if (!required.test(queryAccessors && object.get ? object.get(key) : object[key], object)) {
 									return false;
 								}
-							} else if (required !== (object.get ? object.get(key) : object[key])) {
+							} else if (required !== (queryAccessors && object.get ? object.get(key) : object[key])) {
 								return false;
 							}
 						}
