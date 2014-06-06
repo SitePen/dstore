@@ -77,6 +77,13 @@ define([
 		//		property should be unique.
 		idProperty: 'id',
 
+		// queryAccessors: Boolean
+		//		Indicates if client-side query engine filtering should (if the store property is true)
+		//		access object properties through the get() function (enabling querying by 
+		//		computed properties), or if it should (by setting this to false) use direct/raw
+		// 		property access (which may more closely follow database querying style).
+		queryAccessors: true,
+
 		getIdentity: function (object) {
 			// summary:
 			//		Returns an object's identity
