@@ -89,7 +89,7 @@ define([
 
 		range: function (range) {
 			return function (data) {
-				return data.slice(range.start, range.end || Infinity);
+				return data.slice(range.start, range.end);
 			};
 		}
 	};
