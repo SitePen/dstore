@@ -129,7 +129,9 @@ define([
 
 			var ranges = [];
 			if (this.data) {
-				observed.data = this.data.slice(0); // make local copy
+				observed.data = when(this.data, function (data) {
+					return data.slice(0); // make local copy
+				});
 				// Treat in-memory data as one range to allow a single code path for all stores
 				registerRange(ranges, 0, observed.data.length);
 
