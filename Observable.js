@@ -169,6 +169,7 @@ define([
 				}
 			});
 
+
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
