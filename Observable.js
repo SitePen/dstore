@@ -117,56 +117,6 @@ define([
 				}
 			});
 
-			var originalOn = this.on;
-			// now setup our own event scope, for tracked events
-			observed.on = function (type, listener) {
-				return on.parse(observed, type, listener, function (target, type) {
-					return type in eventTypes ?
-						aspect.after(observed, 'on_tracked' + type, listener, true) :
-						originalOn.call(observed, type, listener);
-				});
-			};
-
-			var ranges = [];
-			if (this.data) {
-				observed.data = when(this.data, function (data) {
-					return data.slice(0); // make local copy
-				});
-				// Treat in-memory data as one range to allow a single code path for all stores
-				registerRange(ranges, 0, observed.data.length);
-
-				observed.releaseRange = function () {};
-			} else {
-				var originalRange = observed.range;
-				observed.range = function (start, end) {
-					// trigger a request
-					var rangeCollection = originalRange.apply(this, arguments),
-						partialData = this.hasOwnProperty('partialData') ? this.partialData : (this.partialData = []);
-
-					// Wait for total in addition to data so updated objects sorted to
-					// the end of the list have a known index
-					whenAll({
-						data: rangeCollection.fetch(),
-						total: rangeCollection.total
-					}).then(function (result) {
-						partialData.length = result.total;
-
-						// copy the new ranged data into the parent partial data set
-						var spliceArgs = [ start, end - start ].concat(result.data);
-						partialData.splice.apply(partialData, spliceArgs);
-						registerRange(ranges, start, end);
-					});
-					return rangeCollection;
-				};
-				observed.releaseRange = function (start, end) {
-					unregisterRange(ranges, start, end);
-
-					for (var i = start; i < end; ++i) {
-						delete this.partialData[i];
-					}
-				};
-			}
-
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
