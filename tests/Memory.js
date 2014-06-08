@@ -141,6 +141,20 @@ define([
 			assert.isTrue(store.get(6).perfect);
 		},
 
+		'put with options.before': function () {
+			store.put({ id: 4 }, { before: store.get(3) });
+			var results = store.fetch();
+			assert.strictEqual(results[2].id, 4);
+			assert.strictEqual(results[3].id, 3);
+		},
+
+		'add with options.before': function () {
+			store.add({ id: 42 }, { before: store.get(3) });
+			var results = store.fetch();
+			assert.strictEqual(results[2].id, 42);
+			assert.strictEqual(results[3].id, 3);
+		},
+
 		'create and remove': function () {
 			var newObject = store.create({
 				id: 10,
@@ -256,5 +270,7 @@ define([
 		}, function sort() {
 			return store.sort.apply(store, arguments).fetch();
 		})
+
+		// TODO: Add add, update, and remove event tests for Memory or develop a reusable suite
 	});
 });

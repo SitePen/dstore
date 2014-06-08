@@ -17,15 +17,19 @@ define([
 			return this.inherited(arguments);
 		}
 	});
-	var store = new MyStore({
-		data: [
+
+	function createData() {
+		return [
 			{id: 0, name: 'zero', even: true, prime: false},
 			{id: 1, name: 'one', prime: false},
 			{id: 2, name: 'two', even: true, prime: true},
 			{id: 3, name: 'three', prime: true},
 			{id: 4, name: 'four', even: true, prime: false},
 			{id: 5, name: 'five', prime: true}
-		]
+		];
+	}
+	var store = new MyStore({
+		data: createData()
 	});
 
 	// TODO: Maybe name this differently
@@ -500,6 +504,50 @@ define([
 				index: 0,
 				target: expectedTarget
 			});
+		},
+
+		'new item - with options.before and queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				evenCollection = store.filter({ even: true }).track(),
+				data = evenCollection.fetch();
+
+			store.add({ id: 6, name: 'six', even: true }, { before: store.get(2) });
+
+			assert.strictEqual(data[1].id, 6);
+			assert.strictEqual(data[2].id, 2);
+		},
+
+		'new item - with options.before and no queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				collection = store.track(),
+				data = collection.fetch();
+
+			store.add({ id: 6, name: 'six', even: true }, { before: store.get(2) });
+
+			assert.strictEqual(data[2].id, 6);
+			assert.strictEqual(data[3].id, 2);
+		},
+
+		'updated item - with options.before and queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				evenCollection = store.filter({ even: true }).track(),
+				data = evenCollection.fetch();
+
+			store.put(store.get(4), { before: store.get(2) });
+
+			assert.strictEqual(data[1].id, 4);
+			assert.strictEqual(data[2].id, 2);
+		},
+
+		'updated item - with options.before and no queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				collection = store.track(),
+				data = collection.fetch();
+
+			store.put(store.get(4), { before: store.get(2) });
+
+			assert.strictEqual(data[2].id, 4);
+			assert.strictEqual(data[3].id, 2);
 		},
 
 		'type': function () {

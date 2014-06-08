@@ -65,6 +65,12 @@ define([
 			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
 			var store = this;
+			var event = {};
+
+			if (options.before) {
+				event.beforeId = this.getIdentity(options.before);
+			}
+
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
@@ -72,11 +78,12 @@ define([
 						'Content-Type': 'application/json',
 						Accept: this.accepts,
 						'If-Match': options.overwrite === true ? '*' : null,
-						'If-None-Match': options.overwrite === false ? '*' : null
+						'If-None-Match': options.overwrite === false ? '*' : null,
+						'X-Put-Before': event.beforeId ? event.beforeId : null
 					}, this.headers, options.headers)
 				}).then(function (response) {
-					var result = store._restore(parse(response));
-					store.emit(options.overwrite === false ? 'add' : 'update', {target: result || object});
+					var result = event.target = store._restore(parse(response)) || object;
+					store.emit(options.overwrite === false ? 'add' : 'update', event);
 					return result;
 				});
 		},

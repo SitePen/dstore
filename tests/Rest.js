@@ -99,6 +99,13 @@ define([
 			});
 		},
 
+		'put object with options.before': function () {
+			var object = { id: 1, name: 'one' };
+			return store.put(object, { before: { id: 123 } }).then(function () {
+				mockRequest.assertRequestHeaders({ 'X-Put-Before': 123 });
+			});
+		},
+
 		'get and save': function () {
 			var expectedObject = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(expectedObject));
@@ -112,6 +119,7 @@ define([
 			});
 		}
 
+		// TODO: Add tests for emitting add, update, and remove events
 	});
 	registerSuite(tests);
 });

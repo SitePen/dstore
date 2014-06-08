@@ -54,6 +54,9 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			//		Additional metadata for storing the data.  Includes an 'id'
 			//		property if a specific id is to be used.
 			// returns: Number
+
+			options = options || {};
+
 			var storage = this.storage,
 				index = storage.index,
 				data = storage.fullData;
@@ -71,22 +74,49 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			}
 			var id = this.getIdentity(object);
 			if (id == null) {
-				this._setIdentity(object, (options && 'id' in options) ? options.id : Math.random());
+				this._setIdentity(object, ('id' in options) ? options.id : Math.random());
 				id = this.getIdentity(object);
 			}
-			if (id in index) {
-				// object exists
-				if (options && options.overwrite === false) {
+
+			var eventType = id in index ? 'update' : 'add',
+				event = { target: object },
+				previousIndex,
+				defaultDestination;
+			if (eventType === 'update') {
+				if (options.overwrite === false) {
 					throw new Error('Object already exists');
+				} else {
+					data.splice(previousIndex = index[id], 1);
+					defaultDestination = previousIndex;
 				}
-				// replace the entry in data
-				data[index[id]] = object;
-				this.emit('update', {target: object});
 			} else {
-				// add the new object
-				index[id] = data.push(object) - 1;
-				this.emit('add', {target: object});
+				defaultDestination = this.defaultToTop ? 0 : data.length;
 			}
+
+			var destination;
+			if (options.before) {
+				var beforeId = this.getIdentity(options.before);
+				destination = index[beforeId];
+
+				if (destination !== undefined) {
+					event.beforeId = beforeId;
+				} else {
+					console.error('options.before was specified but no corresponding index was found');
+					destination = defaultDestination;
+				}
+			} else {
+				destination = defaultDestination;
+			}
+			data.splice(destination, 0, object);
+
+			// the fullData has been changed, so the index needs updated
+			var i = isFinite(previousIndex) ? Math.min(previousIndex, destination) : destination;
+			for (var l = data.length; i < l; ++i) {
+				index[this.getIdentity(data[i])] = i;
+			}
+
+			this.emit(eventType, event);
+
 			return object;
 		},
 		add: function (object, options) {
@@ -172,5 +202,4 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			return this.data;
 		}
 	});
-
 });
