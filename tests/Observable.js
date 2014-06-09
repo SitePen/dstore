@@ -506,48 +506,60 @@ define([
 			});
 		},
 
-		'new item - with options.before and queryExecutor': function () {
+		'new item - with options.beforeId and queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				evenCollection = store.filter({ even: true }).track(),
 				data = evenCollection.fetch();
 
-			store.add({ id: 6, name: 'six', even: true }, { before: store.get(2) });
+			store.defaultToTop = true;
+			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
+			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
 
 			assert.strictEqual(data[1].id, 6);
 			assert.strictEqual(data[2].id, 2);
+			assert.strictEqual(data[data.length - 1].id, -2);
 		},
 
-		'new item - with options.before and no queryExecutor': function () {
+		'new item - with options.beforeId and no queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				collection = store.track(),
 				data = collection.fetch();
 
-			store.add({ id: 6, name: 'six', even: true }, { before: store.get(2) });
+			store.defaultToTop = true;
+			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
+			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
 
 			assert.strictEqual(data[2].id, 6);
 			assert.strictEqual(data[3].id, 2);
+			assert.strictEqual(data[data.length - 1].id, -2);
 		},
 
-		'updated item - with options.before and queryExecutor': function () {
+		'updated item - with options.beforeId and queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				evenCollection = store.filter({ even: true }).track(),
 				data = evenCollection.fetch();
 
-			store.put(store.get(4), { before: store.get(2) });
+			store.defaultToTop = true;
+			store.put(store.get(4), { beforeId: 2 });
+			store.put(store.get(0), { beforeId: null });
 
-			assert.strictEqual(data[1].id, 4);
-			assert.strictEqual(data[2].id, 2);
+			assert.strictEqual(data[0].id, 4);
+			assert.strictEqual(data[1].id, 2);
+			assert.strictEqual(data[data.length - 1].id, 0);
 		},
 
-		'updated item - with options.before and no queryExecutor': function () {
+		'updated item - with options.beforeId and no queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				collection = store.track(),
 				data = collection.fetch();
 
-			store.put(store.get(4), { before: store.get(2) });
+			store.defaultToTop = true;
+			store.put(store.get(4), { beforeId: 2 });
+			store.put(store.get(3), { beforeId: null });
 
 			assert.strictEqual(data[2].id, 4);
 			assert.strictEqual(data[3].id, 2);
+			assert.strictEqual(data[data.length - 1].id, 3);
 		},
 
 		'type': function () {

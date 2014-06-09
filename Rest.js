@@ -65,11 +65,6 @@ define([
 			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
 			var store = this;
-			var event = {};
-
-			if (options.before) {
-				event.beforeId = this.getIdentity(options.before);
-			}
 
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
@@ -79,9 +74,18 @@ define([
 						Accept: this.accepts,
 						'If-Match': options.overwrite === true ? '*' : null,
 						'If-None-Match': options.overwrite === false ? '*' : null,
-						'X-Put-Before': event.beforeId ? event.beforeId : null
+						'X-Put-Before': 'beforeId' in options && options.beforeId !== null
+							? options.beforeId
+							: null,
+						'X-Put-Default-Position': !store.defaultToTop || options.beforeId === null ? 'bottom' : 'top'
 					}, this.headers, options.headers)
 				}).then(function (response) {
+					var event = {};
+
+					if ('beforeId' in options) {
+						event.beforeId = options.beforeId;
+					}
+
 					var result = event.target = store._restore(parse(response)) || object;
 					store.emit(options.overwrite === false ? 'add' : 'update', event);
 					return result;

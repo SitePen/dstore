@@ -185,8 +185,8 @@ define([
 				beforeIds.push(event.beforeId);
 			});
 
-			store.add({}, { before: { id: 123 } });
-			store.put({}, { before: { id: 321 } });
+			store.add({}, { beforeId: 123 });
+			store.put({}, { beforeId: 321 });
 
 			assert.deepEqual(beforeIds, [ 123, 321 ]);
 		},

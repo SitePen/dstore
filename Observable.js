@@ -306,20 +306,26 @@ define([
 							// about where it was inserted or moved to. If it is an update, we leave
 							// its position alone. otherwise, we at least indicate a new object
 
-							var range;
+							var range,
+								possibleRangeIndex = -1;
 							if ('beforeId' in event) {
-								for (i = 0, l = ranges.length; insertionRangeIndex === -1 && i < l; ++i) {
-									range = ranges[i];
+								if (event.beforeId === null) {
+									insertedInto = resultsArray.length;
+									possibleRangeIndex = ranges.length - 1;
+								} else {
+									for (i = 0, l = ranges.length; insertionRangeIndex === -1 && i < l; ++i) {
+										range = ranges[i];
 
-									insertedInto = findObject(
-										resultsArray,
-										event.beforeId,
-										range.start,
-										range.start + range.count
-									);
+										insertedInto = findObject(
+											resultsArray,
+											event.beforeId,
+											range.start,
+											range.start + range.count
+										);
 
-									if (insertedInto !== -1) {
-										insertionRangeIndex = i;
+										if (insertedInto !== -1) {
+											insertionRangeIndex = i;
+										}
 									}
 								}
 							} else {
@@ -327,7 +333,6 @@ define([
 									insertedInto = removedFrom;
 									insertionRangeIndex = removalRangeIndex;
 								} else {
-									var possibleRangeIndex;
 									if (store.defaultToTop) {
 										insertedInto = 0;
 										possibleRangeIndex = 0;
@@ -335,13 +340,15 @@ define([
 										// default to the bottom
 										insertedInto = resultsArray.length;
 										possibleRangeIndex = ranges.length - 1;
+									}
+								}
+							}
 
-									}
-									range = ranges[possibleRangeIndex];
-									if (range && range.start <= insertedInto
-										&& insertedInto <= (range.start + range.count)) {
-										insertionRangeIndex = possibleRangeIndex;
-									}
+							if (possibleRangeIndex !== -1 && insertionRangeIndex === -1) {
+								range = ranges[possibleRangeIndex];
+								if (range && range.start <= insertedInto
+									&& insertedInto <= (range.start + range.count)) {
+									insertionRangeIndex = possibleRangeIndex;
 								}
 							}
 						}

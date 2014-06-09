@@ -28,8 +28,8 @@ define([
 			when(result, function (result) {
 				var event = { target: result },
 					options = args[1] || {};
-				if (options.before) {
-					event.beforeId = self.getIdentity(options.before);
+				if ('beforeId' in options) {
+					event.beforeId = options.beforeId;
 				}
 				self.emit(type, event);
 			});
@@ -466,10 +466,10 @@ define([
 		//		creation of stored objects.
 		// id: String|Number?
 		//		Indicates the identity of the object if a new object is created
-		// before: Object?
+		// beforeId: String?
 		//		If the collection of objects in the store has a natural ordering,
 		//		this indicates that the created or updated object should be placed before the
-		//		object specified by the value of this property. A value of null indicates that the
+		//		object whose identity is specified as the value of this property. A value of null indicates that the
 		//		object should be last.
 		// parent: Object?,
 		//		If the store is hierarchical (with single parenting) this property indicates the

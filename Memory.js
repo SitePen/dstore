@@ -94,9 +94,9 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			}
 
 			var destination;
-			if (options.before) {
-				var beforeId = this.getIdentity(options.before);
-				destination = index[beforeId];
+			if ('beforeId' in options) {
+				var beforeId = options.beforeId;
+				destination = beforeId !== null ? index[beforeId] : data.length;
 
 				if (destination !== undefined) {
 					event.beforeId = beforeId;

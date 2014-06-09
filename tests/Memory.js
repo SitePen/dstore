@@ -8,8 +8,6 @@ define([
 
 	var store;
 
-	function passThrough(object) { return object; }
-
 	registerSuite({
 		name: 'dstore Memory',
 
@@ -141,18 +139,28 @@ define([
 			assert.isTrue(store.get(6).perfect);
 		},
 
-		'put with options.before': function () {
-			store.put({ id: 4 }, { before: store.get(3) });
+		'put with options.beforeId': function () {
+			// Make default put index 0 so it is clear beforeId:null is working
+			store.defaultToTop = true;
+
+			store.put({ id: 4 }, { beforeId: 3 });
+			store.put({ id: 0 }, { beforeId: null });
 			var results = store.fetch();
 			assert.strictEqual(results[2].id, 4);
 			assert.strictEqual(results[3].id, 3);
+			assert.strictEqual(results[results.length - 1].id, 0);
 		},
 
-		'add with options.before': function () {
-			store.add({ id: 42 }, { before: store.get(3) });
+		'add with options.beforeId': function () {
+			// Make default put index 0 so it is clear beforeId:null is working
+			store.defaultToTop = true;
+
+			store.add({ id: 42 }, { beforeId: 3 });
+			store.add({ id: 24 }, { beforeId: null });
 			var results = store.fetch();
 			assert.strictEqual(results[2].id, 42);
 			assert.strictEqual(results[3].id, 3);
+			assert.strictEqual(results[results.length - 1].id, 24);
 		},
 
 		'create and remove': function () {

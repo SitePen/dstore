@@ -99,10 +99,14 @@ define([
 			});
 		},
 
-		'put object with options.before': function () {
-			var object = { id: 1, name: 'one' };
-			return store.put(object, { before: { id: 123 } }).then(function () {
-				mockRequest.assertRequestHeaders({ 'X-Put-Before': 123 });
+		'put object with options.beforeId': function () {
+			store.defaultToTop = true;
+			return store.put({ id: 1, name: 'one' }, { beforeId: 123 }).then(function () {
+				mockRequest.assertRequestHeaders({ 'X-Put-Before': 123, 'X-Put-Default-Position': 'top' });
+			}).then(function () {
+				return store.put({ id: 2, name: 'two' }, { beforeId: null });
+			}).then(function () {
+				mockRequest.assertRequestHeaders({ 'X-Put-Before': null, 'X-Put-Default-Position': 'bottom' });
 			});
 		},
 
