@@ -263,7 +263,7 @@ define([
 								var begin = 0,
 									end = ranges.length - 1,
 									sampleArray,
-									candidateIndex,
+									candidateIndex = -1,
 									sortedIndex,
 									adjustedIndex;
 								while (begin <= end && insertedInto === -1) {
@@ -273,9 +273,13 @@ define([
 
 									sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-									if (!('beforeId' in event)
-										|| (candidateIndex = findObject(sampleArray, event.beforeId)) === -1) {
+									if ('beforeId' in event) {
+										candidateIndex = event.beforeId === null
+											? sampleArray.length
+											: findObject(sampleArray, event.beforeId);
+									}
 
+									if (candidateIndex === -1) {
 										// If the original index came from this range, put back in the original slot
 										// so it doesn't move unless it needs to (relying on a stable sort below)
 										if (removedFrom >= Math.max(0, range.start - 1)
