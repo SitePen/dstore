@@ -100,23 +100,28 @@ define([
 		},
 
 		'put object with store.defaultNewToStart': function () {
-			function test(putOptions, expectedHeaders) {
+			function testPutPosition(object, options, expectedHeaders) {
 				store.defaultNewToStart = undefined;
-				return store.put({ id: 1, name: 'one' }, putOptions).then(function () {
+				return store.put(object, options).then(function () {
 					mockRequest.assertRequestHeaders(expectedHeaders.defaultUndefined);
 				}).then(function () {
 					store.defaultNewToStart = false;
-					return store.put({ id: 2, name: 'two' }, putOptions);
+					return store.put(object, options);
 				}).then(function () {
 					mockRequest.assertRequestHeaders(expectedHeaders.defaultEnd);
 					store.defaultNewToStart = true;
-					return store.put({ id: 3, name: 'three' }, putOptions);
+					return store.put(object, options);
 				}).then(function () {
 					mockRequest.assertRequestHeaders(expectedHeaders.defaultStart);
 				});
 			}
 
-			var noExpectedPositionHeaders = {
+			var objectWithId = { id: 1, name: 'one' },
+				objectWithoutId = { name: 'missing identity' },
+				optionsWithoutOverwrite = {},
+				optionsWithOverwriteTrue = { overwrite: true },
+				optionsWithOverwriteFalse = { overwrite: false },
+				noExpectedPositionHeaders = {
 					defaultUndefined: { 'X-Put-Default-Position': null },
 					defaultEnd: { 'X-Put-Default-Position': null },
 					defaultStart: { 'X-Put-Default-Position': null }
@@ -127,11 +132,21 @@ define([
 					defaultStart: { 'X-Put-Default-Position': 'start' }
 				};
 
-			return test({}, noExpectedPositionHeaders).then(function () {
-				return test({ overwrite: true }, noExpectedPositionHeaders);
-			}).then(function () {
-				return test({ overwrite: false }, expectedPositionHeaders);
-			});
+			var tests = [
+				[ objectWithId, optionsWithoutOverwrite, noExpectedPositionHeaders ],
+				[ objectWithId, optionsWithOverwriteTrue, noExpectedPositionHeaders ],
+				[ objectWithId, optionsWithOverwriteFalse, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithoutOverwrite, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithOverwriteTrue, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithOverwriteFalse, expectedPositionHeaders ]
+			];
+
+			var promise = testPutPosition.apply(null, tests[0]);
+			for (var i = 0; i < tests.length; ++i) {
+				promise = promise.then(function () {
+					return testPutPosition.apply(null, tests[i]);
+				});
+			}
 		},
 
 		'put object with options.beforeId': function () {

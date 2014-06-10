@@ -70,7 +70,7 @@ define([
 				? (options.beforeId === null
 					? { 'X-Put-Default-Position': 'end' }
 					: { 'X-Put-Before': options.beforeId })
-				: (options.overwrite === false
+				: (!hasId || options.overwrite === false
 					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
