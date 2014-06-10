@@ -141,7 +141,7 @@ define([
 
 		'put with options.beforeId': function () {
 			// Make default put index 0 so it is clear beforeId:null is working
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 
 			store.put({ id: 4 }, { beforeId: 3 });
 			store.put({ id: 0 }, { beforeId: null });
@@ -153,7 +153,7 @@ define([
 
 		'add with options.beforeId': function () {
 			// Make default put index 0 so it is clear beforeId:null is working
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 
 			store.add({ id: 42 }, { beforeId: 3 });
 			store.add({ id: 24 }, { beforeId: null });

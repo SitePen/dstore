@@ -337,7 +337,7 @@ define([
 									insertedInto = removedFrom;
 									insertionRangeIndex = removalRangeIndex;
 								} else {
-									if (store.defaultToTop) {
+									if (store.defaultNewToStart) {
 										insertedInto = 0;
 										possibleRangeIndex = 0;
 									} else {

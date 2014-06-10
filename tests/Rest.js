@@ -99,14 +99,55 @@ define([
 			});
 		},
 
+		'put object with store.defaultNewToStart': function () {
+			function test(putOptions, expectedHeaders) {
+				store.defaultNewToStart = undefined;
+				return store.put({ id: 1, name: 'one' }, putOptions).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultUndefined);
+				}).then(function () {
+					store.defaultNewToStart = false;
+					return store.put({ id: 2, name: 'two' }, putOptions);
+				}).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultEnd);
+					store.defaultNewToStart = true;
+					return store.put({ id: 3, name: 'three' }, putOptions);
+				}).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultStart);
+				});
+			}
+
+			var noExpectedPositionHeaders = {
+					defaultUndefined: { 'X-Put-Default-Position': null },
+					defaultEnd: { 'X-Put-Default-Position': null },
+					defaultStart: { 'X-Put-Default-Position': null }
+				},
+				expectedPositionHeaders = {
+					defaultUndefined: { 'X-Put-Default-Position': 'end' },
+					defaultEnd: { 'X-Put-Default-Position': 'end' },
+					defaultStart: { 'X-Put-Default-Position': 'start' }
+				};
+
+			return test({}, noExpectedPositionHeaders).then(function () {
+				return test({ overwrite: true }, noExpectedPositionHeaders);
+			}).then(function () {
+				return test({ overwrite: false }, expectedPositionHeaders);
+			});
+		},
+
 		'put object with options.beforeId': function () {
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 			return store.put({ id: 1, name: 'one' }, { beforeId: 123 }).then(function () {
-				mockRequest.assertRequestHeaders({ 'X-Put-Before': 123, 'X-Put-Default-Position': 'top' });
+				mockRequest.assertRequestHeaders({
+					'X-Put-Before': 123,
+					'X-Put-Default-Position': null
+				});
 			}).then(function () {
 				return store.put({ id: 2, name: 'two' }, { beforeId: null });
 			}).then(function () {
-				mockRequest.assertRequestHeaders({ 'X-Put-Before': null, 'X-Put-Default-Position': 'bottom' });
+				mockRequest.assertRequestHeaders({
+					'X-Put-Before': null,
+					'X-Put-Default-Position': 'end'
+				});
 			});
 		},
 

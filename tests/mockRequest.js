@@ -54,9 +54,18 @@ define([
 	};
 	mockRequest.assertRequestHeaders = function (expectedHeaders) {
 		for (var name in expectedHeaders) {
-			var lowerCaseName = name.toLowerCase();
-			assert.isTrue(lowerCaseName in latestRequestHeaders);
-			assert.strictEqual(latestRequestHeaders[lowerCaseName], expectedHeaders[name]);
+			var lowerCaseName = name.toLowerCase(),
+				value = expectedHeaders[name];
+
+			if (value === null) {
+				assert.isTrue(
+					!(lowerCaseName in latestRequestHeaders)
+					|| latestRequestHeaders[lowerCaseName] === null
+				);
+			} else {
+				assert.isTrue(lowerCaseName in latestRequestHeaders);
+				assert.strictEqual(latestRequestHeaders[lowerCaseName], expectedHeaders[name]);
+			}
 		}
 	};
 	mockRequest.assertQueryParams = function (expectedParams) {

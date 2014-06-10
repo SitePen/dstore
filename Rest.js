@@ -66,6 +66,14 @@ define([
 			var parse = this.parse;
 			var store = this;
 
+			var positionHeaders = 'beforeId' in options
+				? (options.beforeId === null
+					? { 'X-Put-Default-Position': 'end' }
+					: { 'X-Put-Before': options.beforeId })
+				: (options.overwrite === false
+					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
+					: null);
+
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
@@ -73,12 +81,8 @@ define([
 						'Content-Type': 'application/json',
 						Accept: this.accepts,
 						'If-Match': options.overwrite === true ? '*' : null,
-						'If-None-Match': options.overwrite === false ? '*' : null,
-						'X-Put-Before': 'beforeId' in options && options.beforeId !== null
-							? options.beforeId
-							: null,
-						'X-Put-Default-Position': !store.defaultToTop || options.beforeId === null ? 'bottom' : 'top'
-					}, this.headers, options.headers)
+						'If-None-Match': options.overwrite === false ? '*' : null
+					}, positionHeaders, this.headers, options.headers)
 				}).then(function (response) {
 					var event = {};
 

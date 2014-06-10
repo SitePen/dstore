@@ -90,7 +90,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 					defaultDestination = previousIndex;
 				}
 			} else {
-				defaultDestination = this.defaultToTop ? 0 : data.length;
+				defaultDestination = this.defaultNewToStart ? 0 : data.length;
 			}
 
 			var destination;

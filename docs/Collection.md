@@ -22,7 +22,7 @@ Property | Description
 -------- | -----------
 `model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof store.model`.
 `total` | This property should be included in if the query options included the "count" property limiting the result set. This property indicates the total number of objects matching the query (as if "start" and "count" weren't present). This may be a promise if the query is asynchronous.
-`defaultToTop` | If a new object is added to a store, this will indicate it if it should go to the top or bottom. By default, it will be placed at the bottom.
+`defaultNewToStart` | If a new object is added to a store, this will indicate it if it should go to the start or end. By default, it will be placed at the end.
 
 ### Method Summary
 

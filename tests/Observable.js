@@ -439,7 +439,7 @@ define([
 				assert.isUndefined(addEvent.index);
 
 				// choose a defaultIndex at the top (in known range)
-				store.defaultToTop = true;
+				store.defaultNewToStart = true;
 				// a new item with a default index within a known range has a known index
 				addEvent = null;
 				expectedNewItem = store._restore({ id: 201, name: 'item-201', order: Infinity });
@@ -449,7 +449,7 @@ define([
 				assert.deepEqual(addEvent.target, expectedNewItem);
 				assert.propertyVal(addEvent, 'index', 0);
 
-				store.defaultToTop = false;
+				store.defaultNewToStart = false;
 				return trackedStore.range(25, 102).fetch().then(function () {
 					// now add to the bottom, where it is in range
 					expectedNewItem = store._restore({ id: 202, name: 'item-202', order: Infinity });
@@ -511,7 +511,7 @@ define([
 				evenCollection = store.filter({ even: true }).track(),
 				data = evenCollection.fetch();
 
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
 			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
 
@@ -525,7 +525,7 @@ define([
 				collection = store.track(),
 				data = collection.fetch();
 
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
 			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
 
@@ -539,7 +539,7 @@ define([
 				evenCollection = store.filter({ even: true }).track(),
 				data = evenCollection.fetch();
 
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 			store.put(store.get(4), { beforeId: 2 });
 			store.put(store.get(0), { beforeId: null });
 
@@ -553,7 +553,7 @@ define([
 				collection = store.track(),
 				data = collection.fetch();
 
-			store.defaultToTop = true;
+			store.defaultNewToStart = true;
 			store.put(store.get(4), { beforeId: 2 });
 			store.put(store.get(3), { beforeId: null });
 
