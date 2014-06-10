@@ -75,7 +75,16 @@ Once we have created a new instance from this store, we can track a collection, 
 
 	var store = new ObservableMemory({data: ...});
 	var filteredSorted = store.filter({inStock: true}).sort('price');
+
+At this point, we can do a `fetch()` or `forEach()` to access the items in the filtered collection. Once we have done that, the data will be loaded, or will be loading, and we can track it.
+
 	var tracked = filteredSorted.track();
+
+Alternately, rather than retrieving results prior to tracking, we could call `track()`, and then make individual range requests from the tracked collection. 
+
+	tracked.range(0, 10).forEach(...);
+	
+Observable will keep track of each page of data, and send out notifications based on the data it has available.
 
 And then we could listen for notifications:
 
