@@ -22,6 +22,22 @@ define([
 		total: true
 	};
 
+	function emitUpdateEvent(type) {
+		return function (result, args) {
+			var self = this;
+			when(result, function (result) {
+				var event = { target: result },
+					options = args[1] || {};
+				if ('beforeId' in options) {
+					event.beforeId = options.beforeId;
+				}
+				self.emit(type, event);
+			});
+
+			return result;
+		};
+	}
+
 	var base = Evented;
 	/*=====
 	base = [ Evented, Collection ];
@@ -45,18 +61,8 @@ define([
 			var store = this;
 			if (this.autoEmitEvents) {
 				// emit events when modification operations are called
-				aspect.after(this, 'add', function (result) {
-					when(result, function (result) {
-						store.emit('add', {target: result});
-					});
-					return result;
-				});
-				aspect.after(this, 'put', function (result) {
-					when(result, function (result) {
-						store.emit('update', {target: result});
-					});
-					return result;
-				});
+				aspect.after(this, 'add', emitUpdateEvent('add'));
+				aspect.after(this, 'put', emitUpdateEvent('update'));
 				aspect.after(this, 'remove', function (result, args) {
 					when(result, function () {
 						store.emit('remove', {id: args[0]});
@@ -79,7 +85,7 @@ define([
 
 		// queryAccessors: Boolean
 		//		Indicates if client-side query engine filtering should (if the store property is true)
-		//		access object properties through the get() function (enabling querying by 
+		//		access object properties through the get() function (enabling querying by
 		//		computed properties), or if it should (by setting this to false) use direct/raw
 		// 		property access (which may more closely follow database querying style).
 		queryAccessors: true,
@@ -460,10 +466,10 @@ define([
 		//		creation of stored objects.
 		// id: String|Number?
 		//		Indicates the identity of the object if a new object is created
-		// before: Object?
+		// beforeId: String?
 		//		If the collection of objects in the store has a natural ordering,
 		//		this indicates that the created or updated object should be placed before the
-		//		object specified by the value of this property. A value of null indicates that the
+		//		object whose identity is specified as the value of this property. A value of null indicates that the
 		//		object should be last.
 		// parent: Object?,
 		//		If the store is hierarchical (with single parenting) this property indicates the

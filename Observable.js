@@ -182,10 +182,20 @@ define([
 			}
 
 			var defaultEventProps = {
-				'add': { index: undefined },
-				'update': { previousIndex: undefined, index: undefined },
-				'remove': { previousIndex: undefined }
-			};
+					'add': { index: undefined },
+					'update': { previousIndex: undefined, index: undefined },
+					'remove': { previousIndex: undefined }
+				},
+				findObject = function (data, id, start, end) {
+					start = start !== undefined ? start : 0;
+					end = end !== undefined ? end : data.length;
+					for (var i = start; i < end; ++i) {
+						if (store.getIdentity(data[i]) === id) {
+							return i;
+						}
+					}
+					return -1;
+				};
 			function notify(type, target, event) {
 				revision++;
 				event = lang.delegate(event, defaultEventProps[type]);
@@ -253,6 +263,7 @@ define([
 								var begin = 0,
 									end = ranges.length - 1,
 									sampleArray,
+									candidateIndex = -1,
 									sortedIndex,
 									adjustedIndex;
 								while (begin <= end && insertedInto === -1) {
@@ -262,14 +273,23 @@ define([
 
 									sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-									// If the original index came from this range, put back in the original slot
-									// so it doesn't move unless it needs to (relying on a stable sort below)
-									if (removedFrom >= Math.max(0, range.start - 1) &&
-											removedFrom <= (range.start + range.count)) {
-										sampleArray.splice(removedFrom, 0, target);
-									} else {
-										sampleArray.push(target);
+									if ('beforeId' in event) {
+										candidateIndex = event.beforeId === null
+											? sampleArray.length
+											: findObject(sampleArray, event.beforeId);
 									}
+
+									if (candidateIndex === -1) {
+										// If the original index came from this range, put back in the original slot
+										// so it doesn't move unless it needs to (relying on a stable sort below)
+										if (removedFrom >= Math.max(0, range.start - 1)
+											&& removedFrom <= (range.start + range.count)) {
+											candidateIndex = removedFrom;
+										} else {
+											candidateIndex = sampleArray.length;
+										}
+									}
+									sampleArray.splice(candidateIndex, 0, target);
 
 									sortedIndex = arrayUtil.indexOf(queryExecutor(sampleArray), target);
 									adjustedIndex = range.start + sortedIndex;
@@ -290,22 +310,48 @@ define([
 							// about where it was inserted or moved to. If it is an update, we leave
 							// its position alone. otherwise, we at least indicate a new object
 
-							if (type === 'update') {
-								insertedInto = removedFrom;
-								insertionRangeIndex = removalRangeIndex;
-							} else {
-								var possibleRangeIndex;
-								if (store.defaultToTop) {
-									insertedInto = 0;
-									possibleRangeIndex = 0;
-								} else {
-									// default to the bottom
+							var range,
+								possibleRangeIndex = -1;
+							if ('beforeId' in event) {
+								if (event.beforeId === null) {
 									insertedInto = resultsArray.length;
 									possibleRangeIndex = ranges.length - 1;
+								} else {
+									for (i = 0, l = ranges.length; insertionRangeIndex === -1 && i < l; ++i) {
+										range = ranges[i];
 
+										insertedInto = findObject(
+											resultsArray,
+											event.beforeId,
+											range.start,
+											range.start + range.count
+										);
+
+										if (insertedInto !== -1) {
+											insertionRangeIndex = i;
+										}
+									}
 								}
-								var range = ranges[possibleRangeIndex];
-								if (range && range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
+							} else {
+								if (type === 'update') {
+									insertedInto = removedFrom;
+									insertionRangeIndex = removalRangeIndex;
+								} else {
+									if (store.defaultNewToStart) {
+										insertedInto = 0;
+										possibleRangeIndex = 0;
+									} else {
+										// default to the bottom
+										insertedInto = resultsArray.length;
+										possibleRangeIndex = ranges.length - 1;
+									}
+								}
+							}
+
+							if (possibleRangeIndex !== -1 && insertionRangeIndex === -1) {
+								range = ranges[possibleRangeIndex];
+								if (range && range.start <= insertedInto
+									&& insertedInto <= (range.start + range.count)) {
 									insertionRangeIndex = possibleRangeIndex;
 								}
 							}

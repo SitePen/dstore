@@ -17,15 +17,19 @@ define([
 			return this.inherited(arguments);
 		}
 	});
-	var store = new MyStore({
-		data: [
+
+	function createData() {
+		return [
 			{id: 0, name: 'zero', even: true, prime: false},
 			{id: 1, name: 'one', prime: false},
 			{id: 2, name: 'two', even: true, prime: true},
 			{id: 3, name: 'three', prime: true},
 			{id: 4, name: 'four', even: true, prime: false},
 			{id: 5, name: 'five', prime: true}
-		]
+		];
+	}
+	var store = new MyStore({
+		data: createData()
 	});
 
 	// TODO: Maybe name this differently
@@ -435,7 +439,7 @@ define([
 				assert.isUndefined(addEvent.index);
 
 				// choose a defaultIndex at the top (in known range)
-				store.defaultToTop = true;
+				store.defaultNewToStart = true;
 				// a new item with a default index within a known range has a known index
 				addEvent = null;
 				expectedNewItem = store._restore({ id: 201, name: 'item-201', order: Infinity });
@@ -445,7 +449,7 @@ define([
 				assert.deepEqual(addEvent.target, expectedNewItem);
 				assert.propertyVal(addEvent, 'index', 0);
 
-				store.defaultToTop = false;
+				store.defaultNewToStart = false;
 				return trackedStore.range(25, 102).fetch().then(function () {
 					// now add to the bottom, where it is in range
 					expectedNewItem = store._restore({ id: 202, name: 'item-202', order: Infinity });
@@ -500,6 +504,62 @@ define([
 				index: 0,
 				target: expectedTarget
 			});
+		},
+
+		'new item - with options.beforeId and queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				evenCollection = store.filter({ even: true }).track(),
+				data = evenCollection.fetch();
+
+			store.defaultNewToStart = true;
+			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
+			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
+
+			assert.strictEqual(data[1].id, 6);
+			assert.strictEqual(data[2].id, 2);
+			assert.strictEqual(data[data.length - 1].id, -2);
+		},
+
+		'new item - with options.beforeId and no queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				collection = store.track(),
+				data = collection.fetch();
+
+			store.defaultNewToStart = true;
+			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
+			store.add({ id: -2, name: 'negative-two', even: true }, { beforeId: null });
+
+			assert.strictEqual(data[2].id, 6);
+			assert.strictEqual(data[3].id, 2);
+			assert.strictEqual(data[data.length - 1].id, -2);
+		},
+
+		'updated item - with options.beforeId and queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				evenCollection = store.filter({ even: true }).track(),
+				data = evenCollection.fetch();
+
+			store.defaultNewToStart = true;
+			store.put(store.get(4), { beforeId: 2 });
+			store.put(store.get(0), { beforeId: null });
+
+			assert.strictEqual(data[0].id, 4);
+			assert.strictEqual(data[1].id, 2);
+			assert.strictEqual(data[data.length - 1].id, 0);
+		},
+
+		'updated item - with options.beforeId and no queryExecutor': function () {
+			var store = new MyStore({ data: createData() }),
+				collection = store.track(),
+				data = collection.fetch();
+
+			store.defaultNewToStart = true;
+			store.put(store.get(4), { beforeId: 2 });
+			store.put(store.get(3), { beforeId: null });
+
+			assert.strictEqual(data[2].id, 4);
+			assert.strictEqual(data[3].id, 2);
+			assert.strictEqual(data[data.length - 1].id, 3);
 		},
 
 		'type': function () {
