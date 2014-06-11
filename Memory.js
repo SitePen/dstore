@@ -101,7 +101,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 				if (destination !== undefined) {
 					event.beforeId = beforeId;
 				} else {
-					console.error('options.before was specified but no corresponding index was found');
+					console.error('options.beforeId was specified but no corresponding index was found');
 					destination = defaultDestination;
 				}
 			} else {
