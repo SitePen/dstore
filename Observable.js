@@ -88,7 +88,7 @@ define([
 				handles.push(
 					this.on(type, (function (type) {
 						return function (event) {
-							notify(type, event.target || event.id, event);
+							notify(type, event);
 						};
 					})(type))
 				);
@@ -186,8 +186,9 @@ define([
 				'update': { previousIndex: undefined, index: undefined },
 				'remove': { previousIndex: undefined }
 			};
-			function notify(type, target, event) {
+			function notify(type, event) {
 				revision++;
+				var target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
 				when(observed.hasOwnProperty('data') ? observed.data :
 						observed.partialData, function (resultsArray) {
@@ -214,7 +215,7 @@ define([
 						' query prior to any data modifications');
 					}*/
 
-					var targetId = type === 'remove' ? target : store.getIdentity(target);
+					var targetId = 'id' in event ? event.id : store.getIdentity(target);
 					var removedFrom = -1,
 						removalRangeIndex = -1,
 						insertedInto = -1,

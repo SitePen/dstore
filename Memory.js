@@ -113,11 +113,11 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			var index = storage.index;
 			var data = storage.fullData;
 			if (id in index) {
-				data.splice(index[id], 1);
+				var removed = data.splice(index[id], 1)[0];
 				// now we have to reindex
 				this._reindex();
 				// TODO: The id property makes it seem like an event id. Maybe targetId would be better.
-				this.emit('remove', {id: id});
+				this.emit('remove', {id: id, target: removed});
 				return true;
 			}
 		},
