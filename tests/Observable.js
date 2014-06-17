@@ -147,10 +147,12 @@ define([
 				target: store._restore(seven),
 				index: 3
 			});
+			var three = store.get(3);
 			store.remove(3);
 			expectedChanges.push({
 				type: 'remove',
 				id: 3,
+				target: store._restore(three),
 				previousIndex: 0
 			});
 			assert.strictEqual(tracked.data.length, 3);

@@ -108,8 +108,9 @@ define([
 				method: 'DELETE',
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
-				store.emit('remove', {id: id});
-				return response ? store.parse(response) : true;
+				var target = response && store.parse(response);
+				store.emit('remove', {id: id, target: target});
+				return response ? target : true;
 			});
 		}
 	});
