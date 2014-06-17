@@ -39,6 +39,7 @@ Property | Description
 ------ | -----------
 `type` | This is a string that indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This is a boolean that indicates whether a (non-empty) value is required for this property.
+`default` | This defines the default value for the property. When a new model object is created, this will be used as the initial value, if no other value is provided.
 `errors` | This is an array of errors from the last validation of this property. This may be null to indicate no errors.
 `name` | This is the name of the property.
 `validateOnSet` | This indicates whether or not to validate a property when a new value is set on it.
@@ -66,6 +67,7 @@ Property | Description
 ------ | -----------
 `type` | This indicates the primitive type of the property value (string, number, boolean, or object).
 `required` | This indicates whether a (non-empty) value is required for this property.
+`default` | This defines the default value for the property.
 
 The property definition defines the type, structure, metadata, and behavior of the properties on the model. If the property definition object is an instance of `dstore/Property`, it will be used as the direct prototype for the instance property objects, as well. If not, the property definition will be used to construct a `dstore/Property` instance, (properties are copied over), to use as the prototype of the instance property objects.
 
