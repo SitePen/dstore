@@ -1,6 +1,12 @@
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', './objectQueryEngine' /*=====, './api/Store' =====*/],
+define([
+	'dojo/_base/declare',
+	'dojo/_base/lang',
+	'dojo/has',
+	'dojo/_base/array',
+	'./Store',
+	'./objectQueryEngine' /*=====, './api/Store' =====*/],
 		// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
-		function (declare, lang, arrayUtil, StoreBase, objectQueryEngine /*=====, Store =====*/) {
+		function (declare, lang, has, arrayUtil, StoreBase, objectQueryEngine /*=====, Store =====*/) {
 
 	function createQuery(updateTotal) {
 		return function query () {
@@ -15,8 +21,6 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 
 	// module:
 	//		dstore/Memory
-	/* jshint proto: true */
-	var hasProto = !!{}.__proto__ && !({}).watch;
 	return declare(StoreBase, {
 		constructor: function () {
 			// summary:
@@ -61,7 +65,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 			var model = this.model;
 			if (model && !(object instanceof model)) {
 				var prototype = model.prototype;
-				if (hasProto) {
+				if (has('object-proto')) {
 					// the fast easy way
 					object.__proto__ = prototype;
 				} else {
