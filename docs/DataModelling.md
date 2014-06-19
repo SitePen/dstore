@@ -2,7 +2,9 @@
 
 In addition to handling collections of items, dstore also provides robust data modeling capabilities for managing individual objects themselves. dstore provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes.
 
-By default, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model. The default data model is `dstore/Model`. Since objects are instances of this model, they all inherit the following properties and methods:
+Objects that are returned from a store (whether it be from iterating over a collection, or performing a get()) can be set to be
+ an instance of the store's data model by setting the `model` property of the store to a model class, such as `dstore/Model`. 
+ With this setting, the objects are instances of this model, and they all inherit the following properties and methods:
 
 ### Property Summary
 
