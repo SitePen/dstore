@@ -14,10 +14,10 @@ define([
 ], function (registerSuite, assert, Deferred, when, JSON, aspect, declare, Store, Memory, Request, mockRequest, Cache) {
 
 	/* jshint newcap: false */
-	var masterFilterCalled;
+	var masterFetchCalled;
 	var Master = declare(Memory, {
-		filter: function () {
-			masterFilterCalled = true;
+		fetch: function () {
+			masterFetchCalled = true;
 			return this.inherited(arguments);
 		}
 	});
@@ -175,16 +175,12 @@ define([
 
 			'cached filtered data from all': function () {
 				return when(store.fetch()).then(function () { // should result in everything being cached
-					masterFilterCalled = false;
+					masterFetchCalled = false;
 					return store.filter({prime: true}).fetch();
 				}).then(function (results) {
-					assert.strictEqual(results.length, 3);
-					assert.isFalse(masterFilterCalled);
+					assert.strictEqual(results.length, 4);
+					assert.isFalse(masterFetchCalled);
 				});
-			},
-			'cached collections': function () {
-				assert.strictEqual(store.filter({prime: true}), store.filter({prime: true}));
-				assert.strictEqual(store.sort('prime'), store.sort('prime'));
 			},
 			'defaults to queryEngine of the cachingStore': function () {
 				var store = new (declare([ Store, Cache ]))({

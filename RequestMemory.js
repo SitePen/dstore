@@ -7,6 +7,7 @@ define([
 		postscript: function () {
 			this.inherited(arguments);
 			this.fetch();
-		}
+		},
+		isValidFetchCache: true
 	});
 });

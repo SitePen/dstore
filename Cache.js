@@ -1,15 +1,25 @@
 define([
-	'dojo/_base/lang',
 	'dojo/_base/array',
-	'dojo/json',
 	'dojo/when',
 	'dojo/_base/declare',
 	'./Store',
 	'./Memory'
-], function (lang, arrayUtil, JSON, when, declare, Store, Memory) {
+], function (arrayUtil, when, declare, Store, Memory) {
 
 	// module:
-	//		dstore/Cache
+	//		dstore/ObjectCache
+
+
+	function cachingQuery(type) {
+		// ensure querying creates a parallel caching store query
+		return function () {
+			var subCollection = this.inherited(arguments);
+			var cachingCollection = this.cachingCollection || this.cachingStore;
+			subCollection.cachingCollection = cachingCollection[type].apply(cachingCollection, arguments);
+			subCollection.isValidFetchCache = this.canCacheQuery === true || this.canCacheQuery(type, arguments);
+			return subCollection;
+		};
+	}
 
 	return declare(Store, {
 		cachingStore: null,
@@ -24,103 +34,70 @@ define([
 			}
 			this.cachingStore.model = this.model;
 			this.cachingStore.idProperty = this.idProperty;
-			this._collectionCache = {};
 		},
-		_tryCacheForResults: function (method, serialized, args) {
-			serialized = method + ':' + serialized;
-
-			var cacheable = !this.canCacheQuery || this.canCacheQuery(method, args);
-
-			if (cacheable && this._collectionCache[serialized]) {
-				return this._collectionCache[serialized];
-			} else {
-				var self = this,
-					subCollection;
-
-				if (this.allLoaded) {
-					subCollection = this._createSubCollection({});
-
-					// if we have loaded everything, we can go to the caching store
-					// for quick client side querying
-
-					// wait for it to finish loading
-					subCollection.allLoaded = subCollection.data = when(this.allLoaded, function () {
-						var cachingStore = self.cachingStore,
-							subCachingStore = cachingStore[method].apply(cachingStore, args);
-						subCollection.cachingStore = subCachingStore;
-
-						var data = subCachingStore.fetch();
-						subCollection.total = subCachingStore.total;
-
-						return data;
-					});
-				} else {
-					// nothing in the cache, have to use the inherited method to perform the action
-					subCollection = this.inherited(args);
-				}
-
-				if (cacheable) {
-					this._collectionCache[serialized] = subCollection;
-				}
-
-				return subCollection;
-			}
+		canCacheQuery: function (method, args) {
+			// summary:
+			//		Indicates if a queried (filter, sort, etc.) collection should using caching
+			return false;
 		},
-		_createSubCollection: function (kwArgs) {
-			kwArgs = lang.delegate(kwArgs);
-			// each sub collection should have it's own collection cache and caching store
-			kwArgs._collectionCache = {};
-			if (!('cachingStore' in kwArgs)) {
-				kwArgs.cachingStore = new this.cachingStore.constructor();
-			}
-			return this.inherited(arguments, [ kwArgs ]);
-		},
-		sort: function (property, descending) {
-			return this._tryCacheForResults('sort',
-				JSON.stringify(property) + (descending ? '-' : '+'), arguments);
-		},
-		filter: function (query) {
-			return this._tryCacheForResults('filter',
-				JSON.stringify(query), arguments);
-		},
-		range: function (start, end) {
-			return this._tryCacheForResults('range',
-				start + '-' + end, arguments);
+		isAvailableInCache: function () {
+			// summary:
+			//		Indicates if the collection's cachingCollection is a viable source
+			//		for a fetch
+			return this.allLoaded || (this.isValidFetchCache && this.fetchRequest) ||
+					this._parent && this._parent.isAvailableInCache();
 		},
 		fetch: function () {
+			// if the data is available in the cache (via any parent), we use fetch from the caching store
 			var cachingStore = this.cachingStore;
+			var cachingCollection = this.cachingCollection || cachingStore;
 			var store = this;
-			return this.allLoaded || (this.allLoaded = when(this.inherited(arguments), function (results) {
+			var available = this.isAvailableInCache();
+			if (available) {
+				var args = arguments;
+				return when(available, function () {
+					// need to double check to make sure the flag hasn't been cleared
+					// and we really have all data loaded
+					if (store.isAvailableInCache()) {
+						return cachingCollection.fetch();
+					} else {
+						return store.inherited(args);
+					}
+				});
+			}
+			return when(this.fetchRequest = this.inherited(arguments), function (results) {
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
+					var allLoaded = true;
+					store.fetchRequest = null;
 					// store each object before calling the callback
 					if (!store.isLoaded || store.isLoaded(object)) {
 						cachingStore.put(object);
+					} else {
+						// if anything is not loaded, we can't consider them all loaded
+						allLoaded = false;
+					}
+					if (allLoaded) {
+						store.allLoaded = true;
 					}
 				});
 
 				return results;
-			}));
+			});
 		},
-		// canCacheQuery: Function
-		//		This function can be overriden to provide more specific functionality for
-		// 		determining if a query should go to the master store or the caching store.
-		//		This will be called with the query method (sort, filter, or range), and the
-		//		arguments, and should return true or false indicating if the query is cacheable.
-
-		// isLoaded: Function
-		//		This function can be overriden to specify if individual objects can be cached
-		//		(if they are a fully loaded representation, that can be cached for later retrieval through
-		//		get()). This is called with an object, and can return true or false to indicate
-		//		if it is fully loaded cacheable object.
-
-		allLoaded: false,
+		// TODO: for now, all forEach() calls delegate to fetch(), but that may be different
+		// with IndexedDB, so we may need to intercept forEach as well (and hopefully not
+		// double load elements.
+		// isValidFetchCache: boolean
+		//		This flag indicates if a previous fetch can be used as a cache for subsequent
+		//		fetches (in this collection, or downstream).
+		isValidFetchCache: false,
 		get: function (id, directives) {
 			var cachingStore = this.cachingStore;
 			var masterGet = this.getInherited(arguments);
 			var masterStore = this;
 			// if everything is being loaded, we always wait for that to finish
-			return when(this.allLoaded, function () {
+			return when(this.fetchRequest, function () {
 				return when(cachingStore.get(id), function (result) {
 					if (result !== undefined) {
 						return result;
@@ -137,8 +114,7 @@ define([
 		},
 		add: function (object, directives) {
 			var cachingStore = this.cachingStore;
-			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
-					this.store.add(object, directives) : this.inherited(arguments), function (result) {
+			return when(this.inherited(arguments), function (result) {
 				// now put result in cache (note we don't do add, because add may have
 				// called put() and already added it)
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
@@ -150,8 +126,7 @@ define([
 			// first remove from the cache, so it is empty until we get a response from the master store
 			var cachingStore = this.cachingStore;
 			cachingStore.remove((directives && directives.id) || this.getIdentity(object));
-			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
-					this.store.put(object, directives) : this.inherited(arguments), function (result) {
+			return when(this.inherited(arguments), function (result) {
 				// now put result in cache
 				cachingStore.put(object && typeof result === 'object' ? result : object, directives);
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore
@@ -160,15 +135,35 @@ define([
 		},
 		remove: function (id, directives) {
 			var cachingStore = this.cachingStore;
-			return when((this.store && this.store !== this) ? // check to see if we need to delegate to store
-					this.store.remove(id, directives) : this.inherited(arguments), function (result) {
+			return when(this.inherited(arguments), function (result) {
 				return when(cachingStore.remove(id, directives), function () {
 					return result;
 				});
 			});
 		},
 		evict: function (id) {
+			// summary:
+			//		Evicts an object from the cache
+			// any eviction means that we don't have everything loaded anymore
+			this.allLoaded = false;
 			return this.cachingStore.remove(id);
-		}
+		},
+		invalidate: function () {
+			// summary:
+			//		Invalidates this collection's cache as being a valid source of
+			//		future fetches
+			this.allLoaded = false;
+		},
+		_createSubCollection: function () {
+			var subCollection = this.inherited(arguments);
+			// TODO: Is this going to be added to Store.js?
+			subCollection._parent = this;
+			return subCollection;
+		},
+
+		sort: cachingQuery('sort'),
+		filter: cachingQuery('filter'),
+		range: cachingQuery('range')
+
 	});
 });
