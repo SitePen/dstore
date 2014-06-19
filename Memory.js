@@ -192,14 +192,6 @@ define([
 			storage.version++;
 		},
 
-<<<<<<< HEAD
-		filter: createQuery(true),
-		sort: createQuery(),
-		range: createQuery(),
-
-		fetch: function () {
-			return this.data;
-=======
 		fetch: function () {
 			var data = this.data;
 			if (!data || data._version !== this.storage.version) {
