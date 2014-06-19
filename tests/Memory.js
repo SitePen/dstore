@@ -3,8 +3,9 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'./sorting',
+	'dstore/Model',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, sorting, Memory) {
+], function (registerSuite, assert, declare, sorting, Model, Memory) {
 
 	var store;
 
@@ -21,7 +22,8 @@ define([
 					{ id: 3, name: 'three', prime: true, mappedTo: 'C' },
 					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
 					{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
-				]
+				],
+				model: Model
 			});
 
 			// add a method to the model prototype

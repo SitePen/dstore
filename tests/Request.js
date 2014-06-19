@@ -8,6 +8,7 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Request',
+	'dstore/Model',
 	'dstore/objectQueryEngine',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
@@ -22,6 +23,7 @@ define([
 	when,
 	whenAll,
 	Request,
+	Model,
 	objectQueryEngine,
 	mockRequest,
 	treeTestRootData
@@ -87,7 +89,8 @@ define([
 				mockRequest.setResponseHeaders({});
 				store = new Store({
 					target: '/mockRequest/',
-					headers: globalHeaders
+					headers: globalHeaders,
+					model: Model
 				});
 				store.model.prototype.describe = function () {
 					return 'name is ' + this.name;

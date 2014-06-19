@@ -7,8 +7,9 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dojo/store/JsonRest',
+	'dstore/Model',
 	'dstore/legacy/StoreAdapter'
-], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, StoreAdapter) {
+], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, Model, StoreAdapter) {
 
 	var legacyStore = new JsonRest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
@@ -19,7 +20,10 @@ define([
 			});
 		}
 	});
-	var adaptedStore = new StoreAdapter({ objectStore: legacyStore });
+	var adaptedStore = new StoreAdapter({
+		objectStore: legacyStore,
+		model: Model
+	});
 	adaptedStore.model.prototype.describe = function () {
 		return 'name is ' + this.name;
 	};
@@ -33,7 +37,8 @@ define([
 					return response && JSON.parse(response);
 				});
 			}
-		})
+		}),
+		model: Model
 	});
 	store.model.prototype.describe = function () {
 		return 'name is ' + this.name;

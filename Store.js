@@ -7,15 +7,16 @@ define([
 	'dojo/Deferred',
 	'dojo/_base/declare',
 	'./QueryMethod',
-	'./Model',
 	'dojo/Evented'
-], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Model, Evented) {
+], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Evented) {
 
 	// module:
 	//		dstore/Store
 	/* jshint proto: true */
-	// detect __proto__
-	has.add('object-proto', !!{}.__proto__);
+	// detect __proto__, and avoid using it on Firefox, as they warn about
+	// deoptimizations. The watch method is a clear indicator of the Firefox
+	// JS engine.
+	has.add('object-proto', !!{}.__proto__ && !({}).watch);
 	var hasProto = has('object-proto');
 	var excludePropertiesOnCopy = {
 		data: true,
@@ -31,12 +32,11 @@ define([
 		constructor: function (options) {
 			// perform the mixin
 			options && declare.safeMixin(this, options);
-			if (!this.hasOwnProperty('model') && this.model) {
-				// we need a distinct model for each store, so we can
-				// save the reference back to this store on it
-				this.model = declare(this.model, {});
-			}
 			if (this.model) {
+				// we need a distinct model for each store, so we can
+				// save the reference back to this store on it.
+				// we always create a new model to be safe.
+				this.model = declare(this.model, {});
 				// give a reference back to the store for saving, etc.
 				this.model.prototype._store = this;
 			}
@@ -152,10 +152,11 @@ define([
 
 		// model: Function
 		//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
-		//		used as the prototype for all objects returned from this store. One can set this
+		//		used as the prototype for all objects returned from this store. One can set
+		//		this to the Model from dstore/Model to return Model objects, or leave this
 		//		to null if you don't want any methods to decorate the returned
-		//		objects (this can improve performance by avoiding prototype setting)
-		model: Model,
+		//		objects (this can improve performance by avoiding prototype setting),
+		model: null,
 
 		_restore: function (object) {
 			// summary:

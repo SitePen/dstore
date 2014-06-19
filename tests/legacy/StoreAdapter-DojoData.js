@@ -8,8 +8,9 @@ define([
 	'dojo/store/Memory',
 	'dojo/_base/lang',
 	'dstore/legacy/StoreAdapter',
+	'dstore/Model',
 	'../data/testData'
-], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, StoreAdapter, testData) {
+], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, StoreAdapter, Model, testData) {
 
 	function getResultsArray(store) {
 		var results = [];
@@ -29,7 +30,10 @@ define([
 					data: lang.clone(testData)
 				})
 			});
-			store = new StoreAdapter({ objectStore: dataStore });
+			store = new StoreAdapter({
+				objectStore: dataStore,
+				model: Model
+			});
 			store.model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};

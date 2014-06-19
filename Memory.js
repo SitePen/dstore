@@ -16,7 +16,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/array', './Store', 
 	// module:
 	//		dstore/Memory
 	/* jshint proto: true */
-	var hasProto = !!{}.__proto__;
+	var hasProto = !!{}.__proto__ && !({}).watch;
 	return declare(StoreBase, {
 		constructor: function () {
 			// summary:

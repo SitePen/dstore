@@ -4,8 +4,9 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'../sorting',
+	'dstore/Model',
 	'dstore/legacy/StoreAdapter'
-], function (declare, registerSuite, assert, Memory, sorting, StoreAdapter) {
+], function (declare, registerSuite, assert, Memory, sorting, Model, StoreAdapter) {
 
 	function getResultsArray(store) {
 		var results = [];
@@ -30,7 +31,8 @@ define([
 						{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
 						{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 					]
-				})
+				}),
+				model: Model
 			});
 			store.model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
