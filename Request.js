@@ -95,7 +95,7 @@ define([
 			if (this.useRangeHeaders) {
 				requestArgs.headers = this._renderRangeHeaders(start, end);
 			} else {
-				requestArgs.params = this._renderRangeParams(start, end);
+				requestArgs.queryParams = this._renderRangeParams(start, end);
 			}
 
 			var results = this._request(requestArgs);
@@ -238,7 +238,7 @@ define([
 			// headers: Object
 			//		The headers to which a Range property is added
 
-			var value = 'items=' + start + '-' + end;
+			var value = 'items=' + start + '-' + (end - 1);
 			return {
 				'Range': value,
 				'X-Range': value //set X-Range for Opera since it blocks "Range" header
