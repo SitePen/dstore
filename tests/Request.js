@@ -36,13 +36,20 @@ define([
 		});
 	}
 
-	function runCollectionTest(collection, expected) {
+	function runCollectionTest(collection, rangeArgs, expected) {
 		var expectedResults = [
 			{ id: 1, name: 'one' },
 			{ id: 2, name: 'two' }
 		];
 		mockRequest.setResponseText(JSON.stringify(expectedResults));
-		return when(collection.fetch ? collection.fetch() : collection).then(function (results) {
+		var results;
+		if (!expected) {
+			expected = rangeArgs;
+			results = collection.fetch();
+		} else {
+			results = collection.fetchRange(rangeArgs);
+		}
+		return when(results).then(function (results) {
 			expected.headers && mockRequest.assertRequestHeaders(expected.headers);
 			expected.queryParams && mockRequest.assertQueryParams(expected.queryParams);
 
@@ -186,8 +193,7 @@ define([
 			},
 
 			'range': function () {
-				var rangeResults = store.fetchRange({start: 15, end: 25});
-				return runCollectionTest(rangeResults, {
+				return runCollectionTest(store, {start: 15, end: 25}, {
 					queryParams: {
 						'limit(10,15)': ''
 					}
@@ -196,8 +202,7 @@ define([
 			'range with rangeParam': function () {
 				store.rangeStartParam = 'start';
 				store.rangeCountParam = 'count';
-				var rangeResults = store.fetchRange({start: 15, end: 25});
-				return runCollectionTest(rangeResults, {
+				return runCollectionTest(store, {start: 15, end: 25}, {
 					queryParams: {
 						'start': '15',
 						'count': '10'
@@ -206,8 +211,7 @@ define([
 			},
 			'range with headers': function () {
 				store.useRangeHeaders = true;
-				var rangeResults = store.fetchRange({start: 15, end: 25});
-				return runCollectionTest(rangeResults, {
+				return runCollectionTest(store, {start: 15, end: 25}, {
 					headers: {
 						'Range': 'items=15-24'
 					}
@@ -216,8 +220,7 @@ define([
 
 			'range with headers without end': function () {
 				store.useRangeHeaders = true;
-				var rangeResults = store.fetchRange({start: 15, end: Infinity});
-				return runCollectionTest(rangeResults, {
+				return runCollectionTest(store, {start: 15, end: Infinity}, {
 					headers: {
 						'Range': 'items=15-Infinity'
 					}
@@ -227,8 +230,8 @@ define([
 			// TODO: Convert this to a test of all permutations of filter, sort, and range calls
 			'filter+sort+range': function () {
 				var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
-				var collection = store.filter(filter).sort('prop1').fetchRange({start: 15, end: 25});
-				return runCollectionTest(collection, {
+				var collection = store.filter(filter).sort('prop1');
+				return runCollectionTest(collection, {start: 15, end: 25}, {
 					queryParams: lang.mixin({}, filter, {
 						'limit(10,15)': '',
 						'sort(+prop1)': ''
@@ -259,7 +262,7 @@ define([
 						var queryLog = collection.queryLog;
 						return queryLog[queryLog.length - 1];
 					},
-					queryer;
+					querier;
 
 				assert.strictEqual(filteredCollection.queryLog.length, 1);
 				return when(filteredCollection.fetch()).then(function (results) {
@@ -267,10 +270,10 @@ define([
 					assert.strictEqual(results.length, expectedResults.length);
 
 					var queryLogEntry = getTopQueryLogEntry(filteredCollection);
-					assert.property(queryLogEntry, 'queryer');
-					queryer = queryLogEntry.queryer;
+					assert.property(queryLogEntry, 'querier');
+					querier = queryLogEntry.querier;
 
-					var filteredResults = queryer(expectedResults);
+					var filteredResults = querier(expectedResults);
 					assert.equal(filteredResults.length, 2);
 					assert.deepEqual(filteredResults[0], expectedResults[0]);
 					assert.deepEqual(filteredResults[1], expectedResults[2]);
@@ -284,16 +287,16 @@ define([
 					assert.strictEqual(results.length, expectedResults.length);
 
 					var queryLogEntry = getTopQueryLogEntry(sortedCollection);
-					assert.property(queryLogEntry, 'queryer');
-					queryer = (function () {
-						var existingQueryer = queryer,
-							newQueryer = queryLogEntry.queryer;
+					assert.property(queryLogEntry, 'querier');
+					querier = (function () {
+						var existingQueryer = querier,
+							newQueryer = queryLogEntry.querier;
 						return function (data) {
 							return newQueryer(existingQueryer(data));
 						};
 					})();
 
-					var sortedFilteredResults = queryer(expectedResults);
+					var sortedFilteredResults = querier(expectedResults);
 					assert.equal(sortedFilteredResults.length, 2);
 					assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
 					assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);

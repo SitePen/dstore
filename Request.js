@@ -79,15 +79,26 @@ define([
 		//		included with a RQL style limit() parameter
 
 		fetch: function () {
-			if (!this.hasOwnProperty('data')) {
-				// perform the actual query
-				var headers = lang.delegate(this.headers, { Accept: this.accepts });
-				if (this.useRangeHeaders) {
-					this._applyRangeHeader(headers);
-				}
-				var response = request(this._renderUrl(), {
-					method: 'GET',
-					headers: headers
+			var results = this._request();
+			return results.data.then(function (data) {
+				return new QueryResults(data);
+			});
+		},
+
+		fetchRange: function (kwArgs) {
+			var start = kwArgs.start,
+				end = kwArgs.end,
+				requestArgs = {};
+			if (this.useRangeHeaders) {
+				requestArgs.headers = this._renderRangeHeaders(start, end);
+			} else {
+				requestArgs.queryParams = this._renderRangeParams(start, end);
+			}
+
+			var results = this._request(requestArgs);
+			return results.data.then(function (data) {
+				return new QueryResults(data, {
+					totalLength: results.total,
 				});
 				var parse = this.parse;
 				var collection = this;
@@ -218,6 +229,11 @@ define([
 					);
 				}
 			});
+			var value = 'items=' + start + '-' + (end - 1);
+			return {
+				'Range': value,
+				'X-Range': value //set X-Range for Opera since it blocks "Range" header
+			};
 		}
 	});
 
