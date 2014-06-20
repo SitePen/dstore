@@ -4,18 +4,33 @@ var miniExcludes = {
 	},
 	isTestRe = /\/test\//;
 
+var packages = {};
+try {
+	// retrieve the set of packages for determining which modules to include
+	require(['util/build/buildControl'], function (buildControl) {
+		packages = buildControl.packages;
+	});
+} catch (error) {
+	console.error('Unable to retrieve packages for determining optional package support in dstore');
+}
 var profile = {
 	resourceTags: {
-		test: function(filename, mid){
+		test: function (filename, mid) {
 			return isTestRe.test(filename);
 		},
 
-		miniExclude: function(filename, mid){
+		miniExclude: function (filename, mid) {
 			return /\/(?:tests|demos|docs)\//.test(filename) || mid in miniExcludes;
 		},
 
-		amd: function(filename, mid){
+		amd: function (filename, mid) {
 			return /\.js$/.test(filename);
+		},
+
+		copyOnly: function (filename, mid) {
+			// conditionally omit modules dependent on rql or json-schema packages
+			return (!packages.rql && /rqlQueryEngine\.js/.test(filename)) ||
+				(!packages['json-schema'] && /jsonSchema\.js/.test(filename));
 		}
 	}
 };
