@@ -177,6 +177,20 @@ define([
 			assert.deepEqual(events, ['update', 'add', 'remove']);
 		},
 
+		'events with beforeId': function () {
+			var store = new Store(),
+				beforeIds = [];
+
+			store.on('add, update', function (event) {
+				beforeIds.push(event.beforeId);
+			});
+
+			store.add({}, { beforeId: 123 });
+			store.put({}, { beforeId: 321 });
+
+			assert.deepEqual(beforeIds, [ 123, 321 ]);
+		},
+
 		forEach: function () {
 			var store = new (declare(Store, {
 				fetch: function () {

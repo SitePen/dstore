@@ -65,6 +65,15 @@ define([
 			var hasId = typeof id !== 'undefined';
 			var parse = this.parse;
 			var store = this;
+
+			var positionHeaders = 'beforeId' in options
+				? (options.beforeId === null
+					? { 'X-Put-Default-Position': 'end' }
+					: { 'X-Put-Before': options.beforeId })
+				: (!hasId || options.overwrite === false
+					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
+					: null);
+
 			return request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
@@ -73,10 +82,16 @@ define([
 						Accept: this.accepts,
 						'If-Match': options.overwrite === true ? '*' : null,
 						'If-None-Match': options.overwrite === false ? '*' : null
-					}, this.headers, options.headers)
+					}, positionHeaders, this.headers, options.headers)
 				}).then(function (response) {
-					var result = store._restore(parse(response));
-					store.emit(options.overwrite === false ? 'add' : 'update', {target: result || object});
+					var event = {};
+
+					if ('beforeId' in options) {
+						event.beforeId = options.beforeId;
+					}
+
+					var result = event.target = store._restore(parse(response)) || object;
+					store.emit(options.overwrite === false ? 'add' : 'update', event);
 					return result;
 				});
 		},

@@ -99,6 +99,73 @@ define([
 			});
 		},
 
+		'put object with store.defaultNewToStart': function () {
+			function testPutPosition(object, options, expectedHeaders) {
+				store.defaultNewToStart = undefined;
+				return store.put(object, options).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultUndefined);
+				}).then(function () {
+					store.defaultNewToStart = false;
+					return store.put(object, options);
+				}).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultEnd);
+					store.defaultNewToStart = true;
+					return store.put(object, options);
+				}).then(function () {
+					mockRequest.assertRequestHeaders(expectedHeaders.defaultStart);
+				});
+			}
+
+			var objectWithId = { id: 1, name: 'one' },
+				objectWithoutId = { name: 'missing identity' },
+				optionsWithoutOverwrite = {},
+				optionsWithOverwriteTrue = { overwrite: true },
+				optionsWithOverwriteFalse = { overwrite: false },
+				noExpectedPositionHeaders = {
+					defaultUndefined: { 'X-Put-Default-Position': null },
+					defaultEnd: { 'X-Put-Default-Position': null },
+					defaultStart: { 'X-Put-Default-Position': null }
+				},
+				expectedPositionHeaders = {
+					defaultUndefined: { 'X-Put-Default-Position': 'end' },
+					defaultEnd: { 'X-Put-Default-Position': 'end' },
+					defaultStart: { 'X-Put-Default-Position': 'start' }
+				};
+
+			var tests = [
+				[ objectWithId, optionsWithoutOverwrite, noExpectedPositionHeaders ],
+				[ objectWithId, optionsWithOverwriteTrue, noExpectedPositionHeaders ],
+				[ objectWithId, optionsWithOverwriteFalse, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithoutOverwrite, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithOverwriteTrue, expectedPositionHeaders ],
+				[ objectWithoutId, optionsWithOverwriteFalse, expectedPositionHeaders ]
+			];
+
+			var promise = testPutPosition.apply(null, tests[0]);
+			for (var i = 0; i < tests.length; ++i) {
+				promise = promise.then(function () {
+					return testPutPosition.apply(null, tests[i]);
+				});
+			}
+		},
+
+		'put object with options.beforeId': function () {
+			store.defaultNewToStart = true;
+			return store.put({ id: 1, name: 'one' }, { beforeId: 123 }).then(function () {
+				mockRequest.assertRequestHeaders({
+					'X-Put-Before': 123,
+					'X-Put-Default-Position': null
+				});
+			}).then(function () {
+				return store.put({ id: 2, name: 'two' }, { beforeId: null });
+			}).then(function () {
+				mockRequest.assertRequestHeaders({
+					'X-Put-Before': null,
+					'X-Put-Default-Position': 'end'
+				});
+			});
+		},
+
 		'get and save': function () {
 			var expectedObject = { id: 1, name: 'one' };
 			mockRequest.setResponseText(store.stringify(expectedObject));
@@ -112,6 +179,7 @@ define([
 			});
 		}
 
+		// TODO: Add tests for emitting add, update, and remove events
 	});
 	registerSuite(tests);
 });
