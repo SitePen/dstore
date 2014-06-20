@@ -42,7 +42,7 @@ define([
 			{ id: 2, name: 'two' }
 		];
 		mockRequest.setResponseText(JSON.stringify(expectedResults));
-		return when(collection.fetch()).then(function (results) {
+		return when(collection.fetch ? collection.fetch() : collection).then(function (results) {
 			expected.headers && mockRequest.assertRequestHeaders(expected.headers);
 			expected.queryParams && mockRequest.assertQueryParams(expected.queryParams);
 
@@ -186,8 +186,8 @@ define([
 			},
 
 			'range': function () {
-				var rangeCollection = store.range(15, 25);
-				return runCollectionTest(rangeCollection, {
+				var rangeResults = store.fetchRange({start: 15, end: 25});
+				return runCollectionTest(rangeResults, {
 					queryParams: {
 						'limit(10,15)': ''
 					}
@@ -196,8 +196,8 @@ define([
 			'range with rangeParam': function () {
 				store.rangeStartParam = 'start';
 				store.rangeCountParam = 'count';
-				var rangeCollection = store.range(15, 25);
-				return runCollectionTest(rangeCollection, {
+				var rangeResults = store.fetchRange({start: 15, end: 25});
+				return runCollectionTest(rangeResults, {
 					queryParams: {
 						'start': '15',
 						'count': '10'
@@ -206,8 +206,8 @@ define([
 			},
 			'range with headers': function () {
 				store.useRangeHeaders = true;
-				var rangeCollection = store.range(15, 25);
-				return runCollectionTest(rangeCollection, {
+				var rangeResults = store.fetchRange({start: 15, end: 25});
+				return runCollectionTest(rangeResults, {
 					headers: {
 						'Range': 'items=15-24'
 					}
@@ -216,8 +216,8 @@ define([
 
 			'range with headers without end': function () {
 				store.useRangeHeaders = true;
-				var rangeCollection = store.range(15);
-				return runCollectionTest(rangeCollection, {
+				var rangeResults = store.fetchRange({start: 15, end: Infinity});
+				return runCollectionTest(rangeResults, {
 					headers: {
 						'Range': 'items=15-Infinity'
 					}
@@ -227,7 +227,7 @@ define([
 			// TODO: Convert this to a test of all permutations of filter, sort, and range calls
 			'filter+sort+range': function () {
 				var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
-				var collection = store.filter(filter).sort('prop1').range(15, 25);
+				var collection = store.filter(filter).sort('prop1').fetchRange({start: 15, end: 25});
 				return runCollectionTest(collection, {
 					queryParams: lang.mixin({}, filter, {
 						'limit(10,15)': '',
@@ -254,7 +254,7 @@ define([
 				var filter = { odd: true },
 					filteredCollection = store.filter(filter),
 					sortedCollection,
-					rangeCollection,
+					rangeResults,
 					getTopQueryLogEntry = function (collection) {
 						var queryLog = collection.queryLog;
 						return queryLog[queryLog.length - 1];
@@ -298,10 +298,7 @@ define([
 					assert.deepEqual(sortedFilteredResults[0], expectedResults[2]);
 					assert.deepEqual(sortedFilteredResults[1], expectedResults[0]);
 
-					rangeCollection = sortedCollection.range(0, 25);
-					assert.strictEqual(rangeCollection.queryLog.length, 3);
-
-					return rangeCollection.fetch();
+					return sortedCollection.fetchRange({start: 0, end: 25});
 				}).then(function (results) {
 					mockRequest.assertQueryParams({
 						'sort(-id)': '',

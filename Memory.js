@@ -8,17 +8,6 @@ define([
 		// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
 		function (declare, lang, has, arrayUtil, StoreBase, objectQueryEngine /*=====, Store =====*/) {
 
-	function createQuery(updateTotal) {
-		return function query () {
-			var newCollection = this.inherited(arguments),
-				queryer = newCollection.queryLog[newCollection.queryLog.length - 1].queryer;
-
-			var data = newCollection.data = queryer(this.data);
-			newCollection.total = updateTotal ? data.length : this.total;
-			return newCollection;
-		};
-	}
-
 	// module:
 	//		dstore/Memory
 	return declare(StoreBase, {
@@ -81,6 +70,7 @@ define([
 				this._setIdentity(object, ('id' in options) ? options.id : Math.random());
 				id = this.getIdentity(object);
 			}
+			storage.version++;
 
 			var eventType = id in index ? 'update' : 'add',
 				event = { target: object },
@@ -196,14 +186,48 @@ define([
 				}
 				index[this.getIdentity(object)] = i;
 			}
+			storage.version++;
 		},
 
+<<<<<<< HEAD
 		filter: createQuery(true),
 		sort: createQuery(),
 		range: createQuery(),
 
 		fetch: function () {
 			return this.data;
+=======
+		fetch: function () {
+			var data = this.data;
+			if (!data || data._version !== this.storage.version) {
+				// our data is absent or out-of-date, so we requery from the root
+				// start with the root data
+				data = this.storage.fullData;
+				var queryLog = this.queryLog;
+				// iterate through the query log, applying each querier
+				for (var i = 0, l = queryLog.length; i < l; i++) {
+					data = queryLog[i].querier(data);
+				}
+				// store it, with the storage version stamp
+				data._version = this.storage.version; 
+				this.data = data;
+			}
+			return new QueryResults(data);
+		},
+
+		fetchRange: function (kwArgs) {
+			var data = this.fetch(),
+				start = kwArgs.start,
+				end = kwArgs.end;
+			return new QueryResults(
+				data.slice(start, end),
+				{
+					totalLength: data.length,
+					start: start,
+				    end: end
+				}
+			);
+>>>>>>> Implement lazy, version-checking fetch() in Memory, add map() query type, lots of test updates
 		}
 	});
 });

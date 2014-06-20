@@ -112,20 +112,6 @@ define([
 			assert.deepEqual(sortedCollection.queryLog, expectedQueryLog4);
 		},
 
-		'range': function () {
-			var rangedCollection = store.range(100, 200),
-				expectedQueryLog1 = [ {
-					type: 'range', arguments: [ 100, 200 ], normalizedArguments: [ { start: 100, end: 200 } ]
-				} ];
-			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog1);
-
-			rangedCollection = rangedCollection.range(25, 50);
-			var expectedQueryLog2 = expectedQueryLog1.concat({
-				type: 'range', arguments: [ 25, 50 ], normalizedArguments: [ { start: 25, end: 50 } ]
-			});
-			assert.deepEqual(rangedCollection.queryLog, expectedQueryLog2);
-		},
-
 		'restore': function () {
 			var TestModel = declare(Model, {
 				_restore: function (Constructor) {
@@ -204,20 +190,6 @@ define([
 				assert.strictEqual(instance, store);
 			});
 			assert.deepEqual(results, [0, 1, 2]);
-		},
-
-		map: function () {
-			var store = new (declare(Store, {
-				fetch: function () {
-					return [0, 1, 2];
-				}
-			}))();
-			var results = store.map(function (item, i, instance) {
-				assert.strictEqual(item, i);
-				assert.strictEqual(instance, store);
-				return item * 2;
-			});
-			assert.deepEqual(results, [0, 2, 4]);
 		}
 
 		// TODO: Add map test and tests for other Store features

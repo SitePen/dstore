@@ -104,7 +104,7 @@ define([
 				var total = results.total;
 				// apply the object restoration
 				this.data = results = results.map(this._restore, this);
-				this.total = results.total = total;
+				this.total = results.totalLength = total;
 			}
 			return results;
 		}

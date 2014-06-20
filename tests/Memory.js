@@ -39,7 +39,7 @@ define([
 		'model': function () {
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
-			assert.strictEqual(store.filter({even: true}).data[1].describe(), 'four is not a prime');
+			assert.strictEqual(store.filter({even: true}).fetch()[1].describe(), 'four is not a prime');
 		},
 
 		'no model': function() {
@@ -54,44 +54,44 @@ define([
 		},
 
 		'filter': function () {
-			assert.strictEqual(store.filter({prime: true}).data.length, 3);
-			assert.strictEqual(store.filter({even: true}).data[1].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
+			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
 		},
 
 		'filter with string': function () {
-			assert.strictEqual(store.filter({name: 'two'}).data.length, 1);
-			assert.strictEqual(store.filter({name: 'two'}).data[0].name, 'two');
+			assert.strictEqual(store.filter({name: 'two'}).fetch().length, 1);
+			assert.strictEqual(store.filter({name: 'two'}).fetch()[0].name, 'two');
 		},
 
 		'filter with regexp': function () {
-			assert.strictEqual(store.filter({name: /^t/}).data.length, 2);
-			assert.strictEqual(store.filter({name: /^t/}).data[1].name, 'three');
-			assert.strictEqual(store.filter({name: /^o/}).data.length, 1);
-			assert.strictEqual(store.filter({name: /o/}).data.length, 3);
+			assert.strictEqual(store.filter({name: /^t/}).fetch().length, 2);
+			assert.strictEqual(store.filter({name: /^t/}).fetch()[1].name, 'three');
+			assert.strictEqual(store.filter({name: /^o/}).fetch().length, 1);
+			assert.strictEqual(store.filter({name: /o/}).fetch().length, 3);
 		},
 
 		'filter with test function': function () {
 			assert.strictEqual(store.filter({id: {test: function (id) {
 				return id < 4;
-			}}}).data.length, 3);
+			}}}).fetch().length, 3);
 			assert.strictEqual(store.filter({even: {test: function (even, object) {
 				return even && object.id > 2;
-			}}}).data.length, 1);
+			}}}).fetch().length, 1);
 		},
 
 		'filter with sort': function () {
-			assert.strictEqual(store.filter({prime: true}).sort('name').data.length, 3);
-			assert.strictEqual(store.filter({even: true}).sort('name').data[1].name, 'two');
+			assert.strictEqual(store.filter({prime: true}).sort('name').fetch().length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('name').fetch()[1].name, 'two');
 			assert.strictEqual(store.filter({even: true}).sort(function (a, b) {
 				return a.name < b.name ? -1 : 1;
-			}).data[1].name, 'two');
-			assert.strictEqual(store.filter(null).sort('mappedTo').data[4].name, 'four');
+			}).fetch()[1].name, 'two');
+			assert.strictEqual(store.filter(null).sort('mappedTo').fetch()[4].name, 'four');
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(store.filter({prime: true}).range(1, 2).data.length, 1);
-			assert.strictEqual(store.filter({prime: true}).range(1, 2).total, 3);
-			assert.strictEqual(store.filter({even: true}).range(1, 2).data[0].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).length, 1);
+			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).totalLength, 3);
+			assert.strictEqual(store.filter({even: true}).fetchRange({start: 1, end: 2})[0].name, 'four');
 		},
 
 		'filter with inheritance': function () {
@@ -222,17 +222,17 @@ define([
 		},
 
 		'remove missing': function () {
-			var expectedLength = store.data.length;
+			var expectedLength = store.fetch().length;
 			assert(!store.remove(77));
 			// make sure nothing changed
-			assert.strictEqual(store.data.length, expectedLength);
+			assert.strictEqual(store.fetch().length, expectedLength);
 		},
 
 		'filter after changes': function () {
 			store.remove(2);
 			store.add({ id: 6, perfect: true });
-			assert.strictEqual(store.filter({prime: true}).data.length, 2);
-			assert.strictEqual(store.filter({perfect: true}).data.length, 1);
+			assert.strictEqual(store.filter({prime: true}).fetch().length, 2);
+			assert.strictEqual(store.filter({perfect: true}).fetch().length, 1);
 		},
 
 		'ItemFileReadStore style data': function () {
@@ -248,7 +248,7 @@ define([
 				}
 			});
 			assert.strictEqual(anotherStore.get('one').name, 'one');
-			assert.strictEqual(anotherStore.filter({name: 'one'}).data[0].name, 'one');
+			assert.strictEqual(anotherStore.filter({name: 'one'}).fetch()[0].name, 'one');
 		},
 
 		'add new id assignment': function () {
@@ -263,15 +263,12 @@ define([
 			var filteredCollection = store.filter(function (o) {
 				return o.id <= 3;
 			});
-			assert.property(filteredCollection, 'total');
-			assert.strictEqual(filteredCollection.total, filteredCollection.data.length);
 
 			var sortedCollection = store.sort('id');
-			assert.strictEqual(sortedCollection.total, sortedCollection.data.length);
 
-			var rangedCollection = store.range(0, 3);
-			assert.strictEqual(rangedCollection.total, 5);
-			assert.strictEqual(rangedCollection.data.length, 3);
+			var ranged = store.fetchRange({start: 0, end: 3});
+			assert.strictEqual(ranged.totalLength, 5);
+			assert.strictEqual(ranged.length, 3);
 		},
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
 			return function before() {

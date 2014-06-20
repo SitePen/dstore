@@ -47,6 +47,12 @@ define([
 			};
 		},
 
+		map: function (query) {
+			return function (data) {
+				return arrayUtil.map(data, query);
+			};
+		},
+
 		/* jshint ignore:start */
 		sort: function (sorted) {
 			return function (data) {

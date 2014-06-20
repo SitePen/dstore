@@ -58,6 +58,7 @@ define([
 			}
 			// the object the store can use for holding any local data or events
 			this.storage = new Evented();
+			this.storage.version = 0;
 			var store = this;
 			if (this.autoEmitEvents) {
 				// emit events when modification operations are called
@@ -118,15 +119,6 @@ define([
 			}
 		},
 
-		map: function (callback, thisObject) {
-			var results = [];
-			// like forEach, except we collect results
-			return when(this.forEach(function (object, i, collection) {
-				results.push(callback.call(thisObject, object, i, collection));
-			}, thisObject), function () {
-				return results;
-			});
-		},
 		forEach: function (callback, thisObject) {
 			var collection = this;
 			return when(this.fetch(), function (data) {
@@ -233,6 +225,8 @@ define([
 		queryLog: [],	// NOTE: It's ok to define this on the prototype because the array instance is never modified
 
 		filter: new QueryMethod({ type: 'filter' }),
+
+		map: new QueryMethod({ type: 'map' }),
 
 		sort: new QueryMethod({
 			type: 'sort',
@@ -510,7 +504,7 @@ define([
 			The original query arguments
 		normalizedArguments: Array
 			The normalized query arguments
-		queryer: Function?
+		querier: Function?
 			A client-side implementation of the query that takes an item array and returns an item array
 	};
 ====*/

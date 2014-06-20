@@ -66,7 +66,7 @@ define([
 		'filter': function () {
 			var results = store.filter({ someProperty: 'somePropertyB' }).map(function (item) {
 				return item.id;
-			});
+			}).fetch();
 			return when(results, function (data) {
 				assert.deepEqual(data, [ 'node2', 'node5' ]);
 			});
@@ -78,16 +78,16 @@ define([
 					{ property: 'name', descending: false }
 				]).map(function (item) {
 					return item.id;
-				});
+				}).fetch();
 			return when(results, function (data) {
 				assert.deepEqual(data, [ 'node3', 'node2', 'node5', 'node1', 'node4' ]);
 			});
 		},
 
-		'.range': function () {
-			var results = store.range(1, 4).map(function (item) {
+		'.fetchRange': function () {
+			var results = store.map(function (item) {
 					return item.id;
-				});
+				}).fetchRange({start: 1, end: 4});
 			return when(results, function (data) {
 				assert.deepEqual(data, [ 'node2', 'node3', 'node4' ]);
 			});
@@ -99,10 +99,9 @@ define([
 					return item.someProperty !== 'somePropertyB';
 				})
 				.sort('name', true)
-				.range(1, 3)
 				.map(function (item) {
 					return item.id;
-				});
+				}).fetchRange({start: 1, end: 3});
 			return when(results, function (data) {
 				assert.deepEqual(data, [ 'node3', 'node1' ]);
 			});

@@ -51,7 +51,7 @@ define([], function () {
 			if (this.queryEngine) {
 				// Call the query factory in store context to support things like
 				// mapping a filter query's string argument to a custom filter method on the collection
-				logEntry.queryer = this.queryEngine[type].apply(this, normalizedArguments);
+				logEntry.querier = this.queryEngine[type].apply(this, normalizedArguments);
 			}
 
 			var newCollection = this._createSubCollection({
