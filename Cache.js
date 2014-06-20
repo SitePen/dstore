@@ -48,24 +48,31 @@ define([
 					this._parent && this._parent.isAvailableInCache();
 		},
 		fetch: function () {
+			return this._fetch(arguments);
+		},
+		fetchRange: function () {
+			return this._fetch(arguments, true);
+		},
+		_fetch: function (args, isRange) {
 			// if the data is available in the cache (via any parent), we use fetch from the caching store
 			var cachingStore = this.cachingStore;
 			var cachingCollection = this.cachingCollection || cachingStore;
 			var store = this;
 			var available = this.isAvailableInCache();
 			if (available) {
-				var args = arguments;
 				return when(available, function () {
 					// need to double check to make sure the flag hasn't been cleared
 					// and we really have all data loaded
 					if (store.isAvailableInCache()) {
-						return cachingCollection.fetch();
+						return isRange ?
+							cachingCollection.fetchRange(args[0]) :
+							cachingCollection.fetch();
 					} else {
 						return store.inherited(args);
 					}
 				});
 			}
-			return when(this.fetchRequest = this.inherited(arguments), function (results) {
+			return when(this.fetchRequest = this.inherited(args), function (results) {
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
 					var allLoaded = true;
@@ -163,7 +170,7 @@ define([
 
 		sort: cachingQuery('sort'),
 		filter: cachingQuery('filter'),
-		range: cachingQuery('range')
+		map: cachingQuery('map')
 
 	});
 });
