@@ -88,8 +88,8 @@ define([
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(getResultsArray(store.filter({prime: true}).range(1, 2)).length, 1);
-			assert.strictEqual(getResultsArray(store.filter({even: true}).range(1, 2))[0].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).length, 1);
+			assert.strictEqual(store.filter({even: true}).fetchRange({start: 1, end: 2})[0].name, 'four');
 		},
 
 		'put update': function () {
