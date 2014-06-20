@@ -68,7 +68,7 @@ define([
 				return item.id;
 			}).fetch();
 			return when(results, function (data) {
-				assert.deepEqual(data, [ 'node2', 'node5' ]);
+				assert.deepEqual(data.slice(), [ 'node2', 'node5' ]);
 			});
 		},
 
@@ -80,7 +80,7 @@ define([
 					return item.id;
 				}).fetch();
 			return when(results, function (data) {
-				assert.deepEqual(data, [ 'node3', 'node2', 'node5', 'node1', 'node4' ]);
+				assert.deepEqual(data.slice(), [ 'node3', 'node2', 'node5', 'node1', 'node4' ]);
 			});
 		},
 
@@ -89,7 +89,7 @@ define([
 					return item.id;
 				}).fetchRange({start: 1, end: 4});
 			return when(results, function (data) {
-				assert.deepEqual(data, [ 'node2', 'node3', 'node4' ]);
+				assert.deepEqual(data.slice(), [ 'node2', 'node3', 'node4' ]);
 			});
 		},
 
@@ -103,7 +103,7 @@ define([
 					return item.id;
 				}).fetchRange({start: 1, end: 3});
 			return when(results, function (data) {
-				assert.deepEqual(data, [ 'node3', 'node1' ]);
+				assert.deepEqual(data.slice(), [ 'node3', 'node1' ]);
 			});
 		}
 		// TODO: Add tests for all permutations of filter, sort, range queries
