@@ -93,17 +93,15 @@ define([
 				// Apply a range
 				if ('start' in options) {
 					var start = options.start || 0;
-					results = results.range(
-						start,
-						options.count ? (start + options.count) : Infinity
-					);
+					var queryResults = results.fetchRange({
+						start: start,
+						end: options.count ? (start + options.count) : Infinity
+					});
+					queryResults.total = queryResults.totalLength;
+					return new QueryResults(queryResults);
 				}
 			}
-			var queryResults = new QueryResults(results.map(function (object) {
-				return object;
-			}));
-			queryResults.total = results.total;
-			return queryResults;
+			return new QueryResults(results.fetch());
 		}
 	};
 
