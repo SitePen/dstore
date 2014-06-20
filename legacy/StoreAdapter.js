@@ -58,6 +58,17 @@ define([
 
 			// create an object store query and query options based on current collection
 			// information
+			return this.fetchRange();
+		},
+
+		fetchRange: function (rangeArgs) {
+			// summary:
+			//		Fetches the query results with a range. Note that the fetch may occur asynchronously
+			// returns: Array|Promise
+			//		The results or a promise for the results
+
+			// create an object store query and query options based on current collection
+			// information
 			var queryOptions = {},
 				queryLog = this.queryLog,
 				getQueryArguments = function (type) {
@@ -82,17 +93,9 @@ define([
 					}
 				}
 			}
-
-			var ranged = getQueryArguments('range');
-			if (ranged.length > 1) {
-				console.warn(
-					'Chaining multiple ranges is not supported for dojo/store. Only the first range will be used.'
-				);
-			}
-			ranged = ranged.shift();
-			if (ranged) {
+			if (rangeArgs) {
 				// set the range
-				queryOptions.count = ranged.end - ((queryOptions.start = ranged.start) || 0);
+				queryOptions.count = rangeArgs.end - ((queryOptions.start = rangeArgs.start) || 0);
 			}
 
 			var filtered = getQueryArguments('filter');

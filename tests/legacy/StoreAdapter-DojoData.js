@@ -7,10 +7,11 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'dojo/_base/lang',
+	'dojo/when',
 	'dstore/legacy/StoreAdapter',
 	'dstore/Model',
 	'../data/testData'
-], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, StoreAdapter, Model, testData) {
+], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, Model, testData) {
 
 	function getResultsArray(store) {
 		var results = [];
@@ -72,8 +73,12 @@ define([
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(getResultsArray(store.filter({prime: true}).range(1, 2)).length, 1);
-			assert.strictEqual(getResultsArray(store.filter({even: true}).range(1, 2))[0].name, 'four');
+			when(store.filter({prime: true}).fetchRange({start: 1, end: 2}), function (results) {
+				assert.strictEqual(results.length, 1);
+			});
+			when(store.filter({even: true}).fetchRange({start: 1, end: 2}), function (results) {
+				assert.strictEqual(results[0].name, 'four');
+			});
 		},
 
 		'put new': function () {
