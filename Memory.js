@@ -212,7 +212,7 @@ define([
 					data = queryLog[i].querier(data);
 				}
 				// store it, with the storage version stamp
-				data._version = this.storage.version; 
+				data._version = this.storage.version;
 				this.data = data;
 			}
 			return new QueryResults(data);
@@ -222,19 +222,11 @@ define([
 			var data = this.fetch(),
 				start = kwArgs.start,
 				end = kwArgs.end;
-			return new QueryResults(
-				when(data, function (data) {
-					return data.slice(start, end);
-				}),
-				{
-					totalLength: when(data, function (data) {
-						return data.length;
-					}),
-					start: start,
-				    end: end
-				}
-			);
->>>>>>> Implement lazy, version-checking fetch() in Memory, add map() query type, lots of test updates
+			return when(data, function (data) {
+				return new QueryResults(data.slice(start, end), {
+					totalLength: data.length
+				});
+			});
 		}
 	});
 });

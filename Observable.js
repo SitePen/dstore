@@ -98,13 +98,62 @@ define([
 			// a new collection, just decorating an existing collection with item index tracking.
 			// If we use _createSubCollection, it will return a new collection that may exclude
 			// important, defining properties from the tracked collection.
-			var observed = lang.delegate(this, {
-				// TODO: The fact that we have to remember `store` here might indicate the need to adjust our approach to _createSubCollection and perhaps allow for not excluding existing properties
-				store: this.store || this,
+			var observed = declare.safeMixin(lang.delegate(this), {
+				_ranges: [],
 
-				// Any sub-collections created from the tracked collection should be based on this
-				// parent collection instead
-				_createSubCollection: lang.hitch(this, '_createSubCollection'),
+				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
+				fetch: function () {
+					var self = this;
+					return when(self._results = this.inherited(arguments), function (results) {
+						results = self._results = results.slice();
+
+						self._ranges = [];
+						registerRange(self._ranges, 0, results.length);
+
+						return results;
+					});
+				},
+
+				fetchRange: function (kwArgs) {
+					var self = this,
+						start = kwArgs.start,
+						end = kwArgs.end;
+					return when(this.inherited(arguments), function (results) {
+						return when(results.totalLength, function (totalLength) {
+							var partialResults = self._partialResults || (self._partialResults = []);
+							end = Math.min(end, start + results.length);
+
+							partialResults.length = totalLength;
+
+							// copy the new ranged data into the parent partial data set
+							var spliceArgs = [ start, end - start ].concat(results);
+							partialResults.splice.apply(partialResults, spliceArgs);
+							registerRange(self._ranges, start, end);
+
+							return results;
+						});
+					});
+				},
+
+				releaseRange: function (start, end) {
+					if (this._partialResults) {
+						unregisterRange(this._ranges, start, end);
+
+						for (var i = start; i < end; ++i) {
+							delete this._partialResults[i];
+						}
+					}
+				},
+
+				on: function (type, listener) {
+					var self = this,
+						inheritedOn = this.getInherited(arguments);
+					return on.parse(observed, type, listener, function (target, type) {
+						return type in eventTypes ?
+							aspect.after(observed, 'on_tracked' + type, listener, true) :
+							inheritedOn.call(self, type, listener);
+					});
+				},
 
 				tracking: {
 					remove: function () {
@@ -122,11 +171,11 @@ define([
 				arrayUtil.forEach(this.queryLog, function (entry) {
 					// TODO: This isn't extensible for new query types. How we can we make a general determination to not include a query type as we do for 'range'?
 					if (entry.type !== 'range') {
-						var existingQueryer = queryExecutor,
-							queryer = entry.queryer;
-						queryExecutor = existingQueryer
-							? function (data) { return queryer(existingQueryer(data)); }
-							: queryer;
+						var existingQuerier = queryExecutor,
+							querier = entry.querier;
+						queryExecutor = existingQuerier
+							? function (data) { return querier(existingQuerier(data)); }
+							: querier;
 					}
 				});
 			}
