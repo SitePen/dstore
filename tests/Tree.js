@@ -27,7 +27,10 @@ define([
 		name: 'dstore/Tree',
 
 		'getRootCollection': function () {
-			assert.deepEqual(store.getRootCollection().fetch(), [
+			// slice() to get a copy of the results without a totalLength property
+			var results = store.getRootCollection().fetch().slice();
+
+			assert.deepEqual(results, [
 				{ parent: null, id: '1', name: 'root1' },
 				{ parent: null, id: '2', name: 'root2' },
 				{ parent: null, id: '3', name: 'root3' }
@@ -42,17 +45,20 @@ define([
 
 		'getChildren': function () {
 			var childlessObject = store.get('3');
-			assert.deepEqual(store.getChildren(childlessObject).fetch(), []);
+			var children = store.getChildren(childlessObject).fetch().slice();
+			assert.deepEqual(children, []);
 
 			var parentObject = store.get('1');
-			assert.deepEqual(store.getChildren(parentObject).fetch(), [
+			children = store.getChildren(parentObject).fetch().slice();
+			assert.deepEqual(children, [
 				{ parent: '1', id: '1.1', name: 'child1.1' },
 				{ parent: '1', id: '1.2', name: 'child1.2' },
 				{ parent: '1', id: '1.3', name: 'child1.3' }
 			]);
 
 			var grandparentObject = store.get('1.2');
-			assert.deepEqual(store.getChildren(grandparentObject).fetch(), [
+			children = store.getChildren(grandparentObject).fetch().slice();
+			assert.deepEqual(children, [
 				{ parent: '1.2', id: '1.2.1', name: 'grandchild1.2.1' },
 				{ parent: '1.2', id: '1.2.2', name: 'grandchild1.2.2' }
 			]);

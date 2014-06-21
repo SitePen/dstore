@@ -10,7 +10,6 @@ define([
 	'dstore/Observable',
 	'dstore/objectQueryEngine'
 ], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, objectQueryEngine) {
-
 	var MyStore = declare([Memory, Observable], {
 		get: function () {
 			// need to make sure that this.inherited still works with Observable
@@ -55,7 +54,7 @@ define([
 			};
 		});
 
-		arrayUtil.forEach(['filter', 'sort', 'range'], function (method) {
+		arrayUtil.forEach(['filter', 'sort'], function (method) {
 			proto[method] = function () {
 				var newBackingStore = this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 				return lang.mixin(this.inherited(arguments), {
@@ -71,9 +70,12 @@ define([
 		};
 
 		proto.fetch = function () {
-			this.data = when(this.backingMemoryStore.fetch());
-			this.total = when(this.backingMemoryStore.total);
-			return this.data;
+			return when(this.backingMemoryStore.fetch());
+		};
+
+		proto.fetchRange = function () {
+			var backingStore = this.backingMemoryStore;
+			return when(backingStore.fetchRange.apply(backingStore, arguments));
 		};
 
 		return proto;
@@ -89,11 +91,12 @@ define([
 		},
 
 		'filter': function () {
-			var results = store.filter({prime: true});
+			var filteredCollection = store.filter({prime: true});
 
-			assert.strictEqual(results.data.length, 3);
 			var changes = [], secondChanges = [];
-			var tracked = results.track();
+			var tracked = filteredCollection.track();
+			tracked.fetch();
+			assert.strictEqual(tracked._results.length, 3);
 			tracked.on('add, update, remove', function (event) {
 				changes.push(event);
 			});
@@ -102,11 +105,10 @@ define([
 			});
 			var expectedChanges = [],
 				expectedSecondChanges = [];
-			var two = results.data[0];
+			var two = tracked._results[0];
 			two.prime = false;
 			store.put(two); // should remove it from the array
-			tracked.fetch();
-			assert.strictEqual(tracked.data.length, 2);
+			assert.strictEqual(tracked._results.length, 2);
 			expectedChanges.push({
 				type: 'update',
 				target: two,
@@ -124,11 +126,11 @@ define([
 				index: 2,
 				previousIndex: undefined
 			});
-			assert.strictEqual(tracked.data.length, 3);
+			assert.strictEqual(tracked._results.length, 3);
 			// shouldn't be added
 			var six = {id: 6, name: 'six'};
 			store.add(six);
-			assert.strictEqual(tracked.data.length, 3);
+			assert.strictEqual(tracked._results.length, 3);
 
 			expectedChanges.push({
 				type: 'add',
@@ -140,7 +142,7 @@ define([
 			// should be added
 			var seven = {id: 7, name: 'seven', prime: true};
 			store.add(seven);
-			assert.strictEqual(tracked.data.length, 4);
+			assert.strictEqual(tracked._results.length, 4);
 
 			expectedChanges.push({
 				type: 'add',
@@ -153,17 +155,17 @@ define([
 				id: 3,
 				previousIndex: 0
 			});
-			assert.strictEqual(tracked.data.length, 3);
+			assert.strictEqual(tracked._results.length, 3);
 
 			assert.deepEqual(secondChanges, expectedSecondChanges);
 			assert.deepEqual(changes, expectedChanges);
 		},
 
 		'filter with zero id': function () {
-			var results = store.filter({});
-			results.fetch();
-			assert.strictEqual(results.data.length, 7);
-			var tracked = results.track();
+			var filteredCollection = store.filter({});
+			var results = filteredCollection.fetch();
+			assert.strictEqual(results.length, 7);
+			var tracked = filteredCollection.track();
 			tracked.on('update', function (event) {
 				// we only do puts so previous & new indices must always been the same
 				assert.ok(event.index === event.previousIndex);
@@ -191,13 +193,12 @@ define([
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
-			bigObserved.range(0, 25).fetch();
-			bigObserved.range(25, 50).fetch();
-			bigObserved.range(50, 75).fetch();
-			bigObserved.range(75, 100).fetch();
+			bigObserved.fetchRange({ start: 0, end: 25 });
+			bigObserved.fetchRange({ start: 25, end: 50 });
+			bigObserved.fetchRange({ start: 50, end: 75 });
+			bigObserved.fetchRange({ start: 75, end: 100 });
 
-			bigObserved.fetch();
-			var results = bigObserved.data;
+			var results = bigObserved.fetch();
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 1);
@@ -210,7 +211,7 @@ define([
 		},
 
 		// TODO: Consider breaking this down into smaller test cases
-		'paging with store.partialData': function () {
+		'paging with store._partialResults': function () {
 			var bigStore = createBigStore(100, ObservablePartialDataStore),
 				bigFiltered = bigStore.filter({}).sort('order'),
 				latestObservation,
@@ -256,7 +257,7 @@ define([
 			assertObservationIs({ type: 'remove', id: item.id });
 
 			// An update sorted to the beginning of a range and the data has a known index
-			bigObserved.range(0, 25).fetch();
+			bigObserved.fetchRange({ start: 0, end: 25 });
 			item = bigStore.get(0);
 			item.order = 0;
 			bigStore.put(item);
@@ -290,7 +291,7 @@ define([
 			// and the first range being reduced to 0-23 instead of 0-24.
 			// Requesting 24-50 instead of 25-50 in order to request a contiguous range.
 			// Observable should treat contiguous requested ranges as a single range.
-			bigObserved.range(24, 50).fetch();
+			bigObserved.fetchRange({ start: 24, end: 50 });
 
 			// An update sorted to the end of a range but adjacent to another range has a known index
 			item = bigStore.get(22);
@@ -323,7 +324,7 @@ define([
 			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24 });
 
 			// Request range at end of data
-			bigObserved.range(75, 100).fetch();
+			bigObserved.fetchRange({ start: 75, end: 100 });
 
 			// An update at the end of a range and the data has a known index
 			item = bigStore.get(98);
@@ -348,7 +349,7 @@ define([
 			assertObservationIs({ type: 'add', target: item });
 		},
 
-		'paging releaseRange with store.partialData': function () {
+		'paging releaseRange with store._partialResults': function () {
 			var itemCount = 100,
 				store = createBigStore(itemCount, ObservablePartialDataStore),
 				rangeToBeEclipsed = { start: 5, end: 15 },
@@ -363,23 +364,23 @@ define([
 			var trackedStore = store.track(),
 				assertRangeDefined = function (start, end) {
 					for(var i = start; i < end; ++i) {
-						assert.notEqual(trackedStore.partialData[i], undefined);
+						assert.notEqual(trackedStore._partialResults[i], undefined);
 					}
 				},
 				assertRangeUndefined = function (start, end) {
 					for(var i = start; i < end; ++i) {
-						assert.equal(trackedStore.partialData[i], undefined);
+						assert.equal(trackedStore._partialResults[i], undefined);
 					}
 				};
 
 			// Remove all of a range
-			trackedStore.range(rangeToBeEclipsed.start, rangeToBeEclipsed.end).fetch();
+			trackedStore.fetchRange({ start: rangeToBeEclipsed.start, end: rangeToBeEclipsed.end });
 			assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 			trackedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
 			assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
 
 			// Split a range
-			trackedStore.range(rangeToBeSplit.start, rangeToBeSplit.end).fetch();
+			trackedStore.fetchRange({ start: rangeToBeSplit.start, end: rangeToBeSplit.end });
 			assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
 			trackedStore.releaseRange(splittingRange.start, splittingRange.end);
 			assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
@@ -387,14 +388,14 @@ define([
 			assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
 
 			// Remove from range head
-			trackedStore.range(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end).fetch();
+			trackedStore.fetchRange({ start: rangeToBeHeadTrimmed.start, end: rangeToBeHeadTrimmed.end });
 			assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
 			trackedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
 			assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
 
 			// Remove from range tail
-			trackedStore.range(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end).fetch();
+			trackedStore.fetchRange({ start: rangeToBeTailTrimmed.start, end: rangeToBeTailTrimmed.end });
 			assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
 			trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
 			assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
@@ -405,7 +406,7 @@ define([
 			var store = createBigStore(100, ObservablePartialDataStore),
 				trackedStore = store.track();
 
-			return trackedStore.range(0, 25).fetch().then(function () {
+			return trackedStore.fetchRange({ start: 0, end: 25 }).then(function () {
 				var addEvent = null;
 				trackedStore.on('add', function (event) {
 					addEvent = event;
@@ -432,7 +433,7 @@ define([
 				assert.propertyVal(addEvent, 'index', 0);
 
 				store.defaultToTop = false;
-				return trackedStore.range(25, 102).fetch().then(function () {
+				return trackedStore.fetchRange({ start: 25, end: 102 }).then(function () {
 					// now add to the bottom, where it is in range
 					expectedNewItem = store._restore({ id: 202, name: 'item-202', order: Infinity });
 
@@ -447,6 +448,9 @@ define([
 		'new item in empty store - with queryExecutor': function () {
 			var store = new MyStore({ data: [] }),
 				collection = store.filter({ type: 'test-item' }).track();
+
+			// Fetch so tracking has data to work with
+			collection.fetch();
 
 			var actualEvent;
 			collection.on('add', function (event) {
@@ -469,6 +473,9 @@ define([
 		'new item in empty store - without queryExecutor': function () {
 			var store = new MyStore({ data: [] }),
 				collection = store.track();
+
+			// Fetch so tracking has data to work with
+			collection.fetch();
 
 			var actualEvent;
 			collection.on('add', function (event) {
@@ -497,6 +504,9 @@ define([
 				trackedCollection = store.track();
 
 			assert.property(trackedCollection, 'tracking');
+
+			// Fetch so tracking has data to work with
+			trackedCollection.fetch();
 
 			var lastEvent = null;
 			trackedCollection.on('add, update', function (event) {

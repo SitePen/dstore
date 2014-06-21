@@ -173,7 +173,7 @@ define([
 					data = queryLog[i].querier(data);
 				}
 				// store it, with the storage version stamp
-				data._version = this.storage.version; 
+				data._version = this.storage.version;
 				this.data = data;
 			}
 			return new QueryResults(data);
@@ -185,11 +185,7 @@ define([
 				end = kwArgs.end;
 			return new QueryResults(
 				data.slice(start, end),
-				{
-					totalLength: data.length,
-					start: start,
-				    end: end
-				}
+				{ totalLength: data.length }
 			);
 		}
 	});
