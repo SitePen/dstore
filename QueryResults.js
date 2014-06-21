@@ -4,8 +4,6 @@ define([], function () {
 		options = options || {};
 
 		data.totalLength = 'totalLength' in options ? options.totalLength : data.length;
-		data.start = 'start' in options ? options.start : 0;
-		data.end = 'end' in options ? options.end : (data.start + data.totalLength);
 
 		// TODO: Add iteration methods when necessary
 

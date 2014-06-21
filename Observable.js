@@ -99,18 +99,14 @@ define([
 			// a new collection, just decorating an existing collection with item index tracking.
 			// If we use _createSubCollection, it will return a new collection that may exclude
 			// important, defining properties from the tracked collection.
-			var observed = lang.delegate(this, {
-				_collection: this,
-
+			var observed = declare.safeMixin(lang.delegate(this), {
 				_ranges: [],
 
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 				fetch: function () {
-					var self = this,
-						collection = this._collection;
-
-					return when(self._results = collection.fetch.apply(collection, arguments), function (results) {
-						self._results = results;
+					var self = this;
+					return when(self._results = this.inherited(arguments), function (results) {
+						results = self._results = results.slice();
 
 						self._ranges = [];
 						registerRange(self._ranges, 0, results.length);
@@ -119,14 +115,14 @@ define([
 					});
 				},
 
-				fetchRange: function () {
+				fetchRange: function (kwArgs) {
 					var self = this,
-						collection = this._collection;
-					return when(collection.fetchRange.apply(collection, arguments), function (results) {
+						start = kwArgs.start,
+						end = kwArgs.end;
+					return when(this.inherited(arguments), function (results) {
 						return when(results.totalLength, function (totalLength) {
-							var partialResults = self._partialResults || (self._partialResults = []),
-								start = results.start,
-								end = results.end;
+							var partialResults = self._partialResults || (self._partialResults = []);
+							end = Math.min(end, start + results.length);
 
 							partialResults.length = totalLength;
 
@@ -135,7 +131,7 @@ define([
 							partialResults.splice.apply(partialResults, spliceArgs);
 							registerRange(self._ranges, start, end);
 
-							return partialResults;
+							return results;
 						});
 					});
 				},
@@ -149,12 +145,14 @@ define([
 						}
 					}
 				},
+
 				on: function (type, listener) {
-					var self = this;
+					var self = this,
+						inheritedOn = this.getInherited(arguments);
 					return on.parse(observed, type, listener, function (target, type) {
 						return type in eventTypes ?
 							aspect.after(observed, 'on_tracked' + type, listener, true) :
-							self._collection.on(observed, type, listener);
+							inheritedOn.call(self, type, listener);
 					});
 				},
 
@@ -173,11 +171,11 @@ define([
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
-					var existingQueryer = queryExecutor,
-						queryer = entry.queryer;
-					queryExecutor = existingQueryer
-						? function (data) { return queryer(existingQueryer(data)); }
-						: queryer;
+					var existingQuerier = queryExecutor,
+						querier = entry.querier;
+					queryExecutor = existingQuerier
+						? function (data) { return querier(existingQuerier(data)); }
+						: querier;
 				});
 			}
 
@@ -302,7 +300,6 @@ define([
 									// default to the bottom
 									insertedInto = resultsArray.length;
 									possibleRangeIndex = ranges.length - 1;
-
 								}
 								var range = ranges[possibleRangeIndex];
 								if (range && range.start <= insertedInto && insertedInto <= (range.start + range.count)) {
