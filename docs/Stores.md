@@ -59,6 +59,17 @@ This mixin adds functionality for validating any objects that are saved through 
 This store provides client-side querying functionality, but will load its data from the server, using the provided URL. This is
 an asynchronous store since queries and data retrieval may be made before the data has been retrieved from the server.
 
+## Cache
+
+This is a mixin that can be used to add caching functionality to a store. This store has the following properties:
+
+Name | Description
+---- | -----------
+`cachingStore` | This can be used to define the store to be used for caching the data. By default a Memory store will be used.
+`isValidFetchCache` | This is a flag that indicates if the data fetched for a collection/store can be cached to fulfill subsequent fetches. This is false by default, and the value will be inherited by downstream collections.
+`canCacheQuery(method, args)' | This can be a boolean or a method that will indicate if a collection can be cached (if it should have `isValidFetchCache` set to true), based on the query method and arguments used to derive the collection.
+`isLoaded(object)` | This can be defined to indicate if a given object in a query can be cached (by default, objects are cached).
+
 ## Resource Query Language
 
 [Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages includes an alternate query engine for using
