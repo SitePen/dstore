@@ -44,7 +44,7 @@ define([
 			// summary:
 			//		Indicates if the collection's cachingCollection is a viable source
 			//		for a fetch
-			return this.allLoaded || (this.isValidFetchCache && this.fetchRequest) ||
+			return (this.isValidFetchCache && (this.allLoaded || this.fetchRequest)) ||
 					this._parent && this._parent.isAvailableInCache();
 		},
 		fetch: function () {
