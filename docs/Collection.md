@@ -1,16 +1,16 @@
 # Collection
 
-A Collection is the interface for a collection of items, which can be filtered, sorted, and sliced to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `map()`, or `fetch()`.
+A Collection is the interface for a collection of items, which can be filtered, sorted, and sliced to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. The methods represent a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
 
 ## Querying
 
-Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify define which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `range()` method can be called if you want to retrieve an index-based subset, rather than the entire result set. A typical query from a store would look like:
+Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify define which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `map()` method can be called if you want to objects to a different representations. A typical query from a store would look like:
 
-    store.filter({priority: 'high'}).sort('dueDate').range(0, 10).forEach(function (object) {
+    store.filter({priority: 'high'}).sort('dueDate').forEach(function (object) {
             // called for each item in the final result set
         });
 
-In addition, the `track()` method may be used to track store changes, ensuring notifications include index information about object changes, and keeping result sets up-to-date after a query. The `fetch()` method is alternative way to retrieve results, providing an array, and the `map()` is another iterative alternative to `forEach()` for accessing query results. The section below describes each of these methods.
+In addition, the `track()` method may be used to track store changes, ensuring notifications include index information about object changes, and keeping result sets up-to-date after a query. The `fetch()` method is alternative way to retrieve results, providing an array for accessing query results. The section below describes each of these methods.
 
 ## Collection API
 
@@ -38,17 +38,22 @@ This sorts the collection, returning a new ordered collection.
 
 This also sorts the collection, but can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a new collection sorted by lastName, with firstName used to sort identical lastName values.
 
-#### `range(start, [end])`
+#### `map(callback, thisObject)`
 
-Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range.
+Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns. This will return a new collection for the mapped results.
 
 #### `forEach(callback, thisObject)`
 
 Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns. If this is executed asynchronously, a promise will be returned to indicate the completion.
 
-#### `map(callback, thisObject)`
+#### `fetch()`
 
-Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns. This will return a new array (or a promise for an array) for the mapped results.
+Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed. Calling `fetch()` will force the data to be retrieved, returning an array, or a promise to an array.
+
+#### `fetchRange({start: start, end: end})`
+
+This fetches a range of objects from the collection, returning an array, or a promise to an array. The returned (and resolved) array should have a `totalLength`
+property indicating the total number of objects available in the collection.
 
 #### `on(type, listener)`
 
@@ -60,10 +65,6 @@ Type | Description
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `remove` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
 `refresh` | This indicates that the collection has changed substantially such that the user interface should iterate over the collection again to retrieve the latest list of objects. This event is issued in lieu of individual updates, and doesn't guarantee any specific change or update to any specific item.
-
-#### `fetch()`
-
-Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed through an iterative method (like `forEach`, `filter`, or `map`). Calling `fetch()` will force the data to be retrieved, returning an array, or a promise to an array.
 
 #### `track()`
 

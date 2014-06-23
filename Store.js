@@ -254,17 +254,8 @@ define([
 				}
 				return sorted;
 			}
-		}),
-
-		range: new QueryMethod({
-			type: 'range',
-			normalizeArguments: function (start, end) {
-				return [ {
-					start: start,
-					end: end
-				} ];
-			}
 		})
+
 /*====,
 		get: function (id) {
 			// summary:
