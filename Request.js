@@ -101,7 +101,7 @@ define([
 			var results = this._request(requestArgs);
 			return results.data.then(function (data) {
 				return new QueryResults(data, {
-					availableLength: results.total
+					totalLength: results.total
 				});
 			});
 		},

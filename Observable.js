@@ -118,8 +118,9 @@ define([
 				fetchRange: function (kwArgs) {
 					var self = this,
 						start = kwArgs.start,
-						end = kwArgs.end;
-					return when(this.inherited(arguments), function (results) {
+						end = kwArgs.end,
+						fetchResults = this.inherited(arguments);
+					when(fetchResults, function (results) {
 						return when(results.totalLength, function (totalLength) {
 							var partialResults = self._partialResults || (self._partialResults = []);
 							end = Math.min(end, start + results.length);
@@ -134,6 +135,7 @@ define([
 							return results;
 						});
 					});
+					return fetchResults;
 				},
 
 				releaseRange: function (start, end) {
