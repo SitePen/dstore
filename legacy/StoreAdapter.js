@@ -106,8 +106,12 @@ define([
 			if (results) {
 				var total = results.total;
 				// apply the object restoration
-				this.data = results = results.map(this._restore, this);
-				this.total = results.totalLength = total;
+				return when(results.map(this._restore, this), function (results) {
+					if (rangeArgs) {
+						results.totalLength = total;
+					}
+					return results;
+				});
 			}
 			return results;
 		}

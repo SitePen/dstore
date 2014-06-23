@@ -98,7 +98,7 @@ define([
 			var results = this._request(requestArgs);
 			return results.data.then(function (data) {
 				return new QueryResults(data, {
-					totalLength: results.total,
+					totalLength: results.total
 				});
 				var parse = this.parse;
 				var collection = this;
