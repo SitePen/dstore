@@ -104,9 +104,6 @@ define([
 			tracked.on('add, update, remove', function (event) {
 				changes.push(event);
 			});
-			tracked.on('add', function (event) {
-				changes.push(event);
-			});
 			var secondObserverUpdate = tracked.on('update', function (event) {
 				secondChanges.push(event);
 			});

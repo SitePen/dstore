@@ -201,8 +201,7 @@ define([
 				revision++;
 				var target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
-				when(observed.hasOwnProperty('data') ? observed.data :
-						observed.partialData, function (resultsArray) {
+				when(observed._results || observed._partialResults, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
 
 					function emitEvent() {
@@ -220,7 +219,7 @@ define([
 						return;
 					}
 
-					var i, j, l, range;
+					var i, j, l, ranges = observed._ranges, range;
 					/*if(++queryRevision != revision){
 						throw new Error('Query is out of date, you must observe() the' +
 						' query prior to any data modifications');
