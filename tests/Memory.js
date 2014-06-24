@@ -282,6 +282,27 @@ define([
 			assert.strictEqual(ranged.totalLength, 5);
 			assert.strictEqual(ranged.length, 3);
 		},
+
+		'composite key': function () {
+			var store = new Memory({
+				data: [
+					{ x: 1, y: 1, name: '1,1' },
+					{ x: 2, y: 1, name: '2,1' },
+					{ x: 1, y: 2, name: '1,2' },
+					{ x: 2, y: 2, name: '2,2' },
+				],
+				getIdentity: function (object) {
+					return object.x + ',' + object.y;
+				}
+			});
+			assert.equal(store.get('1,1').name, '1,1');
+			assert.equal(store.getIdentity(store.get('1,2')), '1,2');
+			store.add({x: 3, y: 2, name: '3,2'});
+			assert.equal(store.get('3,2').name, '3,2');
+			store.put({x: 1, y: 1, name: 'changed'});
+			assert.equal(store.get('1,1').name, 'changed');
+		},
+
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
 			return function before() {
 				store = new Memory({data: data});
