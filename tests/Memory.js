@@ -55,6 +55,12 @@ define([
 
 		'filter': function () {
 			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
+			var count = 0;
+			store.filter({prime: true}).fetch().forEach(function (object) {
+				count++;
+				assert.equal(object.prime, true);
+			});
+			assert.equal(count, 3);
 			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
 		},
 
@@ -90,6 +96,12 @@ define([
 
 		'filter with paging': function () {
 			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).length, 1);
+			var count = 0;
+			store.filter({prime: true}).fetchRange({start: 1, end: 2}).forEach(function (object) {
+				count++;
+				assert.equal(object.prime, true);
+			});
+			assert.equal(count, 1);
 			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).totalLength, 3);
 			assert.strictEqual(store.filter({even: true}).fetchRange({start: 1, end: 2})[0].name, 'four');
 		},

@@ -3,8 +3,9 @@ define([
 	'dojo/_base/lang',
 	'dojo/_base/array',
 	'dojo/when',
-	'../Store'
-], function (declare, lang, arrayUtil, when, Store) {
+	'../Store',
+	'../QueryResults'
+], function (declare, lang, arrayUtil, when, Store, QueryResults) {
 // module:
 //		An adapter mixin that makes a legacy Dojo object store look like a dstore object.
 
@@ -104,13 +105,9 @@ define([
 			//		Though it may be an inaccurate composition if more than one filter mentions the same property.
 			var results = this.objectStore.query(filtered[0] || {}, queryOptions);
 			if (results) {
-				var total = results.total;
 				// apply the object restoration
-				return when(results.map(this._restore, this), function (results) {
-					if (rangeArgs) {
-						results.totalLength = total;
-					}
-					return results;
+				return new QueryResults(results.map(this._restore, this), {
+					totalLength: results.total
 				});
 			}
 			return results;

@@ -214,10 +214,10 @@ define([
 			var data = this.fetch(),
 				start = kwArgs.start,
 				end = kwArgs.end;
-			return when(data, function (data) {
-				return new QueryResults(data.slice(start, end), {
-					totalLength: data.length
-				});
+			return new QueryResults(when(data, function (data) {
+				return data.slice(start, end);
+			}), {
+				totalLength: data.length
 			});
 		}
 	});

@@ -3,8 +3,9 @@ define([
 	'dojo/when',
 	'dojo/_base/declare',
 	'./Store',
-	'./Memory'
-], function (arrayUtil, when, declare, Store, Memory) {
+	'./Memory',
+	'./QueryResults'
+], function (arrayUtil, when, declare, Store, Memory, QueryResults) {
 
 	// module:
 	//		dstore/ObjectCache
@@ -60,7 +61,7 @@ define([
 			var store = this;
 			var available = this.isAvailableInCache();
 			if (available) {
-				return when(available, function () {
+				return new QueryResults(when(available, function () {
 					// need to double check to make sure the flag hasn't been cleared
 					// and we really have all data loaded
 					if (store.isAvailableInCache()) {
@@ -70,9 +71,10 @@ define([
 					} else {
 						return store.inherited(args);
 					}
-				});
+				}));
 			}
-			return when(this.fetchRequest = this.inherited(args), function (results) {
+			var results = this.fetchRequest = this.inherited(args);
+			when(results, function (results) {
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
 					var allLoaded = true;
@@ -91,6 +93,7 @@ define([
 
 				return results;
 			});
+			return results;
 		},
 		// TODO: for now, all forEach() calls delegate to fetch(), but that may be different
 		// with IndexedDB, so we may need to intercept forEach as well (and hopefully not
