@@ -3,9 +3,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dstore/Memory',
+	'dstore/Observable',
 	'../sorting',
 	'dstore/legacy/DstoreAdapter'
-], function (declare, registerSuite, assert, Memory, sorting, DstoreAdapter) {
+], function (declare, registerSuite, assert, Memory, Observable, sorting, DstoreAdapter) {
 
 	var store;
 
@@ -34,6 +35,39 @@ define([
 		'query': function () {
 			assert.strictEqual(store.query({prime: true}).length, 3);
 			assert.strictEqual(store.query({even: true})[1].name, 'four');
+		},
+		'query on Observable with observe': function () {
+			store = new DstoreAdapter(new (declare([Memory, Observable]))({
+				data: [
+					{ id: 2, name: 'two', prime: true }
+				]
+			}));
+			var observedEvents = [];
+			store.query({prime: true}, {sort: [{attribute: 'name'}]}).observe(function (object, previousIndex, index) {
+				observedEvents.push([object.name, previousIndex, index]);
+			}, true);
+			store.put({id: 5, name: 'five', prime: true});
+			store.put({id: 6, name: 'six', prime: true});
+			store.put({id: 5, name: 'z-five', prime: true});
+			store.put({id: 5, name: 'z-five', prime: false});
+			store.remove(2);
+			assert.deepEqual(observedEvents, [
+				['five', -1, 0],
+				['six', -1, 1],
+				['z-five', 0, 2],
+				['z-five', 2, -1],
+				['two', 1, -1]]);
+		},
+		'query on plain store with observe': function () {
+			var observedEvents = [];
+			store.query({prime: true}).observe(function (object, previousIndex, index) {
+				observedEvents.push([object.name, previousIndex, index]);
+			}, true);
+			store.put({id: 11, name: 'eleven', prime: true});
+			store.remove(5);
+			assert.deepEqual(observedEvents, [
+				['eleven', -1, undefined],
+				['five', undefined, -1]]);
 		},
 		'query with string': function () {
 			assert.strictEqual(store.query({name: 'two'}).length, 1);

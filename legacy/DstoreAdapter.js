@@ -101,20 +101,44 @@ define([
 					return new QueryResults(queryResults);
 				}
  			}
-
-			if (results.track && this.notify) {
-				var self = this;
-				results.on('add', function (event) {
-					self.notify(event.target);
-				});
-				results.on('update', function (event) {
-					self.notify(event.target, self.store.getIdentity(event.target));
-				});
-				results.on('remove', function (event) {
-					self.notify(null, event.id);
-				});
+ 			var tracked;
+			if (results.track) {
+				// if it is trackable, always track, so that observe can
+				// work properly.
+				results = results.track();
+				tracked = true;
 			}
-			return new QueryResults(results.fetch());
+			var queryResults = new QueryResults(results.fetch());
+			queryResults.observe = function (callback, includeObjectUpdates) {
+				// translate observe to event listeners
+				function convertUndefined(value) {
+					if (value === undefined && tracked) {
+						return -1;
+					}
+					return value;
+				}
+				var addHandle = results.on('add', function (event) {
+					callback(event.target, -1, convertUndefined(event.index));
+				});
+				var updateHandle = results.on('update', function (event) {
+					if (includeObjectUpdates || event.previousIndex !== event.index || !isFinite(event.index)) {
+						callback(event.target, convertUndefined(event.previousIndex), convertUndefined(event.index));
+					}
+				});
+				var removeHandle = results.on('remove', function (event) {
+					callback(event.target, convertUndefined(event.previousIndex), -1);
+				});
+				var handle = {
+					remove: function () {
+						addHandle.remove();
+						updateHandle.remove();
+						removeHandle.remove();
+					}
+				};
+				handle.cancel = handle.remove;
+				return handle;
+			};
+			return queryResults;
 		}
 	};
 
