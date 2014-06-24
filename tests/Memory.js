@@ -91,19 +91,19 @@ define([
 		'filter with or': function () {
 			var filter = new store.Filter();
 			var primeOrEven = filter.or(filter.eq('prime', true), filter.eq('even', true));
-			assert.strictEqual(store.filter(primeOrEven).fetch().length, 4);
+			assert.strictEqual(store.filter(primeOrEven).fetchSync().length, 4);
 		},
 
 		'filter with gt and lt': function () {
 			var filter = new store.Filter();
 			var betweenTwoAndFour = filter.gt('id', 2).lt('id', 5);
-			assert.strictEqual(store.filter(betweenTwoAndFour).fetch().length, 2);
+			assert.strictEqual(store.filter(betweenTwoAndFour).fetchSync().length, 2);
 			var overTwo = {
 				id: filter.gt(2)
 			};
-			assert.strictEqual(store.filter(overTwo).fetch().length, 3);
+			assert.strictEqual(store.filter(overTwo).fetchSync().length, 3);
 			var TwoToFour = filter.gte('id', 2).lte('id', 5);
-			assert.strictEqual(store.filter(TwoToFour).fetch().length, 4);
+			assert.strictEqual(store.filter(TwoToFour).fetchSync().length, 4);
 		},
 
 		'filter with test function': function () {

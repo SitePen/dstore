@@ -1,9 +1,10 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/array',
+	'dojo/Deferred',
 	'dojo/store/util/QueryResults'
 	/*=====, "dstore/api/Store" =====*/
-], function (declare, arrayUtil, QueryResults /*=====, Store =====*/) {
+], function (declare, arrayUtil, Deferred, QueryResults /*=====, Store =====*/) {
 // module:
 //		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
