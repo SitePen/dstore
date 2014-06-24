@@ -26,7 +26,10 @@ define([
 			var result = this.inherited(arguments);
 			var deferred = new Deferred();
 			setTimeout(function () {
-				deferred.resolve(result);
+				// Dojo's deferred resolve doesn't properly defer promises
+				when(result, function (result) {
+					deferred.resolve(result);
+				});
 			});
 			return deferred.promise;
 		};
@@ -145,18 +148,14 @@ define([
 			},
 
 			'add duplicate': function () {
-				var threw;
-				try {
-					return when(store.add({
-						id: 6,
-						perfect: true
-					})).then(function () {
-						assert.fail('Should not succeed');
-					});
-				} catch (e) {
-					threw = true;
-				}
-				assert.isTrue(threw);
+				return when(store.add({
+					id: 6,
+					perfect: true
+				})).then(function () {
+					assert.fail('Should not succeed');
+				}, function () {
+					// successfully rejected
+				});
 			},
 
 			'add new': function () {

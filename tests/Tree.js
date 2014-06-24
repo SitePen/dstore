@@ -28,7 +28,7 @@ define([
 
 		'getRootCollection': function () {
 			// slice() to get a copy of the results without a totalLength property
-			var results = store.getRootCollection().fetch().slice();
+			var results = store.getRootCollection().fetchSync().slice();
 
 			assert.deepEqual(results, [
 				{ parent: null, id: '1', name: 'root1' },
@@ -44,20 +44,20 @@ define([
 		},
 
 		'getChildren': function () {
-			var childlessObject = store.get('3');
-			var children = store.getChildren(childlessObject).fetch().slice();
+			var childlessObject = store.getSync('3');
+			var children = store.getChildren(childlessObject).fetchSync().slice();
 			assert.deepEqual(children, []);
 
-			var parentObject = store.get('1');
-			children = store.getChildren(parentObject).fetch().slice();
+			var parentObject = store.getSync('1');
+			children = store.getChildren(parentObject).fetchSync().slice();
 			assert.deepEqual(children, [
 				{ parent: '1', id: '1.1', name: 'child1.1' },
 				{ parent: '1', id: '1.2', name: 'child1.2' },
 				{ parent: '1', id: '1.3', name: 'child1.3' }
 			]);
 
-			var grandparentObject = store.get('1.2');
-			children = store.getChildren(grandparentObject).fetch().slice();
+			var grandparentObject = store.getSync('1.2');
+			children = store.getChildren(grandparentObject).fetchSync().slice();
 			assert.deepEqual(children, [
 				{ parent: '1.2', id: '1.2.1', name: 'grandchild1.2.1' },
 				{ parent: '1.2', id: '1.2.2', name: 'grandchild1.2.2' }

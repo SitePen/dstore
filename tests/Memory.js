@@ -30,16 +30,21 @@ define([
 			};
 		},
 
+		'getSync': function () {
+			assert.strictEqual(store.getSync(1).name, 'one');
+			assert.strictEqual(store.getSync(4).name, 'four');
+			assert.isTrue(store.getSync(5).prime);
+		},
 		'get': function () {
-			assert.strictEqual(store.get(1).name, 'one');
-			assert.strictEqual(store.get(4).name, 'four');
-			assert.isTrue(store.get(5).prime);
+			return store.get(1).then(function (object) {
+				assert.strictEqual(object.name, 'one');
+			});
 		},
 
 		'model': function () {
-			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
-			assert.strictEqual(store.get(3).describe(), 'three is a prime');
-			assert.strictEqual(store.filter({even: true}).fetch()[1].describe(), 'four is not a prime');
+			assert.strictEqual(store.getSync(1).describe(), 'one is not a prime');
+			assert.strictEqual(store.getSync(3).describe(), 'three is a prime');
+			assert.strictEqual(store.filter({even: true}).fetchSync()[1].describe(), 'four is not a prime');
 		},
 
 		'no model': function() {
@@ -49,61 +54,67 @@ define([
 				],
 				model: null
 			});
-			assert.strictEqual(noModelStore.get(1).get, undefined);
-			assert.strictEqual(noModelStore.get(1).save, undefined);
+			assert.strictEqual(noModelStore.getSync(1).get, undefined);
+			assert.strictEqual(noModelStore.getSync(1).save, undefined);
 		},
 
 		'filter': function () {
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
+			assert.strictEqual(store.filter({prime: true}).fetchSync().length, 3);
 			var count = 0;
 			store.filter({prime: true}).fetch().forEach(function (object) {
 				count++;
 				assert.equal(object.prime, true);
 			});
 			assert.equal(count, 3);
-			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
+			assert.strictEqual(store.filter({even: true}).fetchSync()[1].name, 'four');
+		},
+
+		'async filter': function () {
+			return store.filter({prime: true}).fetch().then(function (results) {
+				assert.strictEqual(results.length, 3);
+			});
 		},
 
 		'filter with string': function () {
-			assert.strictEqual(store.filter({name: 'two'}).fetch().length, 1);
-			assert.strictEqual(store.filter({name: 'two'}).fetch()[0].name, 'two');
+			assert.strictEqual(store.filter({name: 'two'}).fetchSync().length, 1);
+			assert.strictEqual(store.filter({name: 'two'}).fetchSync()[0].name, 'two');
 		},
 
 		'filter with regexp': function () {
-			assert.strictEqual(store.filter({name: /^t/}).fetch().length, 2);
-			assert.strictEqual(store.filter({name: /^t/}).fetch()[1].name, 'three');
-			assert.strictEqual(store.filter({name: /^o/}).fetch().length, 1);
-			assert.strictEqual(store.filter({name: /o/}).fetch().length, 3);
+			assert.strictEqual(store.filter({name: /^t/}).fetchSync().length, 2);
+			assert.strictEqual(store.filter({name: /^t/}).fetchSync()[1].name, 'three');
+			assert.strictEqual(store.filter({name: /^o/}).fetchSync().length, 1);
+			assert.strictEqual(store.filter({name: /o/}).fetchSync().length, 3);
 		},
 
 		'filter with test function': function () {
 			assert.strictEqual(store.filter({id: {test: function (id) {
 				return id < 4;
-			}}}).fetch().length, 3);
+			}}}).fetchSync().length, 3);
 			assert.strictEqual(store.filter({even: {test: function (even, object) {
 				return even && object.id > 2;
-			}}}).fetch().length, 1);
+			}}}).fetchSync().length, 1);
 		},
 
 		'filter with sort': function () {
-			assert.strictEqual(store.filter({prime: true}).sort('name').fetch().length, 3);
-			assert.strictEqual(store.filter({even: true}).sort('name').fetch()[1].name, 'two');
+			assert.strictEqual(store.filter({prime: true}).sort('name').fetchSync().length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('name').fetchSync()[1].name, 'two');
 			assert.strictEqual(store.filter({even: true}).sort(function (a, b) {
 				return a.name < b.name ? -1 : 1;
-			}).fetch()[1].name, 'two');
-			assert.strictEqual(store.filter(null).sort('mappedTo').fetch()[4].name, 'four');
+			}).fetchSync()[1].name, 'two');
+			assert.strictEqual(store.filter(null).sort('mappedTo').fetchSync()[4].name, 'four');
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).length, 1);
+			assert.strictEqual(store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).length, 1);
 			var count = 0;
 			store.filter({prime: true}).fetchRange({start: 1, end: 2}).forEach(function (object) {
 				count++;
 				assert.equal(object.prime, true);
 			});
 			assert.equal(count, 1);
-			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).totalLength, 3);
-			assert.strictEqual(store.filter({even: true}).fetchRange({start: 1, end: 2})[0].name, 'four');
+			assert.strictEqual(store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).totalLength, 3);
+			assert.strictEqual(store.filter({even: true}).fetchRangeSync({start: 1, end: 2})[0].name, 'four');
 		},
 
 		'filter with inheritance': function () {
@@ -120,28 +131,28 @@ define([
 				}
 			});
 			var filtered = store.filter({even: true}).sort('name');
-			var one = filtered.get('id-1');
+			var one = filtered.getSync('id-1');
 			one.changed = true;
 			filtered.put(one);
 			assert.strictEqual(filtered.getIdentity(one), 'id-1');
 			assert.strictEqual(filtered.newMethod(), 'hello');
 			store.remove('id-1');
-			assert.strictEqual(filtered.get('id-1'), undefined);
+			assert.strictEqual(filtered.getSync('id-1'), undefined);
 		},
 
 		'put update': function () {
-			var four = store.get(4);
+			var four = store.getSync(4);
 			four.square = true;
 			store.put(four);
-			four = store.get(4);
+			four = store.getSync(4);
 			assert.isTrue(four.square);
 		},
 
 		save: function () {
-			var four = store.get(4);
+			var four = store.getSync(4);
 			four.square = true;
 			four.save();
-			four = store.get(4);
+			four = store.getSync(4);
 			assert.isTrue(four.square);
 		},
 
@@ -150,7 +161,7 @@ define([
 				id: 6,
 				perfect: true
 			});
-			assert.isTrue(store.get(6).perfect);
+			assert.isTrue(store.getSync(6).perfect);
 		},
 
 		'put with options.beforeId': function () {
@@ -159,7 +170,7 @@ define([
 
 			store.put({ id: 4 }, { beforeId: 3 });
 			store.put({ id: 0 }, { beforeId: null });
-			var results = store.fetch();
+			var results = store.fetchSync();
 			assert.strictEqual(results[2].id, 4);
 			assert.strictEqual(results[3].id, 3);
 			assert.strictEqual(results[results.length - 1].id, 0);
@@ -171,7 +182,7 @@ define([
 
 			store.add({ id: 42 }, { beforeId: 3 });
 			store.add({ id: 24 }, { beforeId: null });
-			var results = store.fetch();
+			var results = store.fetchSync();
 			assert.strictEqual(results[2].id, 42);
 			assert.strictEqual(results[3].id, 3);
 			assert.strictEqual(results[results.length - 1].id, 24);
@@ -182,11 +193,11 @@ define([
 				id: 10,
 				name: 'ten'
 			});
-			assert.strictEqual(store.get(10), undefined);
+			assert.strictEqual(store.getSync(10), undefined);
 			newObject.save();
-			assert.isObject(store.get(10));
+			assert.isObject(store.getSync(10));
 			newObject.remove();
-			assert.strictEqual(store.get(10), undefined);
+			assert.strictEqual(store.getSync(10), undefined);
 		},
 
 		'add duplicate': function () {
@@ -195,16 +206,14 @@ define([
 				perfect: true
 			});
 
-			var threw;
-			try{
-				store.add({
-					id: 6,
-					perfect: true
-				});
-			}catch(e) {
-				threw = true;
-			}
-			assert.isTrue(threw);
+			var succeeded = false;
+			store.add({
+				id: 6,
+				perfect: true
+			}).then(function() {
+				succeeded = true;
+			});
+			assert.isFalse(succeeded);
 		},
 
 		'add new': function () {
@@ -212,7 +221,7 @@ define([
 				id: 7,
 				prime: true
 			});
-			assert.isTrue(store.get(7).prime);
+			assert.isTrue(store.getSync(7).prime);
 		},
 
 		'remove': function () {
@@ -220,24 +229,26 @@ define([
 				id: 7,
 				prime: true
 			});
-			assert.isTrue(store.remove(7));
-			assert.strictEqual(store.get(7), undefined);
+			assert.isTrue(store.removeSync(7));
+			assert.strictEqual(store.getSync(7), undefined);
 		},
 
 		'remove from object': function () {
-			var newObject = store.add({
+			var newObject = store.addSync({
 				id: 7,
 				prime: true
 			});
-			assert.isTrue(newObject.remove());
-			assert.strictEqual(store.get(7), undefined);
+			return newObject.remove().then(function (result) {
+				assert.isTrue(result);
+				assert.strictEqual(store.getSync(7), undefined);
+			});
 		},
 
 		'remove missing': function () {
-			var expectedLength = store.fetch().length;
-			assert(!store.remove(77));
+			var expectedLength = store.fetchSync().length;
+			assert(!store.removeSync(77));
 			// make sure nothing changed
-			assert.strictEqual(store.fetch().length, expectedLength);
+			assert.strictEqual(store.fetchSync().length, expectedLength);
 		},
 
 		'put typed object': function () {
@@ -248,14 +259,14 @@ define([
 			// make sure we don't mess up the class of the input
 			assert.isTrue(myObject instanceof MyClass);
 			// make sure the the object in the store is the right type
-			assert.isTrue(store.get(10) instanceof store.model);
+			assert.isTrue(store.getSync(10) instanceof store.model);
 		},
 
 		'filter after changes': function () {
 			store.remove(2);
 			store.add({ id: 6, perfect: true });
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 2);
-			assert.strictEqual(store.filter({perfect: true}).fetch().length, 1);
+			assert.strictEqual(store.filter({prime: true}).fetchSync().length, 2);
+			assert.strictEqual(store.filter({perfect: true}).fetchSync().length, 1);
 		},
 
 		'ItemFileReadStore style data': function () {
@@ -270,15 +281,15 @@ define([
 					identifier: 'name'
 				}
 			});
-			assert.strictEqual(anotherStore.get('one').name, 'one');
-			assert.strictEqual(anotherStore.filter({name: 'one'}).fetch()[0].name, 'one');
+			assert.strictEqual(anotherStore.getSync('one').name, 'one');
+			assert.strictEqual(anotherStore.filter({name: 'one'}).fetchSync()[0].name, 'one');
 		},
 
 		'add new id assignment': function () {
 			var object = {
 				random: true
 			};
-			object = store.add(object);
+			object = store.addSync(object);
 			assert.isTrue(!!object.id);
 		},
 
@@ -289,7 +300,7 @@ define([
 
 			var sortedCollection = store.sort('id');
 
-			var ranged = store.fetchRange({start: 0, end: 3});
+			var ranged = store.fetchRangeSync({start: 0, end: 3});
 			assert.strictEqual(ranged.totalLength, 5);
 			assert.strictEqual(ranged.length, 3);
 		},
@@ -306,12 +317,12 @@ define([
 					return object.x + ',' + object.y;
 				}
 			});
-			assert.equal(store.get('1,1').name, '1,1');
-			assert.equal(store.getIdentity(store.get('1,2')), '1,2');
+			assert.equal(store.getSync('1,1').name, '1,1');
+			assert.equal(store.getIdentity(store.getSync('1,2')), '1,2');
 			store.add({x: 3, y: 2, name: '3,2'});
-			assert.equal(store.get('3,2').name, '3,2');
+			assert.equal(store.getSync('3,2').name, '3,2');
 			store.put({x: 1, y: 1, name: 'changed'});
-			assert.equal(store.get('1,1').name, 'changed');
+			assert.equal(store.getSync('1,1').name, 'changed');
 		},
 
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
@@ -319,7 +330,7 @@ define([
 				store = new Memory({data: data});
 			};
 		}, function sort() {
-			return store.sort.apply(store, arguments).fetch();
+			return store.sort.apply(store, arguments).fetchSync();
 		})
 
 		// TODO: Add add, update, and remove event tests for Memory or develop a reusable suite

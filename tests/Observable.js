@@ -52,7 +52,7 @@ define([
 			queryEngine: objectQueryEngine
 		};
 
-		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove'], function (method) {
+		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove', 'getSync', 'addSync', 'putSync', 'removeSync'], function (method) {
 			proto[method] = function () {
 				return this.backingMemoryStore[method].apply(this.backingMemoryStore, arguments);
 			};
@@ -82,6 +82,15 @@ define([
 			return when(backingStore.fetchRange.apply(backingStore, arguments));
 		};
 
+		proto.fetchSync = function () {
+			return when(this.backingMemoryStore.fetchSync());
+		};
+
+		proto.fetchRangeSync = function () {
+			var backingStore = this.backingMemoryStore;
+			return when(backingStore.fetchRangeSync.apply(backingStore, arguments));
+		};
+
 		return proto;
 	})());
 
@@ -89,9 +98,9 @@ define([
 		name: 'dstore Observable',
 
 		'get': function () {
-			assert.strictEqual(store.get(1).name, 'one');
-			assert.strictEqual(store.get(4).name, 'four');
-			assert.isTrue(store.get(5).prime);
+			assert.strictEqual(store.getSync(1).name, 'one');
+			assert.strictEqual(store.getSync(4).name, 'four');
+			assert.isTrue(store.getSync(5).prime);
 		},
 
 		'filter': function () {
@@ -129,7 +138,7 @@ define([
 			secondObserverUpdate.remove();
 			secondObserverRemove.remove();
 			secondObserverAdd.remove();
-			var one = store.get(1);
+			var one = store.getSync(1);
 			one.prime = true;
 			store.put(one); // should add it
 			expectedChanges.push({
@@ -161,7 +170,7 @@ define([
 				target: store._restore(seven),
 				index: 3
 			});
-			var three = store.get(3);
+			var three = store.getSync(3);
 			store.remove(3);
 			expectedChanges.push({
 				type: 'remove',
@@ -177,7 +186,10 @@ define([
 
 		'filter with zero id': function () {
 			var filteredCollection = store.filter({});
-			var results = filteredCollection.fetch();
+			var results;
+			filteredCollection.fetch().then(function (data) {
+				results = data;
+			});
 			assert.strictEqual(results.length, 7);
 			var tracked = filteredCollection.track();
 			tracked.on('update', function (event) {
@@ -212,7 +224,7 @@ define([
 			bigObserved.fetchRange({ start: 50, end: 75 });
 			bigObserved.fetchRange({ start: 75, end: 100 });
 
-			var results = bigObserved.fetch();
+			var results = bigObserved.fetchSync();
 			bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 			assert.strictEqual(results.length, 101);
 			assert.strictEqual(observations.length, 1);
@@ -256,7 +268,7 @@ define([
 			// TODO: Fix names bigXyz names. Probably use the term collection instead of store for return value of filter and sort
 
 			// An update outside of requested ranges has an indeterminate index
-			item = bigStore.get(0);
+			item = bigStore.getSync(0);
 			item.order = 1.25;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item });
@@ -272,7 +284,7 @@ define([
 
 			// An update sorted to the beginning of a range and the data has a known index
 			bigObserved.fetchRange({ start: 0, end: 25 });
-			item = bigStore.get(0);
+			item = bigStore.getSync(0);
 			item.order = 0;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1 });
@@ -287,7 +299,7 @@ define([
 			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 0 });
 
 			// An update sorted to the end of a range has an indeterminate index
-			item = bigStore.get(24);
+			item = bigStore.getSync(24);
 			item.name = 'item 24 updated';
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, previousIndex: 24 });
@@ -308,7 +320,7 @@ define([
 			bigObserved.fetchRange({ start: 24, end: 50 });
 
 			// An update sorted to the end of a range but adjacent to another range has a known index
-			item = bigStore.get(22);
+			item = bigStore.getSync(22);
 			item.order = 23.1;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22 });
@@ -323,7 +335,7 @@ define([
 			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24 });
 
 			// An update sorted to the beginning of a range but adjacent to another range has a known index
-			item = bigStore.get(25);
+			item = bigStore.getSync(25);
 			item.order = 23.9;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25 });
@@ -341,7 +353,7 @@ define([
 			bigObserved.fetchRange({ start: 75, end: 100 });
 
 			// An update at the end of a range and the data has a known index
-			item = bigStore.get(98);
+			item = bigStore.getSync(98);
 			item.order = 99.1;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98 });
@@ -352,7 +364,7 @@ define([
 			assertObservationIs({ type: 'add', target: item, index: 100 });
 
 			// An update at the beginning of a range has an indeterminate index
-			item = bigStore.get(76);
+			item = bigStore.getSync(76);
 			item.order = 74.9;
 			bigStore.put(item);
 			assertObservationIs({ type: 'update', target: item, previousIndex: 76 });
@@ -471,7 +483,7 @@ define([
 				actualEvent = event;
 			});
 
-			var expectedTarget = collection.add({
+			var expectedTarget = collection.addSync({
 				type: 'test-item',
 				id: 1,
 				name: 'one'
@@ -496,7 +508,7 @@ define([
 				actualEvent = event;
 			});
 
-			var expectedTarget = collection.add({
+			var expectedTarget = collection.addSync({
 				type: 'test-item',
 				id: 1,
 				name: 'one'
@@ -512,7 +524,7 @@ define([
 		'new item - with options.beforeId and queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				evenCollection = store.filter({ even: true }).track(),
-				data = evenCollection.fetch();
+				data = evenCollection.fetchSync();
 
 			store.defaultNewToStart = true;
 			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
@@ -526,7 +538,7 @@ define([
 		'new item - with options.beforeId and no queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				collection = store.track(),
-				data = collection.fetch();
+				data = collection.fetchSync();
 
 			store.defaultNewToStart = true;
 			store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
@@ -540,11 +552,11 @@ define([
 		'updated item - with options.beforeId and queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				evenCollection = store.filter({ even: true }).track(),
-				data = evenCollection.fetch();
+				data = evenCollection.fetchSync();
 
 			store.defaultNewToStart = true;
-			store.put(store.get(4), { beforeId: 2 });
-			store.put(store.get(0), { beforeId: null });
+			store.put(store.getSync(4), { beforeId: 2 });
+			store.put(store.getSync(0), { beforeId: null });
 
 			assert.strictEqual(data[0].id, 4);
 			assert.strictEqual(data[1].id, 2);
@@ -554,11 +566,11 @@ define([
 		'updated item - with options.beforeId and no queryExecutor': function () {
 			var store = new MyStore({ data: createData() }),
 				collection = store.track(),
-				data = collection.fetch();
+				data = collection.fetchSync();
 
 			store.defaultNewToStart = true;
-			store.put(store.get(4), { beforeId: 2 });
-			store.put(store.get(3), { beforeId: null });
+			store.put(store.getSync(4), { beforeId: 2 });
+			store.put(store.getSync(3), { beforeId: null });
 
 			assert.strictEqual(data[2].id, 4);
 			assert.strictEqual(data[3].id, 2);

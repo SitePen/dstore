@@ -94,15 +94,9 @@ define([
 				);
 			}
 
-			// delegate rather than call _createSubCollection because we are not ultimately creating
-			// a new collection, just decorating an existing collection with item index tracking.
-			// If we use _createSubCollection, it will return a new collection that may exclude
-			// important, defining properties from the tracked collection.
-			var observed = declare.safeMixin(lang.delegate(this), {
-				_ranges: [],
-
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
-				fetch: function () {
+			function makeFetch() {
+				return function () {
 					var self = this;
 					return when(self._results = this.inherited(arguments), function (results) {
 						results = self._results = results.slice();
@@ -112,9 +106,10 @@ define([
 
 						return results;
 					});
-				},
-
-				fetchRange: function (kwArgs) {
+				};
+			}
+			function makeFetchRange() {
+				return function (kwArgs) {
 					var self = this,
 						start = kwArgs.start,
 						end = kwArgs.end,
@@ -135,7 +130,22 @@ define([
 						});
 					});
 					return fetchResults;
-				},
+				};
+			}
+
+			// delegate rather than call _createSubCollection because we are not ultimately creating
+			// a new collection, just decorating an existing collection with item index tracking.
+			// If we use _createSubCollection, it will return a new collection that may exclude
+			// important, defining properties from the tracked collection.
+			var observed = declare.safeMixin(lang.delegate(this), {
+				_ranges: [],
+
+				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
+				fetch: makeFetch(),
+				fetchSync: makeFetch(),
+
+				fetchRange: makeFetchRange(),
+				fetchRangeSync: makeFetchRange(),
 
 				releaseRange: function (start, end) {
 					if (this._partialResults) {
