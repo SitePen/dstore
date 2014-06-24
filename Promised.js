@@ -3,6 +3,8 @@ define([
 	'dojo/Deferred',
 	'./QueryResults'
 ], function (declare, Deferred, QueryResults) {
+	// this is mixin that can be used to provide async methods,
+	// by implementing their sync counterparts
 	function promised(method, query) {
 		return function() {
 			var deferred = new Deferred();
