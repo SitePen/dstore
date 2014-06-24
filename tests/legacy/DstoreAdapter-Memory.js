@@ -13,17 +13,15 @@ define([
 		name: 'legacy dstore adapter - Memory',
 
 		beforeEach: function () {
-			store = new DstoreAdapter({
-				store: new Memory({
-					data: [
-						{ id: 1, name: 'one', prime: false, mappedTo: 'E' },
-						{ id: 2, name: 'two', even: true, prime: true, mappedTo: 'D' },
-						{ id: 3, name: 'three', prime: true, mappedTo: 'C' },
-						{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
-						{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
-					]
-				})
-			});
+			store = new DstoreAdapter(new Memory({
+				data: [
+					{ id: 1, name: 'one', prime: false, mappedTo: 'E' },
+					{ id: 2, name: 'two', even: true, prime: true, mappedTo: 'D' },
+					{ id: 3, name: 'three', prime: true, mappedTo: 'C' },
+					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
+					{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
+				]
+			}));
 		},
 
 		'get': function () {
@@ -140,7 +138,7 @@ define([
 					identifier: 'name'
 				}
 			});
-			var anotherStore = new DstoreAdapter({ store: dstoreObj });
+			var anotherStore = new DstoreAdapter(dstoreObj);
 			assert.strictEqual(anotherStore.get('one').name, 'one');
 			assert.strictEqual(anotherStore.query({name: 'one'})[0].name, 'one');
 		},
@@ -154,7 +152,7 @@ define([
 		nestedSuite: sorting('legacy dstore adapter sorting - dstore/Memory', function before(data) {
 			return function before() {
 				var dstoreObj = new Memory({data: data});
-				store = new DstoreAdapter({ store: dstoreObj });
+				store = new DstoreAdapter(dstoreObj);
 			};
 		}, function sort() {
 			var sort = [];

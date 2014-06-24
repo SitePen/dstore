@@ -21,8 +21,8 @@ define([
 		//		The dstore store that is wrapped as a Dojo object store
 		store: null,
 
-		constructor: function (kwArgs) {
-			declare.safeMixin(this, kwArgs);
+		constructor: function (store) {
+			this.store = store;
 
 			if (this.store.queryEngine) {
 				var queryEngine = this.store.queryEngine;
