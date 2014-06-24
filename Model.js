@@ -740,7 +740,9 @@ define([
 				options = {type: options};
 			}
 			// and/or mixin any provided properties
-			declare.safeMixin(this, options);
+			if (options) {
+				declare.safeMixin(this, options);
+			}
 		},
 
 		_get: function () {

@@ -267,7 +267,7 @@ define([
 			var object = {
 				random: true
 			};
-			store.add(object);
+			object = store.add(object);
 			assert.isTrue(!!object.id);
 		},
 
@@ -289,7 +289,7 @@ define([
 					{ x: 1, y: 1, name: '1,1' },
 					{ x: 2, y: 1, name: '2,1' },
 					{ x: 1, y: 2, name: '1,2' },
-					{ x: 2, y: 2, name: '2,2' },
+					{ x: 2, y: 2, name: '2,2' }
 				],
 				getIdentity: function (object) {
 					return object.x + ',' + object.y;

@@ -4,7 +4,7 @@ define([
 	'dojo/_base/declare',
 	'dstore/Model',
 	'dstore/Memory',
-	'dstore/validators/NumericValidator',
+	'dstore/validators/NumericValidator'
 ], function (registerSuite, assert, declare, Model, Memory, NumericValidator) {
 
 	registerSuite({
