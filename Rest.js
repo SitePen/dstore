@@ -44,7 +44,7 @@ define([
 			return request(this.target + id, {
 				headers: headers
 			}).then(function (response) {
-				return store._restore(parse(response));
+				return store._restore(parse(response), true);
 			});
 		},
 
@@ -90,7 +90,7 @@ define([
 						event.beforeId = options.beforeId;
 					}
 
-					var result = event.target = store._restore(parse(response)) || object;
+					var result = event.target = store._restore(parse(response), true) || object;
 					store.emit(options.overwrite === false ? 'add' : 'update', event);
 					return result;
 				});

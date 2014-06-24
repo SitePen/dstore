@@ -156,7 +156,7 @@ define([
 		//		objects (this can improve performance by avoiding prototype setting),
 		model: null,
 
-		_restore: function (object) {
+		_restore: function (object, mutateAllowed) {
 			// summary:
 			//		Restores a plain raw object, making an instance of the store's model.
 			//		This is called when an object had been persisted into the underlying
@@ -174,6 +174,10 @@ define([
 			// object: Object
 			//		The raw object with the properties that need to be defined on the new
 			//		model instance
+			// mutateAllowed: boolean
+			//		This indicates if restore is allowed to mutate the original object
+			//		(by setting its __proto__). If this isn't true, than the restore should
+			//		copy the object to a new object with the correct type.
 			// returns: Object
 			//		An instance of the store model, with all the properties that were defined
 			//		on object. This may or may not be the same object that was passed in.
@@ -183,8 +187,8 @@ define([
 				var restore = prototype._restore;
 				if (restore) {
 					// the prototype provides its own restore method
-					object = restore.call(object, model);
-				} else if (hasProto) {
+					object = restore.call(object, model, mutateAllowed);
+				} else if (hasProto && mutateAllowed) {
 					// the fast easy way
 					// http://jsperf.com/setting-the-prototype
 					object.__proto__ = prototype;

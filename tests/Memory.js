@@ -240,6 +240,17 @@ define([
 			assert.strictEqual(store.fetch().length, expectedLength);
 		},
 
+		'put typed object': function () {
+			function MyClass() {}
+			var myObject = new MyClass();
+			myObject.id = 10;
+			store.put(myObject);
+			// make sure we don't mess up the class of the input
+			assert.isTrue(myObject instanceof MyClass);
+			// make sure the the object in the store is the right type
+			assert.isTrue(store.get(10) instanceof store.model);
+		},
+
 		'filter after changes': function () {
 			store.remove(2);
 			store.add({ id: 6, perfect: true });

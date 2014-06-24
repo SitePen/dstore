@@ -136,7 +136,7 @@ define([
 					// support items in the results
 					results = results.items || results;
 					for (var i = 0, l = results.length; i < l; i++) {
-						results[i] = collection._restore(results[i]);
+						results[i] = collection._restore(results[i], true);
 					}
 					return results;
 				}),

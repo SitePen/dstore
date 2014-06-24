@@ -1,7 +1,6 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
-	'dojo/has',
 	'dojo/_base/array',
 	'dojo/when',
 	'./Store',
@@ -9,7 +8,7 @@ define([
 	'./QueryResults'
 	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
 	/*=====, './api/Store' =====*/
-], function (declare, lang, has, arrayUtil, when, StoreBase, objectQueryEngine, QueryResults/*=====, Store =====*/) {
+], function (declare, lang, arrayUtil, when, StoreBase, objectQueryEngine, QueryResults/*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Memory
@@ -59,14 +58,10 @@ define([
 
 			var model = this.model;
 			if (model && !(object instanceof model)) {
-				var prototype = model.prototype;
-				if (has('object-proto')) {
-					// the fast easy way
-					object.__proto__ = prototype;
-				} else {
-					// create a new object with the correct prototype
-					object = lang.delegate(prototype, object);
-				}
+				// if it is not the correct type, restore a
+				// properly typed version of the object. Note that we do not allow
+				// mutation here
+				object = this._restore(object);
 			}
 			var id = this.getIdentity(object);
 			if (id == null) {
@@ -176,11 +171,16 @@ define([
 			var index = storage.index = {};
 			var data = storage.fullData;
 			var model = this.model;
-			var prototype = model && model.prototype;
+			var ObjectPrototype = Object.prototype;
 			for (var i = 0, l = data.length; i < l; i++) {
 				var object = data[i];
 				if (model && !(object instanceof model)) {
-					var restoredObject = this._restore(object);
+					var restoredObject = this._restore(object,
+							// only allow mutation if it is a plain object
+							// (which is generally the expected input),
+							// if "typed" objects are actually passed in, we will
+							// respect that, and leave the original alone
+							object.__proto__ === ObjectPrototype);
 					if (object !== restoredObject) {
 						// a new object was generated in the restoration process,
 						// so we have to update the item in the data array.
