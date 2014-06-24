@@ -28,21 +28,21 @@ define([
 		name: 'dstore RqlMemory',
 
 		'get': function () {
-			assert.strictEqual(rqlMemory.get(1).name, 'one');
-			assert.strictEqual(rqlMemory.get(4).name, 'four');
-			assert.strictEqual(rqlMemory.get(1).describe(), 'one is not a prime');
+			assert.strictEqual(rqlMemory.getSync(1).name, 'one');
+			assert.strictEqual(rqlMemory.getSync(4).name, 'four');
+			assert.strictEqual(rqlMemory.getSync(1).describe(), 'one is not a prime');
 		},
 
 		'filter': function () {
-			assert.strictEqual(rqlMemory.filter('prime=true').fetch().length, 3);
-			assert.strictEqual(rqlMemory.filter('prime=true').fetchRange({start: 1, end: 2}).totalLength, 3);
-			assert.strictEqual(rqlMemory.filter('prime=true').fetchRange({start: 1, end: 2}).length, 1);
-			assert.strictEqual(rqlMemory.filter({prime: true}).fetch().length, 3);
-			assert.strictEqual(rqlMemory.filter('prime=true&even!=true').fetch().length, 2);
-			assert.strictEqual(rqlMemory.filter('prime=true&id>3').fetch().length, 1);
+			assert.strictEqual(rqlMemory.filter('prime=true').fetchSync().length, 3);
+			assert.strictEqual(rqlMemory.filter('prime=true').fetchRangeSync({start: 1, end: 2}).totalLength, 3);
+			assert.strictEqual(rqlMemory.filter('prime=true').fetchRangeSync({start: 1, end: 2}).length, 1);
+			assert.strictEqual(rqlMemory.filter({prime: true}).fetchSync().length, 3);
+			assert.strictEqual(rqlMemory.filter('prime=true&even!=true').fetchSync().length, 2);
+			assert.strictEqual(rqlMemory.filter('prime=true&id>3').fetchSync().length, 1);
 
-			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').fetch().length, 4);
-			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').fetchRange({start: 1, end: 3}).length, 2);
+			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').fetchSync().length, 4);
+			assert.strictEqual(rqlMemory.filter('(prime=true|id>3)').fetchRangeSync({start: 1, end: 3}).length, 2);
 		}
 	});
 

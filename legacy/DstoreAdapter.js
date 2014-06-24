@@ -1,9 +1,10 @@
 define([
 	'dojo/_base/declare',
 	'dojo/_base/array',
+	'dojo/Deferred',
 	'dojo/store/util/QueryResults'
 	/*=====, "dstore/api/Store" =====*/
-], function (declare, arrayUtil, QueryResults /*=====, Store =====*/) {
+], function (declare, arrayUtil, Deferred, QueryResults /*=====, Store =====*/) {
 // module:
 //		An adapter mixin that makes a dstore store object look like a legacy Dojo object store.
 
@@ -93,7 +94,8 @@ define([
 				// Apply a range
 				if ('start' in options) {
 					var start = options.start || 0;
-					var queryResults = results.fetchRange({
+					// object stores support sync results, so try that if available
+					var queryResults = results[results.fetchRangeSync ? 'fetchRangeSync' : 'fetchRange']({
 						start: start,
 						end: options.count ? (start + options.count) : Infinity
 					});
@@ -146,7 +148,8 @@ define([
 	arrayUtil.forEach(delegatedMethods, function (methodName) {
 		adapterPrototype[methodName] = function () {
 			var store = this.store;
-			return store[methodName].apply(store, arguments);
+			// try sync first, since dojo object stores support that directly
+			return (store[methodName + 'Sync'] || store[methodName]).apply(store, arguments);
 		};
 	});
 

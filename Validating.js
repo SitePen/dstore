@@ -15,14 +15,15 @@ define(['./Store', 'dojo/when', 'dojo/_base/declare'], function (Store, when, de
 			if (!(object instanceof this.model)) {
 				object = this._restore(object);
 			}
-			return when(object.validate(), function (isValid) {
+			return when(object.validate()).then(function (isValid) {
 				if (!isValid) {
 					// create and throw a validation error
 					var validationError = new TypeError('Invalid property');
 					validationError.errors = object.errors;
 					throw validationError;
 				}
-				return object; // return the object since it has had its prototype assigned
+					// return the object since it has had its prototype assigned
+				return object;
 			});
 		},
 		put: function (object, options) {

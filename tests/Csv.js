@@ -62,16 +62,16 @@ define([
 				'Store with fieldNames should have 5 fields.');
 			assert.strictEqual(6, withHeader.fieldNames.length,
 				'Store using header row should have 6 fields.');
-			assert.strictEqual('id', noHeader.get('id').id,
+			assert.strictEqual('id', noHeader.getSync('id').id,
 				'First line should be considered an item when fieldNames are set');
-			assert.strictEqual('Albert', withHeader.get('1').first,
+			assert.strictEqual('Albert', withHeader.getSync('1').first,
 				'Field names picked up from header row should be trimmed.');
-			assert.strictEqual(noHeader.get('1').last, withHeader.get('1').last,
+			assert.strictEqual(noHeader.getSync('1').last, withHeader.getSync('1').last,
 				'Item with id of 1 should have the same data in both stores.');
 
 			// Test trim vs. no trim...
-			item = withHeader.get('2');
-			trimmedItem = trim.get('2');
+			item = withHeader.getSync('2');
+			trimmedItem = trim.getSync('2');
 			assert.strictEqual(' Nikola ', item.first,
 				'Leading/trailing spaces should be preserved if trim is false.');
 			assert.strictEqual('Nikola', trimmedItem.first,
@@ -82,10 +82,10 @@ define([
 				'Strings containing only whitespace should be empty if trim is true.');
 
 			// Test data integrity...
-			item = withHeader.get('1');
+			item = withHeader.getSync('1');
 			assert.isTrue(item.middle === '', 'Test blank value.');
 			assert.strictEqual('1879-03-14', item.born, 'Test value after blank value.');
-			assert.isTrue(withHeader.get('3').died === '', 'Test blank value at end of line.');
+			assert.isTrue(withHeader.getSync('3').died === '', 'Test blank value at end of line.');
 		},
 
 		'quote': function () {
@@ -97,19 +97,19 @@ define([
 				'Store with fieldNames should have 5 items.');
 			assert.strictEqual(4, withHeader.data.length,
 				'Store using header row should have 4 items.');
-			assert.strictEqual('id', noHeader.get('id').id,
+			assert.strictEqual('id', noHeader.getSync('id').id,
 				'First line should be considered an item when fieldNames are set');
-			assert.strictEqual(noHeader.get('1').name, withHeader.get('1').name,
+			assert.strictEqual(noHeader.getSync('1').name, withHeader.getSync('1').name,
 				'Item with id of 1 should have the same data in both stores.');
 
 			// Test data integrity...
-			assert.strictEqual('""', withHeader.get('3').quote,
+			assert.strictEqual('""', withHeader.getSync('3').quote,
 				'Value consisting of two double-quotes should pick up properly.');
-			assert.strictEqual(' S, P, ...ace! ', withHeader.get('4').quote,
+			assert.strictEqual(' S, P, ...ace! ', withHeader.getSync('4').quote,
 				'Leading/trailing spaces within quotes should be preserved.');
-			assert.isTrue(/^Then[\s\S]*"Nevermore\."$/.test(withHeader.get('2').quote),
+			assert.isTrue(/^Then[\s\S]*"Nevermore\."$/.test(withHeader.getSync('2').quote),
 				'Multiline value should remain intact.');
-			assert.isTrue(/smiling,\n/.test(withHeader.get('2').quote),
+			assert.isTrue(/smiling,\n/.test(withHeader.getSync('2').quote),
 				'Multiline value should use same newline format as input.');
 		},
 

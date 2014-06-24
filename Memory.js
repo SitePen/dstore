@@ -4,15 +4,16 @@ define([
 	'dojo/_base/array',
 	'dojo/when',
 	'./Store',
+	'./Promised',
 	'./objectQueryEngine',
 	'./QueryResults'
 	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
 	/*=====, './api/Store' =====*/
-], function (declare, lang, arrayUtil, when, StoreBase, objectQueryEngine, QueryResults/*=====, Store =====*/) {
+], function (declare, lang, arrayUtil, when, StoreBase, Promised, objectQueryEngine, QueryResults/*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Memory
-	return declare(StoreBase, {
+	return declare([StoreBase, Promised], {
 		constructor: function () {
 			// summary:
 			//		Creates a memory object store.
@@ -31,7 +32,7 @@ define([
 
 		autoEmitEvents: false, // this is handled by the methods themselves
 
-		get: function (id) {
+		getSync: function (id) {
 			// summary:
 			//		Retrieves an object by its identity
 			// id: Number
@@ -40,7 +41,7 @@ define([
 			//		The object in the store that matches the given id.
 			return this.storage.fullData[this.storage.index[id]];
 		},
-		put: function (object, options) {
+		putSync: function (object, options) {
 			// summary:
 			//		Stores an object
 			// object: Object
@@ -111,7 +112,7 @@ define([
 
 			return object;
 		},
-		add: function (object, options) {
+		addSync: function (object, options) {
 			// summary:
 			//		Creates an object, throws an error if the object already exists
 			// object: Object
@@ -122,9 +123,9 @@ define([
 			// returns: Number
 			(options = options || {}).overwrite = false;
 			// call put with overwrite being false
-			return this.put(object, options);
+			return this.putSync(object, options);
 		},
-		remove: function (id) {
+		removeSync: function (id) {
 			// summary:
 			//		Deletes an object by its identity
 			// id: Number
@@ -192,7 +193,7 @@ define([
 			storage.version++;
 		},
 
-		fetch: function () {
+		fetchSync: function () {
 			var data = this.data;
 			if (!data || data._version !== this.storage.version) {
 				// our data is absent or out-of-date, so we requery from the root
@@ -210,8 +211,8 @@ define([
 			return new QueryResults(data);
 		},
 
-		fetchRange: function (kwArgs) {
-			var data = this.fetch(),
+		fetchRangeSync: function (kwArgs) {
+			var data = this.fetchSync(),
 				start = kwArgs.start,
 				end = kwArgs.end;
 			return new QueryResults(when(data, function (data) {

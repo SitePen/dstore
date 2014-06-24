@@ -39,12 +39,12 @@ define([
 		name: 'dstore validating jsonSchema',
 
 		'get': function () {
-			assert.strictEqual(validatingMemory.get(1).name, 'one');
+			assert.strictEqual(validatingMemory.getSync(1).name, 'one');
 		},
 
 		'model errors': function () {
 			validatingMemory.allowErrors = true;
-			var four = validatingMemory.get(4);
+			var four = validatingMemory.getSync(4);
 			four.set('number', 33);
 			assert.strictEqual(JSON.stringify(four.property('number').get('errors')), JSON.stringify([
 				{'property': 'number', 'message': 'must have a maximum value of 10'}
@@ -54,21 +54,19 @@ define([
 		},
 		
 		'put update': function () {
-			var four = lang.delegate(validatingMemory.get(4));
+			var four = lang.delegate(validatingMemory.getSync(4));
 			four.prime = 'not a boolean';
 			four.number = 34;
 			four.name = 33;
-			var validationError;
-			try {
-				validatingMemory.put(four);
-			} catch (e) {
-				validationError = e;
-			}
-			assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
-				{'property': 'prime', 'message': 'string value found, but a boolean is required'},
-				{'property': 'number', 'message': 'must have a maximum value of 10'},
-				{'property': 'name', 'message': 'number value found, but a string is required'}
-			]));
+			return validatingMemory.put(four).then(function () {
+				assert.fail('should not pass validation');
+			}, function (validationError) {
+				assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
+					{'property': 'prime', 'message': 'string value found, but a boolean is required'},
+					{'property': 'number', 'message': 'must have a maximum value of 10'},
+					{'property': 'name', 'message': 'number value found, but a string is required'}
+				]));
+			});
 		}
 	});
 });
