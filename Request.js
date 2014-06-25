@@ -83,8 +83,8 @@ define([
 
 		fetch: function () {
 			var results = this._request();
-			return results.data.then(function (data) {
-				return new QueryResults(data);
+			return new QueryResults(results.data, {
+				response: results.response
 			});
 		},
 
@@ -100,7 +100,8 @@ define([
 
 			var results = this._request(requestArgs);
 			return new QueryResults(results.data, {
-				totalLength: results.total
+				totalLength: results.total,
+				response: results.response
 			});
 		},
 
@@ -149,7 +150,8 @@ define([
 					}
 					var range = response.getHeader('Content-Range');
 					return range && (range = range.match(/\/(.*)/)) && +range[1];
-				})
+				}),
+				response: response.response
 			};
 		},
 

@@ -24,6 +24,8 @@ define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
 			// make the totalLength available on the promise (whether through the options or the enventual
 			// access to the resolved data)
 			data.totalLength = hasTotalLength ? options.totalLength : totalLengthPromise;
+			// make the response available as well
+			data.response = options && options.response;
 		} else {
 			data.totalLength = hasTotalLength ? options.totalLength : data.length;
 		}
