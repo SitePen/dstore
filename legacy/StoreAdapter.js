@@ -23,10 +23,6 @@ define([
 		//		The object store wrapped by this adapter
 		objectStore: null,
 
-		constructor: function (kwArgs) {
-			declare.safeMixin(this, kwArgs);
-		},
-
 		get: function () {
 			// summary:
 			//		Retrieves an object by its identity
