@@ -80,27 +80,39 @@ define([
 				store.isLoaded = store.canCacheQuery = function () {
 					return false;
 				};
-
+				masterFetchCalled = false;
 				var collection = store.filter({prime: true});
 				return when(collection.fetch()).then(function (results) {
+					assert.isTrue(masterFetchCalled);
 					assert.strictEqual(results.length, 3);
 					return collection.cachingStore.get(3);
 				}).then(function (result) {
 					assert.strictEqual(result, undefined);
 					collection = store.filter({even: true});
-					return collection.fetch();
-				}).then(function (results) {
-					assert.strictEqual(results[1].name, 'four');
-					store.isLoaded = store.canCacheQuery = function () {
+					masterFetchCalled = false;
+					collection.isLoaded = store.canCacheQuery = function () {
 						return true;
 					};
-					collection = store.filter({prime: true});
 					return collection.fetch();
 				}).then(function (results) {
+					assert.isTrue(masterFetchCalled);
+					assert.strictEqual(results[1].name, 'four');
+					collection.isValidFetchCache = true;
+					masterFetchCalled = false;
+					return collection.fetch();
+				}).then(function (results) {
+					assert.strictEqual(results.length, 2);
+					assert.isFalse(masterFetchCalled);
+					return store.put({id: 6, name: 'six', even: true});
+				}).then(function () {
+					masterFetchCalled = false;
+					return collection.fetch();
+				}).then(function (results) {
+					assert.isFalse(masterFetchCalled);
 					assert.strictEqual(results.length, 3);
+					store.remove(6);
+					store.isValidFetchCache = false;
 					return collection.cachingStore.get(3);
-				}).then(function (result) {
-					assert.strictEqual(result.name, 'three');
 				});
 			},
 
@@ -174,6 +186,8 @@ define([
 			},
 
 			'cached filtered data from all': function () {
+				store.isValidFetchCache = true;
+				delete store.isLoaded;
 				return when(store.fetch()).then(function () { // should result in everything being cached
 					masterFetchCalled = false;
 					return store.filter({prime: true}).fetch();

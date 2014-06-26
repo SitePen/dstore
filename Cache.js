@@ -73,10 +73,10 @@ define([
 			}
 			var results = this.fetchRequest = this.inherited(args);
 			when(results, function (results) {
+				var allLoaded = true;
+				store.fetchRequest = null;
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
-					var allLoaded = true;
-					store.fetchRequest = null;
 					// store each object before calling the callback
 					if (!store.isLoaded || store.isLoaded(object)) {
 						cachingStore.put(object);
@@ -84,10 +84,10 @@ define([
 						// if anything is not loaded, we can't consider them all loaded
 						allLoaded = false;
 					}
-					if (allLoaded) {
-						store.allLoaded = true;
-					}
 				});
+				if (allLoaded) {
+					store.allLoaded = true;
+				}
 
 				return results;
 			});
