@@ -17,6 +17,7 @@ define([
 	'./extensions/validating-jsonSchema',
 	'./validators',
 	'./legacy/DstoreAdapter-Memory',
+	'intern/node_modules/dojo/has!host-browser?./legacy/DstoreAdapter-Rest',
 	'./charting/StoreSeries',
 	'./legacy/StoreAdapter-Memory',
 	'./legacy/StoreAdapter-AsyncMemory',
