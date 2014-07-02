@@ -371,7 +371,7 @@ define([
 						}
 					}
 					// update the total
-					observed.total = resultsArray.length;
+					event.totalLength = resultsArray.length;
 
 					emitEvent();
 				});

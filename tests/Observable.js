@@ -123,7 +123,8 @@ define([
 				type: 'update',
 				target: two,
 				index: undefined,
-				previousIndex: 0
+				previousIndex: 0,
+				totalLength: 2
 			});
 			expectedSecondChanges.push(expectedChanges[expectedChanges.length - 1]);
 			secondObserverUpdate.remove();
@@ -136,7 +137,8 @@ define([
 				type: 'update',
 				target: one,
 				index: 2,
-				previousIndex: undefined
+				previousIndex: undefined,
+				totalLength: 3
 			});
 			assert.strictEqual(tracked._results.length, 3);
 			// shouldn't be added
@@ -147,7 +149,8 @@ define([
 			expectedChanges.push({
 				type: 'add',
 				target: store._restore(six),
-				index: undefined
+				index: undefined,
+				totalLength: 3
 				// no index because the addition doesn't have a place in the filtered results
 			});
 
@@ -159,7 +162,8 @@ define([
 			expectedChanges.push({
 				type: 'add',
 				target: store._restore(seven),
-				index: 3
+				index: 3,
+				totalLength: 4
 			});
 			var three = store.get(3);
 			store.remove(3);
@@ -167,7 +171,8 @@ define([
 				type: 'remove',
 				id: 3,
 				target: store._restore(three),
-				previousIndex: 0
+				previousIndex: 0,
+				totalLength: 3
 			});
 			assert.strictEqual(tracked._results.length, 3);
 
@@ -241,7 +246,6 @@ define([
 						&& !('previousIndex' in expectedObservation)) {
 						expectedObservation.previousIndex = undefined;
 					}
-
 					assert.deepEqual(latestObservation, expectedObservation);
 				};
 			bigObserved.on('update', function (event) {
@@ -275,31 +279,31 @@ define([
 			item = bigStore.get(0);
 			item.order = 0;
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1 });
+			assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1, totalLength: 100 });
 
 			// An addition sorted to the beginning of a range and the data has a known index
 			item = bigStore._restore({ id: -1, name: 'item -1', order: -1 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item, index: 0 });
+			assertObservationIs({ type: 'add', target: item, index: 0, totalLength: 101 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 0 });
+			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 0, totalLength: 100 });
 
 			// An update sorted to the end of a range has an indeterminate index
 			item = bigStore.get(24);
 			item.name = 'item 24 updated';
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, previousIndex: 24 });
+			assertObservationIs({ type: 'update', target: item, previousIndex: 24, totalLength: 99 });
 
 			// An addition sorted to the end of a range has an indeterminate index
 			item = bigStore._restore({ id: 24.1, name: 'item 24.1', order: 24.1 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item });
+			assertObservationIs({ type: 'add', target: item, totalLength: 99 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id });
+			assertObservationIs({ type: 'remove', id: item.id, totalLength: 99 });
 
 			// The previous update with an undetermined index resulted in an item dropping from the first range
 			// and the first range being reduced to 0-23 instead of 0-24.
@@ -311,31 +315,31 @@ define([
 			item = bigStore.get(22);
 			item.order = 23.1;
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22 });
+			assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22, totalLength: 100 });
 
 			// An addition sorted to the end of a range but adjacent to another range has a known index
 			item = bigStore._restore({ id: 23.2, name: 'item 23.2', order: 23.2 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item, index: 24 });
+			assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24 });
+			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24, totalLength: 100 });
 
 			// An update sorted to the beginning of a range but adjacent to another range has a known index
 			item = bigStore.get(25);
 			item.order = 23.9;
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25 });
+			assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25, totalLength: 100 });
 
 			// An addition sorted to the beginning of a range but adjacent to another range has a known index
 			item = bigStore._restore({ id: 23.8, name: 'item 23.8', order: 23.8 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item, index: 24 });
+			assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24 });
+			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24, totalLength: 100 });
 
 			// Request range at end of data
 			bigObserved.fetchRange({ start: 75, end: 100 });
@@ -344,23 +348,23 @@ define([
 			item = bigStore.get(98);
 			item.order = 99.1;
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98 });
+			assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98, totalLength: 100 });
 
 			// An addition at the end of a range and the data has a known index
 			item = bigStore._restore({ id: 99.2, name: 'item 99.2', order: 99.2 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item, index: 100 });
+			assertObservationIs({ type: 'add', target: item, index: 100, totalLength: 101 });
 
 			// An update at the beginning of a range has an indeterminate index
 			item = bigStore.get(76);
 			item.order = 74.9;
 			bigStore.put(item);
-			assertObservationIs({ type: 'update', target: item, previousIndex: 76 });
+			assertObservationIs({ type: 'update', target: item, previousIndex: 76, totalLength: 100 });
 
 			// An addition at the beginning of a range has an indeterminate index
 			item = bigStore._restore({ id: 74.8, name: 'item 74.8', order: 74.8 });
 			bigStore.add(item);
-			assertObservationIs({ type: 'add', target: item });
+			assertObservationIs({ type: 'add', target: item, totalLength: 100 });
 		},
 
 		'paging releaseRange with store._partialResults': function () {
@@ -480,7 +484,8 @@ define([
 			assert.deepEqual(actualEvent, {
 				type: 'add',
 				index: 0,
-				target: expectedTarget
+				target: expectedTarget,
+				totalLength: 1
 			});
 		},
 
@@ -505,7 +510,8 @@ define([
 			assert.deepEqual(actualEvent, {
 				type: 'add',
 				index: 0,
-				target: expectedTarget
+				target: expectedTarget,
+				totalLength: 1
 			});
 		},
 
