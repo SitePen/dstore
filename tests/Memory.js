@@ -2,10 +2,11 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
+	'dstore/Filter',
 	'./sorting',
 	'dstore/Model',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, sorting, Model, Memory) {
+], function (registerSuite, assert, declare, Filter, sorting, Model, Memory) {
 
 	var store;
 
@@ -54,14 +55,15 @@ define([
 		},
 
 		'filter': function () {
-			assert.strictEqual(store.filter({prime: true}).fetch().length, 3);
+			var filter = new Filter();
+			assert.strictEqual(store.filter(filter.eq('prime', true)).fetch().length, 3);
 			var count = 0;
-			store.filter({prime: true}).fetch().forEach(function (object) {
+			store.filter(filter.eq('prime', true)).fetch().forEach(function (object) {
 				count++;
 				assert.equal(object.prime, true);
 			});
 			assert.equal(count, 3);
-			assert.strictEqual(store.filter({even: true}).fetch()[1].name, 'four');
+			assert.strictEqual(store.filter(filter.eq('even', true)).fetch()[1].name, 'four');
 		},
 
 		'filter with string': function () {
@@ -74,6 +76,24 @@ define([
 			assert.strictEqual(store.filter({name: /^t/}).fetch()[1].name, 'three');
 			assert.strictEqual(store.filter({name: /^o/}).fetch().length, 1);
 			assert.strictEqual(store.filter({name: /o/}).fetch().length, 3);
+		},
+
+		'filter with or': function () {
+			var filter = new Filter();
+			var primeOrEven = filter.or(filter.eq('prime', true), filter.eq('even', true));
+			assert.strictEqual(store.filter(primeOrEven).fetch().length, 4);
+		},
+
+		'filter with gt and lt': function () {
+			var filter = new Filter();
+			var betweenTwoAndFour = filter.gt('id', 2).lt('id', 5);
+			assert.strictEqual(store.filter(betweenTwoAndFour).fetch().length, 2);
+			var overTwo = {
+				id: filter.gt(2)
+			};
+			assert.strictEqual(store.filter(overTwo).fetch().length, 3);
+			var TwoToFour = filter.gte('id', 2).lte('id', 5);
+			assert.strictEqual(store.filter(TwoToFour).fetch().length, 4);
 		},
 
 		'filter with test function': function () {
