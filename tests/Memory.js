@@ -2,11 +2,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
-	'dstore/Filter',
 	'./sorting',
 	'dstore/Model',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, Filter, sorting, Model, Memory) {
+], function (registerSuite, assert, declare, sorting, Model, Memory) {
 
 	var store;
 
@@ -72,8 +71,9 @@ define([
 		},
 
 		'async filter': function () {
+			var filter = new store.Filter();
 			return store.filter(filter.eq('even', true)).fetch().then(function (results) {
-				assert.strictEqual(results.length, 3);
+				assert.strictEqual(results.length, 2);
 			});
 		},
 
