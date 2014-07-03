@@ -2,11 +2,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
-	'dstore/Filter',
 	'./sorting',
 	'dstore/Model',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, Filter, sorting, Model, Memory) {
+], function (registerSuite, assert, declare, sorting, Model, Memory) {
 
 	var store;
 
