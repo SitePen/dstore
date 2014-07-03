@@ -232,6 +232,7 @@ define([
 		filter: new QueryMethod({
 			type: 'filter',
 			normalizeArguments: function (filter) {
+				var Filter = this.Filter;
 				if (filter instanceof Filter) {
 					return [filter];
 				}
