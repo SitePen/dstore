@@ -3,7 +3,10 @@ define(['dojo/_base/declare'], function (declare) {
 	function filterCreator(type) {
 		// constructs a new filter based on type, used to create each method
 		return function newFilter() {
+<<<<<<< HEAD
 			var Filter = this.constructor;
+=======
+>>>>>>> Add filter building API with new filtering capabilities, refs #34
 			var filter = new Filter();
 			filter.type = type;
 			filter.args = arguments;
