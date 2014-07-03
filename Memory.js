@@ -3,16 +3,16 @@ define([
 	'dojo/_base/lang',
 	'dojo/_base/array',
 	'dojo/when',
-	'./Store',
-	'./objectQueryEngine',
+	'./ClientQuery',
 	'./QueryResults'
 	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
 	/*=====, './api/Store' =====*/
-], function (declare, lang, arrayUtil, when, StoreBase, objectQueryEngine, QueryResults/*=====, Store =====*/) {
+], function (declare, lang, arrayUtil, when, ClientQuery, QueryResults/*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Memory
-	return declare(StoreBase, {
+
+	return declare(ClientQuery, {
 		constructor: function () {
 			// summary:
 			//		Creates a memory object store.
@@ -22,8 +22,6 @@ define([
 
 			this.setData(this.data || []);
 		},
-
-		queryEngine: objectQueryEngine,
 
 		// data: Array
 		//		The array of all the objects in the memory store

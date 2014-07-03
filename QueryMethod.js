@@ -48,16 +48,15 @@ define([], function () {
 					normalizedArguments: normalizedArguments
 				};
 
-			if (this.queryEngine) {
-				// Call the query factory in store context to support things like
-				// mapping a filter query's string argument to a custom filter method on the collection
-				logEntry.querier = this.queryEngine[type].apply(this, normalizedArguments);
-			}
-
 			var newCollection = this._createSubCollection({
-				queryLog: this.queryLog.concat(logEntry)
+				queryLog: this.queryLog.concat(logEntry),
+				lastQuery: logEntry
 			});
 
+			newCollection._defineQuerier = function (factory) {
+				logEntry.querier = factory.apply(this, normalizedArguments);
+				return newCollection;
+			}
 			// TODO: Test calling applyQuery
 			return applyQuery ? applyQuery.call(this, newCollection, logEntry) : newCollection;
 		};
