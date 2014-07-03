@@ -6,44 +6,111 @@ define([
 	//		dstore/objectQueryEngine
 
 	return {
-		filter: function (query) {
-			// create our matching query function
-			var queryer = query;
+		_combine: function(args, type) {
+			var querier;
+			for (var i = 0, l = args.length; i < l; i++) {
+				var nextQuerier = this.filter(args[0]);
+				if (querier) {
+					// combine the last querier with a new one
+					querier = (function(a, b) {
+						return type === 'and' ?
+							function(object) {
+								return a(object) && b(object);
+							} :
+							function(object) {
+								return a(object) || b(object);
+							};
+					})(querier, nextQuerier);
+				} else {
+					querier = nextQuerier;
+				}
+			}
+			return querier;
+		},
+		comparators: {
+			eq: function (value, required) {
+				return value === required;
+			},
+			'in': function(value, required) {
+				return arrayUtil.indexOf(required, value) > -1;
+			},
+			ne: function (value, required) {
+				return value !== required;
+			},
+			lt: function (value, required) {
+				return value < required;
+			},
+			lte: function (value, required) {
+				return value <= required;
+			},
+			gt: function (value, required) {
+				return value > required;
+			},
+			gte: function (value, required) {
+				return value >= required;
+			},
+			match: function (value, required, object) {
+				return required.test(value, object);
+			}
+		},
+		filter: function (filter) {
+			// create our matching filter function
 			var queryAccessors = this.queryAccessors;
-			switch (typeof query) {
-				default:
-					throw new Error('Can not query with a ' + typeof query);
-				case 'object':
-				case 'undefined':
-					var queryObject = query;
-					queryer = function (object) {
-						for (var key in queryObject) {
-							var required = queryObject[key];
-							if (required && required.test) {
-								// an object can provide a test method, which makes it work with regex
-								if (!required.test(queryAccessors && object.get ? object.get(key) : object[key], object)) {
-									return false;
-								}
-							} else if (required !== (queryAccessors && object.get ? object.get(key) : object[key])) {
-								return false;
+			var comparators = this.queryEngine.comparators;
+			var querier = getQuerier(filter);
+
+			function getQuerier(filter) {
+				var type = filter.type;
+				var args = filter.args;
+				var comparator = comparators[type];
+				if (comparator) {
+					// it is a comparator
+					var firstArg = args[0];
+					var secondArg = args[1];
+					return function (object) {
+						// get the value for the property and compare to expected value
+						return comparator(queryAccessors && object.get ? object.get(firstArg) : object[firstArg], secondArg, object);
+					};
+				}
+				switch (type) {
+					case 'and': case 'or':
+						for (var i = 0, l = args.length; i < l; i++) {
+							// combine filters, using and or or
+							var nextQuerier = getQuerier(args[i]);
+							if (querier) {
+								// combine the last querier with a new one
+								querier = (function(a, b) {
+									return type === 'and' ?
+										function(object) {
+											return a(object) && b(object);
+										} :
+										function(object) {
+											return a(object) || b(object);
+										};
+								})(querier, nextQuerier);
+							} else {
+								querier = nextQuerier;
 							}
 						}
-						return true;
-					};
-					break;
-				case 'string':
-					// named query
-					if (!this[query]) {
-						throw new Error('No filter function ' + query + ' was found in store');
-					}
-					queryer = this[query];
-					/* falls through */
-				case 'function':
-					/* falls through */
+						return querier;
+					case 'function':
+						return args[0];
+					case 'string':
+						// named filter
+						if (!this[args[0]]) {
+							throw new Error('No filter function ' + filter + ' was found in store');
+						}
+						return this[filter];
+					case undefined:
+						return function () {
+							return true;
+						};
+					default:
+						throw new Error('Unknown filter operation "' + type + '"');
+				}
 			}
-
 			return function (data) {
-				return arrayUtil.filter(data, queryer);
+				return arrayUtil.filter(data, querier);
 			};
 		},
 

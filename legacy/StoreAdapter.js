@@ -95,11 +95,28 @@ define([
 				queryOptions.count = rangeArgs.end - ((queryOptions.start = rangeArgs.start) || 0);
 			}
 
-			var filtered = getQueryArguments('filter');
-			// TODO: It seems strange to just use the first filter without a warning we are discarding the others.
-			//		Maybe we should try to compose multiple filters into a single filter?
-			//		Though it may be an inaccurate composition if more than one filter mentions the same property.
-			var results = this.objectStore.query(filtered[0] || {}, queryOptions);
+			var queryObject = {};
+			applyFilter(getQueryArguments('filter'));
+			
+			function applyFilter(filtered) {
+				for (var i = 0; i < filtered.length; i++) {
+					var filter = filtered[i];
+					var type = filter.type;
+					var args = filter.args;
+					if (type === 'and') {
+						applyFilter(args);
+					} else if (type === 'eq' || type === 'match') {
+						queryObject[args[0]] = args[1];
+					} else if (type === 'string') {
+						queryObject = args[0];
+					} else if (type) {
+						throw new Error('"' + type + ' operator can not be converted to a legacy store query');
+					}
+					// else if (!type) { no-op }
+				}
+			}
+
+			var results = this.objectStore.query(queryObject, queryOptions);
 			if (results) {
 				// apply the object restoration
 				return new QueryResults(results.map(this._restore, this), {

@@ -3,11 +3,10 @@ define([
 	'dojo/_base/lang',
 	'dojo/_base/array',
 	'dojo/json',
-	'dojo/io-query',
 	'dojo/_base/declare',
 	'./Store',
 	'./QueryResults'
-], function (request, lang, arrayUtil, JSON, ioQuery, declare, Store, QueryResults) {
+], function (request, lang, arrayUtil, JSON, declare, Store, QueryResults) {
 
 	var push = [].push;
 
@@ -160,7 +159,24 @@ define([
 			//		Constructs filter-related params to be inserted into the query string
 			// returns: String
 			//		Filter-related params to be inserted in the query string
-			return [ typeof filter === 'object' ? ioQuery.objectToQuery(filter) : filter ];
+			var type = filter.type;
+			var args = filter.args;
+			if (!type) {
+				return [''];
+			}
+			if (type === 'string') {
+				return [args[0]];
+			}
+			if (type === 'and' || type === 'or') {
+				return [arrayUtil.map(filter.args, function (arg) {
+					// render each of the arguments to and or or, then combine by the right operator
+					var renderedArg = this._renderFilterParams(arg);
+					return ((arg.type === 'and' || arg.type === 'or') && arg.type !== type) ?
+						// need to observe precedence in the case of changing combination operators
+						'(' + renderedArg + ')' : renderedArg;
+				}, this).join(type === 'and' ? '&' : '|')];
+			}
+			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(args[1])];
 		},
 		_renderSortParams: function (sort) {
 			// summary:

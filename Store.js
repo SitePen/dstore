@@ -7,8 +7,9 @@ define([
 	'dojo/Deferred',
 	'dojo/_base/declare',
 	'./QueryMethod',
+	'./Filter',
 	'dojo/Evented'
-], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Evented) {
+], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Filter, Evented) {
 
 	// module:
 	//		dstore/Store
@@ -228,7 +229,17 @@ define([
 		//		The query operations represented by this collection
 		queryLog: [],	// NOTE: It's ok to define this on the prototype because the array instance is never modified
 
-		filter: new QueryMethod({ type: 'filter' }),
+		filter: new QueryMethod({
+			type: 'filter',
+			normalizeArguments: function (filter) {
+				if (filter instanceof Filter) {
+					return [filter];
+				}
+				return [new Filter(filter)];
+			}
+		}),
+
+		Filter: Filter,
 
 		map: new QueryMethod({ type: 'map' }),
 
