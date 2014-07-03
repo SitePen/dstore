@@ -2,11 +2,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
-	'dstore/Filter',
 	'./sorting',
 	'dstore/Model',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, Filter, sorting, Model, Memory) {
+], function (registerSuite, assert, declare, sorting, Model, Memory) {
 
 	var store;
 
@@ -55,7 +54,7 @@ define([
 		},
 
 		'filter': function () {
-			var filter = new Filter();
+			var filter = new store.Filter();
 			assert.strictEqual(store.filter(filter.eq('prime', true)).fetch().length, 3);
 			var count = 0;
 			store.filter(filter.eq('prime', true)).fetch().forEach(function (object) {
@@ -79,13 +78,13 @@ define([
 		},
 
 		'filter with or': function () {
-			var filter = new Filter();
+			var filter = new store.Filter();
 			var primeOrEven = filter.or(filter.eq('prime', true), filter.eq('even', true));
 			assert.strictEqual(store.filter(primeOrEven).fetch().length, 4);
 		},
 
 		'filter with gt and lt': function () {
-			var filter = new Filter();
+			var filter = new store.Filter();
 			var betweenTwoAndFour = filter.gt('id', 2).lt('id', 5);
 			assert.strictEqual(store.filter(betweenTwoAndFour).fetch().length, 2);
 			var overTwo = {

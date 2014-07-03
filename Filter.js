@@ -3,12 +3,13 @@ define(['dojo/_base/declare'], function (declare) {
 	function filterCreator(type) {
 		// constructs a new filter based on type, used to create each method
 		return function newFilter() {
+			var Filter = this.constructor;
 			var filter = new Filter();
 			filter.type = type;
 			filter.args = arguments;
 			if (this.type) {
 				// we are chaining, so combine with an and operator
-				return filterCreator('and').call({}, this, filter);
+				return filterCreator('and').call(Filter.prototype, this, filter);
 			}
 			return filter;
 		};
@@ -22,7 +23,7 @@ define(['dojo/_base/declare'], function (declare) {
 					// construct a filter based on the query object
 					for (var key in filterArg){
 						var value = filterArg[key];
-						if (value instanceof Filter) {
+						if (value instanceof this.constructor) {
 							// fully construct the filter from the single arg
 							filter = filter[value.type](key, value.args[0]);
 						} else if (value && value.test) {
