@@ -39,12 +39,11 @@ define([
 			//		The object in the store that matches the given id.
 			options = options || {};
 			var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
-			var parse = this.parse;
 			var store = this;
 			return request(this.target + id, {
 				headers: headers
 			}).then(function (response) {
-				return store._restore(parse(response), true);
+				return store._restore(store.parse(response), true);
 			});
 		},
 
@@ -63,7 +62,6 @@ define([
 			options = options || {};
 			var id = ('id' in options) ? options.id : this.getIdentity(object);
 			var hasId = typeof id !== 'undefined';
-			var parse = this.parse;
 			var store = this;
 
 			var positionHeaders = 'beforeId' in options
@@ -90,7 +88,7 @@ define([
 						event.beforeId = options.beforeId;
 					}
 
-					var result = event.target = store._restore(parse(response), true) || object;
+					var result = event.target = store._restore(store.parse(response), true) || object;
 					store.emit(options.overwrite === false ? 'add' : 'update', event);
 					return result;
 				});
