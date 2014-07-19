@@ -98,7 +98,7 @@ define([
 			function makeFetch() {
 				return function () {
 					var self = this;
-					return when(self._results = this.inherited(arguments), function (results) {
+					return when(this.inherited(arguments), function (results) {
 						results = self._results = results.slice();
 
 						self._ranges = [];
