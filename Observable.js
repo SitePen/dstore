@@ -104,7 +104,7 @@ define([
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 				fetch: function () {
 					var self = this;
-					return when(self._results = this.inherited(arguments), function (results) {
+					return when(this.inherited(arguments), function (results) {
 						results = self._results = results.slice();
 
 						self._ranges = [];
