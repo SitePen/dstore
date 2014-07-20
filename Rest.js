@@ -1,11 +1,12 @@
 define([
 	'dojo/request',
+	'dojo/when',
 	'dojo/_base/lang',
 	'dojo/json',
 	'dojo/io-query',
 	'dojo/_base/declare',
 	'./Request' /*=====, './Store' =====*/
-], function (request, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/) {
+], function (request, when, lang, JSON, ioQuery, declare, Request /*=====, Store =====*/) {
 
 	/*=====
 	var __HeaderOptions = {
@@ -72,7 +73,7 @@ define([
 					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
-			return request(hasId ? this.target + id : this.target, {
+			var r = request(hasId ? this.target + id : this.target, {
 					method: hasId && !options.incremental ? 'PUT' : 'POST',
 					data: this.stringify(object),
 					headers: lang.mixin({
@@ -81,17 +82,24 @@ define([
 						'If-Match': options.overwrite === true ? '*' : null,
 						'If-None-Match': options.overwrite === false ? '*' : null
 					}, positionHeaders, this.headers, options.headers)
-				}).then(function (response) {
-					var event = {};
-
-					if ('beforeId' in options) {
-						event.beforeId = options.beforeId;
-					}
-
-					var result = event.target = store._restore(store.parse(response), true) || object;
-					store.emit(options.overwrite === false ? 'add' : 'update', event);
-					return result;
 				});
+			return r.then(function (response) {
+				var event = {};
+
+				if ('beforeId' in options) {
+					event.beforeId = options.beforeId;
+				}
+
+				var result = event.target = store._restore(store.parse(response), true) || object;
+
+				when( r.response, function( httpResponse ){
+					console.log( httpResponse );
+					//store.emit(options.overwrite === false ? 'add' : 'update', event);
+					store.emit(httpResponse.status == 201 ? 'add' : 'update', event);
+				});
+
+				return result;
+			});
 		},
 
 		add: function (object, options) {
