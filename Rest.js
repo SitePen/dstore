@@ -73,17 +73,17 @@ define([
 					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
-			var r = request(hasId ? this.target + id : this.target, {
-					method: hasId && !options.incremental ? 'PUT' : 'POST',
-					data: this.stringify(object),
-					headers: lang.mixin({
-						'Content-Type': 'application/json',
-						Accept: this.accepts,
-						'If-Match': options.overwrite === true ? '*' : null,
-						'If-None-Match': options.overwrite === false ? '*' : null
-					}, positionHeaders, this.headers, options.headers)
-				});
-			return r.then(function (response) {
+			var initialResponse = request(hasId ? this.target + id : this.target, {
+				method: hasId && !options.incremental ? 'PUT' : 'POST',
+				data: this.stringify(object),
+				headers: lang.mixin({
+					'Content-Type': 'application/json',
+					Accept: this.accepts,
+					'If-Match': options.overwrite === true ? '*' : null,
+					'If-None-Match': options.overwrite === false ? '*' : null
+				}, positionHeaders, this.headers, options.headers)
+			})
+			return initialResponse.then(function (response) {
 				var event = {};
 
 				if ('beforeId' in options) {
@@ -92,9 +92,7 @@ define([
 
 				var result = event.target = store._restore(store.parse(response), true) || object;
 
-				when( r.response, function( httpResponse ){
-					console.log( httpResponse );
-					//store.emit(options.overwrite === false ? 'add' : 'update', event);
+				when( initialResponse.response, function( httpResponse ){
 					store.emit(httpResponse.status == 201 ? 'add' : 'update', event);
 				});
 
