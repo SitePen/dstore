@@ -82,7 +82,7 @@ define([
 					'If-Match': options.overwrite === true ? '*' : null,
 					'If-None-Match': options.overwrite === false ? '*' : null
 				}, positionHeaders, this.headers, options.headers)
-			})
+			});
 			return initialResponse.then(function (response) {
 				var event = {};
 
@@ -92,8 +92,8 @@ define([
 
 				var result = event.target = store._restore(store.parse(response), true) || object;
 
-				when( initialResponse.response, function( httpResponse ){
-					store.emit(httpResponse.status == 201 ? 'add' : 'update', event);
+				when(initialResponse.response, function (httpResponse) {
+					store.emit(httpResponse.status === 201 ? 'add' : 'update', event);
 				});
 
 				return result;
