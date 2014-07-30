@@ -73,7 +73,7 @@ define([
 			}
 			var results = this.fetchRequest = this.inherited(args);
 			when(results, function (results) {
-				var allLoaded = true;
+				var allLoaded = !isRange;
 				store.fetchRequest = null;
 				// store each object before calling the callback
 				arrayUtil.forEach(results, function (object) {
