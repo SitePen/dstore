@@ -171,14 +171,11 @@ define([
 			var queryExecutor;
 			if (this.queryEngine) {
 				arrayUtil.forEach(this.queryLog, function (entry) {
-					// TODO: This isn't extensible for new query types. How we can we make a general determination to not include a query type as we do for 'range'?
-					if (entry.type !== 'range') {
-						var existingQuerier = queryExecutor,
-							querier = entry.querier;
-						queryExecutor = existingQuerier
-							? function (data) { return querier(existingQuerier(data)); }
-							: querier;
-					}
+					var existingQuerier = queryExecutor,
+						querier = entry.querier;
+					queryExecutor = existingQuerier
+						? function (data) { return querier(existingQuerier(data)); }
+						: querier;
 				});
 			}
 
