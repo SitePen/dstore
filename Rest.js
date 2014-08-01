@@ -67,10 +67,10 @@ define([
 
 			var positionHeaders = 'beforeId' in options
 				? (options.beforeId === null
-					? { 'X-Put-Default-Position': 'end' }
-					: { 'X-Put-Before': options.beforeId })
+					? { 'Put-Default-Position': 'end' }
+					: { 'Put-Before': options.beforeId })
 				: (!hasId || options.overwrite === false
-					? { 'X-Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
+					? { 'Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
 			var initialResponse = request(hasId ? this.target + id : this.target, {
