@@ -37,7 +37,7 @@ define([
 		name: 'dstore validatingMemory',
 
 		'get': function () {
-			assert.strictEqual(validatingMemory.get(1).name, 'one');
+			assert.strictEqual(validatingMemory.getSync(1).name, 'one');
 		},
 
 		'put update': function () {
@@ -45,17 +45,15 @@ define([
 			four.prime = 'not a boolean';
 			four.number = 34;
 			four.name = 33;
-			var validationError;
-			try {
-				validatingMemory.put(four);
-			} catch (e) {
-				validationError = e;
-			}
-			assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
-				'not a boolean is not a boolean',
-				'The value is too high',
-				'33 is not a string'
-			]));
+			return validatingMemory.put(four).then(function () {
+				assert.fail('should not pass validation');
+			}, function (validationError) {
+				assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
+					'not a boolean is not a boolean',
+					'The value is too high',
+					'33 is not a string'
+				]));
+			});
 		},
 		'add update': function () {
 			var four = {
@@ -63,17 +61,15 @@ define([
 				number: 34,
 				name: 33
 			};
-			var validationError;
-			try {
-				validatingMemory.add(four);
-			} catch (e) {
-				validationError = e;
-			}
-			assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
-				'not a boolean is not a boolean',
-				'The value is too high',
-				'33 is not a string'
-			]));
+			return validatingMemory.add(four).then(function () {
+				assert.fail('should not pass validation');
+			}, function (validationError) {
+				assert.strictEqual(JSON.stringify(validationError.errors), JSON.stringify([
+					'not a boolean is not a boolean',
+					'The value is too high',
+					'33 is not a string'
+				]));
+			});
 		}
 
 	});

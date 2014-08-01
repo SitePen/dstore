@@ -93,7 +93,8 @@ define([
 				// Apply a range
 				if ('start' in options) {
 					var start = options.start || 0;
-					var queryResults = results.fetchRange({
+					// object stores support sync results, so try that if available
+					var queryResults = results[results.fetchRangeSync ? 'fetchRangeSync' : 'fetchRange']({
 						start: start,
 						end: options.count ? (start + options.count) : Infinity
 					});
@@ -108,7 +109,7 @@ define([
 				results = results.track();
 				tracked = true;
 			}
-			var queryResults = new QueryResults(results.fetch());
+			var queryResults = new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']);
 			queryResults.observe = function (callback, includeObjectUpdates) {
 				// translate observe to event listeners
 				function convertUndefined(value) {
@@ -146,7 +147,8 @@ define([
 	arrayUtil.forEach(delegatedMethods, function (methodName) {
 		adapterPrototype[methodName] = function () {
 			var store = this.store;
-			return store[methodName].apply(store, arguments);
+			// try sync first, since dojo object stores support that directly
+			return (store[methodName + 'Sync'] || store[methodName]).apply(store, arguments);
 		};
 	});
 

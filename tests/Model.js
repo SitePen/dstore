@@ -430,7 +430,7 @@ define([
 					}
 				})
 			});
-			var myObject = store.get(1);
+			var myObject = store.getSync(1);
 			assert.strictEqual(myObject.get('num'), 1);
 			myObject.set('num', 5);
 			myObject.set('str', '');
@@ -440,7 +440,7 @@ define([
 			assert.isFalse(myObject.isValid());
 			myObject.set('str', 'hellow');
 			myObject.save();
-			myObject = store.get(1);
+			myObject = store.getSync(1);
 			assert.strictEqual(myObject.get('num'), 5);
 		}
 
