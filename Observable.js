@@ -142,10 +142,8 @@ define([
 
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 				fetch: makeFetch(),
-				fetchSync: makeFetch(),
 
 				fetchRange: makeFetchRange(),
-				fetchRangeSync: makeFetchRange(),
 
 				releaseRange: function (start, end) {
 					if (this._partialResults) {
@@ -177,6 +175,13 @@ define([
 					}
 				}
 			});
+			if (this.fetchSync) {
+				// only add these if we extending a sync-capable store
+				declare.safeMixin(observed, {
+					fetchSync: makeFetch(),
+					fetchRangeSync: makeFetchRange()
+				});
+			}
 
 			var queryExecutor;
 			if (this.queryEngine) {
