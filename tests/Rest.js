@@ -122,14 +122,14 @@ define([
 				optionsWithOverwriteTrue = { overwrite: true },
 				optionsWithOverwriteFalse = { overwrite: false },
 				noExpectedPositionHeaders = {
-					defaultUndefined: { 'X-Put-Default-Position': null },
-					defaultEnd: { 'X-Put-Default-Position': null },
-					defaultStart: { 'X-Put-Default-Position': null }
+					defaultUndefined: { 'Put-Default-Position': null },
+					defaultEnd: { 'Put-Default-Position': null },
+					defaultStart: { 'Put-Default-Position': null }
 				},
 				expectedPositionHeaders = {
-					defaultUndefined: { 'X-Put-Default-Position': 'end' },
-					defaultEnd: { 'X-Put-Default-Position': 'end' },
-					defaultStart: { 'X-Put-Default-Position': 'start' }
+					defaultUndefined: { 'Put-Default-Position': 'end' },
+					defaultEnd: { 'Put-Default-Position': 'end' },
+					defaultStart: { 'Put-Default-Position': 'start' }
 				};
 
 			var tests = [
@@ -153,15 +153,15 @@ define([
 			store.defaultNewToStart = true;
 			return store.put({ id: 1, name: 'one' }, { beforeId: 123 }).then(function () {
 				mockRequest.assertRequestHeaders({
-					'X-Put-Before': 123,
-					'X-Put-Default-Position': null
+					'Put-Before': 123,
+					'Put-Default-Position': null
 				});
 			}).then(function () {
 				return store.put({ id: 2, name: 'two' }, { beforeId: null });
 			}).then(function () {
 				mockRequest.assertRequestHeaders({
-					'X-Put-Before': null,
-					'X-Put-Default-Position': 'end'
+					'Put-Before': null,
+					'Put-Default-Position': 'end'
 				});
 			});
 		},
