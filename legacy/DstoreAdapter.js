@@ -109,7 +109,7 @@ define([
 				results = results.track();
 				tracked = true;
 			}
-			var queryResults = new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']);
+			var queryResults = new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']());
 			queryResults.observe = function (callback, includeObjectUpdates) {
 				// translate observe to event listeners
 				function convertUndefined(value) {

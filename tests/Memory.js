@@ -212,6 +212,8 @@ define([
 				perfect: true
 			}).then(function() {
 				succeeded = true;
+			}, function() {
+				// should be rejected as a duplicate
 			});
 			assert.isFalse(succeeded);
 		},
