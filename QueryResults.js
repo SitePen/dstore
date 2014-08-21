@@ -11,7 +11,7 @@ define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
 		var hasTotalLength = options && 'totalLength' in options;
 		if(data.then) {
 			data = lang.delegate(data);
-			// a promise for the eventual realization of the totalLenght, in
+			// a promise for the eventual realization of the totalLength, in
 			// case it comes from the resolved data
 			var totalLengthPromise = data.then(function (data) {
 				// calculate total length, now that we have access to the resolved data
