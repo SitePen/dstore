@@ -181,8 +181,11 @@ define([
 	};
 	var Cache = declare(null, CachePrototype);
 	Cache.create = function (target, properties) {
+		// create a delegate of an existing store with caching
+		// functionality mixed in
 		target = declare.safeMixin(lang.delegate(target), CachePrototype);
 		declare.safeMixin(target, properties);
+		// we need to initialize it since the constructor won't have been called
 		init(target);
 		return target;
 	};
