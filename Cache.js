@@ -2,13 +2,14 @@ define([
 	'dojo/_base/array',
 	'dojo/when',
 	'dojo/_base/declare',
+	'dojo/_base/lang',
 	'./Store',
 	'./Memory',
 	'./QueryResults'
-], function (arrayUtil, when, declare, Store, Memory, QueryResults) {
+], function (arrayUtil, when, declare, lang, Store, Memory, QueryResults) {
 
 	// module:
-	//		dstore/ObjectCache
+	//		dstore/Cache
 
 
 	function cachingQuery(type) {
@@ -22,17 +23,21 @@ define([
 		};
 	}
 
-	return declare(Store, {
+	function init (store) {
+		if (!store.cachingStore) {
+			store.cachingStore = new Memory();
+		}
+		if (!store.queryEngine) {
+			store.queryEngine = store.cachingStore.queryEngine;
+		}
+		store.cachingStore.model = store.model;
+		store.cachingStore.idProperty = store.idProperty;
+
+	}
+	var CachePrototype = {
 		cachingStore: null,
-		constructor: function (options) {
-			if (!this.cachingStore) {
-				this.cachingStore = new Memory();
-			}
-			if (!this.queryEngine) {
-				this.queryEngine = this.cachingStore.queryEngine;
-			}
-			this.cachingStore.model = this.model;
-			this.cachingStore.idProperty = this.idProperty;
+		constructor: function () {
+			init(this);
 		},
 		canCacheQuery: function (method, args) {
 			// summary:
@@ -173,5 +178,13 @@ define([
 		filter: cachingQuery('filter'),
 		map: cachingQuery('map')
 
-	});
+	};
+	var Cache = declare(null, CachePrototype);
+	Cache.create = function (target, properties) {
+		target = declare.safeMixin(lang.delegate(target), CachePrototype);
+		declare.safeMixin(target, properties);
+		init(target);
+		return target;
+	};
+	return Cache;
 });

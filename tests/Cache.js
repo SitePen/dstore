@@ -41,11 +41,15 @@ define([
 		remove: makeDeferred()
 	});
 	var AsyncMaster = declare([AsyncMemory, Master], {});
-	function createTests(name, Master, cachingStore){
+	function createTests(name, Master, cachingStore, createAfter){
 		var store; 
 		return {
 			setup: function () {
-				store = new declare([Master, Cache])({
+				var mixins = [Master];
+				if (!createAfter) {
+					mixins.push(Cache);
+				}
+				store = new declare(mixins)({
 					cachingStore: cachingStore,
 					data: [
 						{id: 1, name: 'one', prime: false},
@@ -55,6 +59,11 @@ define([
 						{id: 5, name: 'five', prime: true}
 					]
 				});
+				if (createAfter) {
+					store = Cache.create(store, {
+						cachingStore: cachingStore
+					});
+				}
 			},
 			name: name,
 
@@ -206,6 +215,7 @@ define([
 		};
 	}
 	registerSuite(createTests('dstore Cache', Master, new Memory()));
+	registerSuite(createTests('dstore create Cache from instance', Master, new Memory(), true));
 	registerSuite(createTests('dstore Cache with async Master', AsyncMaster, new Memory()));
 	registerSuite(createTests('dstore Cache with both async', AsyncMaster, new AsyncMemory()));
 });
