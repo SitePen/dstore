@@ -61,7 +61,13 @@ an asynchronous store since queries and data retrieval may be made before the da
 
 ## Cache
 
-This is a mixin that can be used to add caching functionality to a store. This store has the following properties:
+This is a mixin that can be used to add caching functionality to a store. This can also be used to wrap an existing store, by using the static `create` function:
+
+    var cachedStore = Cache.create(existingStore, {
+        cachingStore: new Memory()
+    });
+
+This store has the following properties:
 
 Name | Description
 ---- | -----------
