@@ -2,14 +2,13 @@ define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'dojo/_base/array',
-	'dojo/when',
 	'./Store',
 	'./Promised',
 	'./objectQueryEngine',
 	'./QueryResults'
 	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
 	/*=====, './api/Store' =====*/
-], function (declare, lang, arrayUtil, when, StoreBase, Promised, objectQueryEngine, QueryResults/*=====, Store =====*/) {
+], function (declare, lang, arrayUtil, StoreBase, Promised, objectQueryEngine, QueryResults/*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Memory
@@ -215,9 +214,7 @@ define([
 			var data = this.fetchSync(),
 				start = kwArgs.start,
 				end = kwArgs.end;
-			return new QueryResults(when(data, function (data) {
-				return data.slice(start, end);
-			}), {
+			return new QueryResults(data.slice(start, end), {
 				totalLength: data.length
 			});
 		}
