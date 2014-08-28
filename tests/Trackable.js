@@ -609,6 +609,46 @@ define([
 			lastEvent = null;
 			store.put({ id: 12, name: 'item-12', order: 12 });
 			assert.isNull(lastEvent);
+		},
+		'index direct from Memory': function () {
+			var myData = [
+				{ id: "foo", name: "Foo" },
+				{ id: "bar", name: "Bar" }
+			];
+
+			var M = declare([Memory, Observable], {});
+
+			// use empty model to easy comparison
+			var myStore = new M({ data: myData, model: null, idProperty: "id" });
+
+			var collection = myStore.filter({});
+
+			collection = collection.map(function(item){
+				var newItem = {};
+				for(var i in item){
+					newItem[i] = item[i];
+				}
+				newItem.beenMapped = true;
+				return newItem;
+			});
+
+			tracked = collection.track();
+			tracked.on("add", function(){ console.log("add"); });
+			var updateReceived;
+			tracked.on("update", function(event) {
+				updateReceived = true;
+				assert.isTrue(event.target.beenMapped);
+				console.log("update, index = ", event.index, " previousIndex = ", event.previousIndex);
+			});
+			tracked.on("remove", function(){ console.log("remove"); });
+
+			var items = tracked.fetch();
+			console.log("fetched items: ", items);
+
+			// This should cause an update notification with index == previousIndex == 0
+			myStore.put({ id: "foo", name: "Foo2" });
+			assert.isTrue(updateReceived);
 		}
+
 	});
 });

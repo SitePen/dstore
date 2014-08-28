@@ -77,6 +77,20 @@ define([
 	return declare(null, {
 		currentRange: [],
 
+		queryTrackers: {
+			map: function (executor, data, target) {
+				// handling of map queries, when we are tracking a target,
+				// we need to reretrieve the target after the map, as it
+				// will be transformed
+				var index = arrayUtil.indexOf(data, target);
+				data = executor(data);
+				return {
+					data: data,
+					target: data[index]
+				};
+			}
+		},
+
 		track: function () {
 			var store = this.store || this;
 
@@ -187,10 +201,24 @@ define([
 			}
 
 			var queryExecutor;
+			var target;
 			if (this.queryEngine) {
+				var queryTrackers = this.queryTrackers;
 				arrayUtil.forEach(this.queryLog, function (entry) {
-					var existingQuerier = queryExecutor,
-						querier = entry.querier;
+					var existingQuerier = queryExecutor;
+					var querier = entry.querier;
+					var queryTracker = queryTrackers[entry.type];
+					if (queryTracker) {
+						// there is a special query tracker handler for this type of query
+						// substitute it in to handle the data, and be able to modify the target
+						var originalQuerier = querier;
+						querier = function (data) {
+							var results = queryTracker(originalQuerier, data, target);
+							// queryTracker should return an object with the data and new target
+							target = results.target;
+							return results.data;
+						}
+					}
 					queryExecutor = existingQuerier
 						? function (data) { return querier(existingQuerier(data)); }
 						: querier;
@@ -214,7 +242,7 @@ define([
 				};
 			function notify(type, event) {
 				revision++;
-				var target = event.target;
+				target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
 				when(observed._results || observed._partialResults, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
@@ -308,6 +336,8 @@ define([
 									sampleArray.splice(candidateIndex, 0, target);
 
 									sortedIndex = arrayUtil.indexOf(queryExecutor(sampleArray), target);
+									// the target may have been updated by the tracked query execution
+									event.target = target;
 									adjustedIndex = range.start + sortedIndex;
 
 									if (sortedIndex === 0 && range.start !== 0) {
