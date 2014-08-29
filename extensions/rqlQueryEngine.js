@@ -4,10 +4,10 @@ define([
 	'../objectQueryEngine'
 ], function (lang, arrayEngine, objectQueryEngine) {
 	return lang.delegate(objectQueryEngine, {
-		filter: function (filter, options) {
-			return typeof filter === 'string'
-				? arrayEngine.query(filter, options)
-				: objectQueryEngine.filter(filter, options);
+		filter: function (filter) {
+			return filter.type === 'string'
+				? arrayEngine.query(filter.args[0])
+				: objectQueryEngine.filter(filter);
 		}
 	});
 });

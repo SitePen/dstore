@@ -46,7 +46,7 @@ define(['dojo/_base/declare'], function (declare) {
 		and: filterCreator('and'),
 		or: filterCreator('or'),
 		eq: filterCreator('eq'),
-		ne: filterCreator('eq'),
+		ne: filterCreator('ne'),
 		lt: filterCreator('lt'),
 		lte: filterCreator('lte'),
 		gt: filterCreator('gt'),
