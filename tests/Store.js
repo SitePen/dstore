@@ -60,19 +60,29 @@ define([
 		'filter': function () {
 			var filter1 = { prop1: 'one' },
 				expectedQueryLog1 = [ {
-					type: 'filter', arguments: [ filter1 ], normalizedArguments: [ filter1 ]
+					type: 'filter', arguments: [ filter1 ], normalizedArguments: [ {
+						type: 'eq',
+						args: { // we have to match Argument type, which is not a real array
+							0: 'prop1', 
+							1: 'one'
+						}
+					} ]
 				} ],
 				filter2 = function filterFunc() {},
 				expectedQueryLog2 = expectedQueryLog1.concat({
-					type: 'filter', arguments: [ filter2 ], normalizedArguments: [ filter2 ]
+					type: 'filter', arguments: [ filter2 ], normalizedArguments: [ {
+						type: 'function',
+						args: [filter2]
+					} ]
 				}),
 				filteredCollection;
 
 			filteredCollection = store.filter(filter1);
-			assert.deepEqual(filteredCollection.queryLog, expectedQueryLog1);
+			// deepEqual just won't work on the data in these
+			assert.equal(JSON.stringify(filteredCollection.queryLog), JSON.stringify(expectedQueryLog1));
 
 			filteredCollection = filteredCollection.filter(filter2);
-			assert.deepEqual(filteredCollection.queryLog, expectedQueryLog2);
+			assert.equal(JSON.stringify(filteredCollection.queryLog), JSON.stringify(expectedQueryLog2));
 		},
 
 		'sort': function () {

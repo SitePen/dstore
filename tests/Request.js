@@ -136,6 +136,24 @@ define([
 				return runCollectionTest(store.filter(filter), { queryParams: filter });
 			},
 
+			'filter builder': function () {
+				var filter = new store.Filter();
+				var betweenTwoAndFour = filter.gt('id', 2).lt('price', 5);
+				return runCollectionTest(store.filter(betweenTwoAndFour), { queryParams: {
+					id: 'gt=2',
+					price: 'lt=5'
+				}});
+			},
+
+			'filter builder ne or': function () {
+				var filter = new store.Filter();
+				var betweenTwoAndFour = filter.ne('id', 2).or(filter.eq('foo', true), filter.eq('foo'));
+				return runCollectionTest(store.filter(betweenTwoAndFour), { queryParams: {
+					id: 'ne=2',
+					'(foo': 'true|foo=undefined)'
+				}});
+			},
+
 			'sort': function () {
 				var sortedCollection = store.sort({
 					property: 'prop1',

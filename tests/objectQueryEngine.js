@@ -1,9 +1,10 @@
 define([
 	'../objectQueryEngine',
 	'dojo/_base/declare',
+	'../Filter',
 	'intern!object',
 	'intern/chai!assert'
-], function (objectQueryEngine, declare, registerSuite, assert) {
+], function (objectQueryEngine, declare, Filter, registerSuite, assert) {
 	var testData = [
 		{ id: 1, name: 'one', odd: true },
 		{ id: 2, name: 'two', odd: false },
@@ -16,7 +17,10 @@ define([
 		name: 'objectQueryEngine',
 
 		'filter with predicate': function () {
-			var filter = objectQueryEngine.filter(function (o) { return o.odd; });
+			var filter = objectQueryEngine.filter({
+				type: 'function',
+				args: [function (o) { return o.odd; }]
+			});
 
 			assert.deepEqual(filter(testData), [
 				{ id: 1, name: 'one', odd: true },
@@ -26,27 +30,11 @@ define([
 		},
 
 		'filter with object': function () {
-			var filter = objectQueryEngine.filter({ odd: false });
+			var filterExpression = new Filter();
+			var filter = objectQueryEngine.filter(filterExpression.eq('odd', false));
 
 			assert.deepEqual(filter(testData), [
 				{ id: 2, name: 'two', odd: false },
-				{ id: 4, name: 'four', odd: false }
-			]);
-		},
-
-		'filter with filter method identifier': function () {
-			var filter = objectQueryEngine.filter.call(
-				{
-					customFilter: function (item) {
-						return item.id > 1 && item.id < 5;
-					}
-				},
-				'customFilter'
-			);
-
-			assert.deepEqual(filter(testData), [
-				{ id: 2, name: 'two', odd: false },
-				{ id: 3, name: 'three', odd: true },
 				{ id: 4, name: 'four', odd: false }
 			]);
 		},
