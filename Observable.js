@@ -299,7 +299,7 @@ define([
 											&& removedFrom <= (range.start + range.count)) {
 											candidateIndex = removedFrom;
 										} else {
-											candidateIndex = sampleArray.length;
+											candidateIndex = store.defaultNewToStart ? 0 : sampleArray.length;
 										}
 									}
 									sampleArray.splice(candidateIndex, 0, target);
@@ -319,7 +319,7 @@ define([
 								}
 							}
 						} else {
-							// we don't have a queryEngine, so we can't provide any information
+							// we don't have a queryExecutor, so we can't provide any information
 							// about where it was inserted or moved to. If it is an update, we leave
 							// its position alone. otherwise, we at least indicate a new object
 
