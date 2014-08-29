@@ -624,6 +624,9 @@ define([
 			var collection = myStore.filter({});
 
 			collection = collection.map(function(item){
+				if (item.beenMapped) {
+					assert.fail('Item has already been mapped');
+				}
 				var newItem = {};
 				for(var i in item){
 					newItem[i] = item[i];

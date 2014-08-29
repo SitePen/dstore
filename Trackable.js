@@ -80,14 +80,12 @@ define([
 		queryTrackers: {
 			map: function (executor, data, target) {
 				// handling of map queries, when we are tracking a target,
-				// we need to reretrieve the target after the map, as it
-				// will be transformed
+				// we need the target needs to be transformed, but the rest of
+				// the data has already been transformed
 				var index = arrayUtil.indexOf(data, target);
-				data = executor(data);
-				return {
-					data: data,
-					target: data[index]
-				};
+				data._target = target = executor([target])[0];
+				data.splice(index, 1, target);
+				return data;
 			}
 		},
 
@@ -201,7 +199,6 @@ define([
 			}
 
 			var queryExecutor;
-			var target;
 			if (this.queryEngine) {
 				var queryTrackers = this.queryTrackers;
 				arrayUtil.forEach(this.queryLog, function (entry) {
@@ -212,15 +209,12 @@ define([
 						// there is a special query tracker handler for this type of query
 						// substitute it in to handle the data, and be able to modify the target
 						var originalQuerier = querier;
-						querier = function (data) {
-							var results = queryTracker(originalQuerier, data, target);
-							// queryTracker should return an object with the data and new target
-							target = results.target;
-							return results.data;
+						querier = function (data, target) {
+							return queryTracker(originalQuerier, data, target);
 						}
 					}
 					queryExecutor = existingQuerier
-						? function (data) { return querier(existingQuerier(data)); }
+						? function (data, target) { return querier(existingQuerier(data, target), target); }
 						: querier;
 				});
 			}
@@ -242,7 +236,7 @@ define([
 				};
 			function notify(type, event) {
 				revision++;
-				target = event.target;
+				var target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
 				when(observed._results || observed._partialResults, function (resultsArray) {
 					/* jshint maxcomplexity: 30 */
@@ -303,7 +297,7 @@ define([
 							// with a queryExecutor, we can determine the correct sorted index for the change
 
 							if (queryExecutor.matches ? queryExecutor.matches(target) :
-									queryExecutor([target]).length) {
+									queryExecutor([target], target).length) {
 								var begin = 0,
 									end = ranges.length - 1,
 									sampleArray,
@@ -333,11 +327,13 @@ define([
 											candidateIndex = store.defaultNewToStart ? 0 : sampleArray.length;
 										}
 									}
+									// make sure we have to original
 									sampleArray.splice(candidateIndex, 0, target);
 
-									sortedIndex = arrayUtil.indexOf(queryExecutor(sampleArray), target);
+									var filteredSampleArray = queryExecutor(sampleArray, target);
 									// the target may have been updated by the tracked query execution
-									event.target = target;
+									event.target = target = filteredSampleArray._target || target;
+									sortedIndex = arrayUtil.indexOf(filteredSampleArray, target);
 									adjustedIndex = range.start + sortedIndex;
 
 									if (sortedIndex === 0 && range.start !== 0) {
