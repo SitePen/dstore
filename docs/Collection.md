@@ -4,13 +4,46 @@ A Collection is the interface for a collection of items, which can be filtered, 
 
 ## Querying
 
-Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify define which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `map()` method can be called if you want to objects to a different representations. A typical query from a store would look like:
+Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `map()` method can be called if you want to objects to a different representations. A typical query from a store would look like:
 
     store.filter({priority: 'high'}).sort('dueDate').forEach(function (object) {
             // called for each item in the final result set
         });
 
 In addition, the `track()` method may be used to track store changes, ensuring notifications include index information about object changes, and keeping result sets up-to-date after a query. The `fetch()` method is alternative way to retrieve results, providing an array for accessing query results. The section below describes each of these methods.
+
+## Filtering
+
+Filtering is used to specify a subset of objects to be returned in a filtered collection. The `filter()` method can be called with a plain object that specifies name-value pairs that the returned object must match. Or a filter builder can be used to construct more sophisticated filter conditions. To use the filter builder, first construct a new filter object from the `Filter` constructor on the collection you would be querying:
+
+	var filter = new store.Filter();
+
+We now have a `filter` object, that represent a filter, without any operators applied yet. We can create new filter objects by calling the operator methods on the filter object. For example, to specify that we want to retrieve objects with a `priority` property with a value of `"high"`, and `stars` property with a value greater than `5`, we could write:
+
+	var highPriorityFiveStarFilter = filter.eq('priority', 'high').gt('stars', 5);
+
+This filter object can then be passed as the argument to the `filter()` method on a collection/store:
+
+	var highPriorityFiveStarCollection = store.filter(highPriorityFiveStarFilter);
+
+The following methods are available on the filter objects. First are the property filtering methods, which each take a property name as the first argument, and a property value to compare for the second argument:
+* eq: Property values must equal the filter value.
+* ne: Property values must not equal the filter value.
+* lt: Property values must be less than the filter value.
+* lte: Property values must be less than or equal to the filter value.
+* gt: Property values must be greater than the filter value.
+* gte: Property values must be greater than or equal to the filter value.
+* in: An array should be passed in as the second argument, and Pproperty values must be equal to one of the values in the array.
+* match: Property values must match the provided regular expression.
+The following are combinatorial methods:
+* and: This takes two arguments that are other filter objects, that both must be true.
+* or: This takes two arguments that are other filter objects, where one of the two must be true.
+
+Different stores may implement filtering in different ways. The `dstore/Memory` will perform filtering in memory. The `dstore/Request`/`dstore/Rest` stores will translate the filters into URL query strings to send to the server. Simple queries will be in standard URL-encoded query format and complex queries will conform to RQL syntax (which is a superset of standard query format).
+
+New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with memory stores, you can also add filter handlers to `dstore/objectQueryEngine` by adding new methods to the `comparators` object on this module.
+
+For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializations of filters to URL queries for existing or new methods by overriding the `_renderFilterParams`. This method is called with a filter object (and by default is recursively called by combinatorial operators), and should return a string serialization of the filter, that will be inserted into the query string of the URL sent to the server.
 
 ## Collection API
 
@@ -28,7 +61,7 @@ Property | Description
 
 #### `filter(query)`
 
-This filters the collection, returning a new subset collection. The query can be an object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (those that include `SimpleQuery` like `Memory`) may accept a function for filtering as well.
+This filters the collection, returning a new subset collection. The query can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (those that include `SimpleQuery` like `Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
 
 #### `sort(property, [descending])`
 

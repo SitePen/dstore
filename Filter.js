@@ -54,5 +54,6 @@ define(['dojo/_base/declare'], function (declare) {
 		'in': filterCreator('in'),
 		match: filterCreator('match')
 	});
+	Filter.filterCreator = filterCreator;
 	return Filter;
 });
