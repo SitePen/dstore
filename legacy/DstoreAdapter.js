@@ -54,6 +54,16 @@ define([
 					};
 				};
 			}
+			var objectStore = this;
+			// we call notify on events to mimic the old dojo/store/Observable
+			store.on('add,update,remove', function (event) {
+				var type = event.type;
+				var target = event.target;
+				objectStore.notify(
+					(type === 'add' || type === 'update') ? target : undefined,
+					(type === 'remove' || type === 'update') ?
+						('id' in event ? event.id : store.getIdentity(target)) : undefined);
+			});
 		},
 
 		query: function (query, options) {
@@ -140,6 +150,9 @@ define([
 				return handle;
 			};
 			return queryResults;
+		},
+		notify: function () {
+
 		}
 	};
 

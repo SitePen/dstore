@@ -1,12 +1,13 @@
 define([
 	'dojo/_base/declare',
+	'dojo/aspect',
 	'intern!object',
 	'intern/chai!assert',
 	'dstore/Memory',
 	'dstore/Observable',
 	'../sorting',
 	'dstore/legacy/DstoreAdapter'
-], function (declare, registerSuite, assert, Memory, Observable, sorting, DstoreAdapter) {
+], function (declare, aspect, registerSuite, assert, Memory, Observable, sorting, DstoreAdapter) {
 
 	var store;
 
@@ -43,6 +44,11 @@ define([
 				]
 			}));
 			var observedEvents = [];
+			var notifyCalls = [];
+
+			aspect.after(store, 'notify', function (object, existingId) {
+				notifyCalls.push([object && object.name, existingId]);
+			}, true);
 			store.query({prime: true}, {sort: [{attribute: 'name'}]}).observe(function (object, previousIndex, index) {
 				observedEvents.push([object.name, previousIndex, index]);
 			}, true);
@@ -57,9 +63,20 @@ define([
 				['z-five', 0, 2],
 				['z-five', 2, -1],
 				['two', 1, -1]]);
+			assert.deepEqual(notifyCalls, [
+				['five', undefined],
+				['six', undefined],
+				['z-five', 5],
+				['z-five', 5],
+				[undefined, 2]]);
 		},
 		'query on plain store with observe': function () {
 			var observedEvents = [];
+			var notifyCalls = [];
+
+			aspect.after(store, 'notify', function (object, existingId) {
+				notifyCalls.push([object && object.name, existingId]);
+			}, true);
 			store.query({prime: true}).observe(function (object, previousIndex, index) {
 				observedEvents.push([object.name, previousIndex, index]);
 			}, true);
@@ -68,6 +85,9 @@ define([
 			assert.deepEqual(observedEvents, [
 				['eleven', -1, undefined],
 				['five', undefined, -1]]);
+			assert.deepEqual(notifyCalls, [
+				['eleven', undefined],
+				[undefined, 5]]);
 		},
 		'query with string': function () {
 			assert.strictEqual(store.query({name: 'two'}).length, 1);
