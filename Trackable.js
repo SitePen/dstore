@@ -10,7 +10,7 @@ define([
 ], function (lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/) {
 
 	// module:
-	//		dstore/Observable
+	//		dstore/Trackable
 	var undef, revision = 0;
 
 	function createRange(newStart, newEnd) {

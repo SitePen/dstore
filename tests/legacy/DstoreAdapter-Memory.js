@@ -4,10 +4,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dstore/Memory',
-	'dstore/Observable',
+	'dstore/Trackable',
 	'../sorting',
 	'dstore/legacy/DstoreAdapter'
-], function (declare, aspect, registerSuite, assert, Memory, Observable, sorting, DstoreAdapter) {
+], function (declare, aspect, registerSuite, assert, Memory, Trackable, sorting, DstoreAdapter) {
 
 	var store;
 
@@ -37,8 +37,8 @@ define([
 			assert.strictEqual(store.query({prime: true}).length, 3);
 			assert.strictEqual(store.query({even: true})[1].name, 'four');
 		},
-		'query on Observable with observe': function () {
-			store = new DstoreAdapter(new (declare([Memory, Observable]))({
+		'query on Trackable with observe': function () {
+			store = new DstoreAdapter(new (declare([Memory, Trackable]))({
 				data: [
 					{ id: 2, name: 'two', prime: true }
 				]
@@ -220,7 +220,7 @@ define([
 					sort: sort
 				});
 		})
-		// TODO: Add tests with dojo/store/Observable
+		// TODO: Add tests with dojo/store/Trackable
 		// TODO: Add tests that verify correct adaptation of dstore queryEngine to dojo/store queryEngine
 	});
 });

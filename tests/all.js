@@ -7,7 +7,7 @@ define([
 	'./Request',
 	'./Rest',
 	'intern/node_modules/dojo/has!host-browser?./RequestMemory',
-	'./Observable',
+	'./Trackable',
 	'./Cache',
 	'./Tree',
 	'./Csv',

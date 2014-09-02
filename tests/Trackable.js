@@ -7,12 +7,12 @@ define([
 	'dojo/when',
 	'dstore/Memory',
 	'dstore/Store',
-	'dstore/Observable',
+	'dstore/Trackable',
 	'dstore/objectQueryEngine'
-], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Observable, objectQueryEngine) {
-	var MyStore = declare([Memory, Observable], {
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Trackable, objectQueryEngine) {
+	var MyStore = declare([Memory, Trackable], {
 		get: function () {
-			// need to make sure that this.inherited still works with Observable
+			// need to make sure that this.inherited still works with Trackable
 			return this.inherited(arguments);
 		}
 	});
@@ -41,8 +41,8 @@ define([
 		return new Store({data: data});
 	}
 
-	// A store for testing Observable with only partial in-memory data
-	var ObservablePartialDataStore = declare([ Store, Observable ], (function () {
+	// A store for testing Trackable with only partial in-memory data
+	var TrackablePartialDataStore = declare([ Store, Trackable ], (function () {
 		var proto = {
 			constructor: function (kwArgs) {
 				delete this.data;
@@ -95,7 +95,7 @@ define([
 	})());
 
 	registerSuite({
-		name: 'dstore Observable',
+		name: 'dstore Trackable',
 
 		'get': function () {
 			assert.strictEqual(store.getSync(1).name, 'one');
@@ -243,7 +243,7 @@ define([
 
 		// TODO: Consider breaking this down into smaller test cases
 		'paging with store._partialResults': function () {
-			var bigStore = createBigStore(100, ObservablePartialDataStore),
+			var bigStore = createBigStore(100, TrackablePartialDataStore),
 				bigFiltered = bigStore.filter({}).sort('order'),
 				latestObservation,
 				bigObserved = bigFiltered.track(),
@@ -320,7 +320,7 @@ define([
 			// The previous update with an undetermined index resulted in an item dropping from the first range
 			// and the first range being reduced to 0-23 instead of 0-24.
 			// Requesting 24-50 instead of 25-50 in order to request a contiguous range.
-			// Observable should treat contiguous requested ranges as a single range.
+			// Trackable should treat contiguous requested ranges as a single range.
 			bigObserved.fetchRange({ start: 24, end: 50 });
 
 			// An update sorted to the end of a range but adjacent to another range has a known index
@@ -381,7 +381,7 @@ define([
 
 		'paging releaseRange with store._partialResults': function () {
 			var itemCount = 100,
-				store = createBigStore(itemCount, ObservablePartialDataStore),
+				store = createBigStore(itemCount, TrackablePartialDataStore),
 				rangeToBeEclipsed = { start: 5, end: 15 },
 				rangeToBeSplit = { start: 25, end: 45 },
 				rangeToBeHeadTrimmed = { start: 55, end: 65 },
@@ -433,7 +433,7 @@ define([
 		},
 
 		'new item with default index': function () {
-			var store = createBigStore(100, ObservablePartialDataStore),
+			var store = createBigStore(100, TrackablePartialDataStore),
 				trackedStore = store.track();
 
 			return trackedStore.fetchRange({ start: 0, end: 25 }).then(function () {
@@ -588,7 +588,7 @@ define([
 		},
 
 		'track and collection.tracking.remove': function () {
-			var store = createBigStore(10, declare([ Memory, Observable ])),
+			var store = createBigStore(10, declare([ Memory, Trackable ])),
 				trackedCollection = store.track();
 
 			assert.property(trackedCollection, 'tracking');

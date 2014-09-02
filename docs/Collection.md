@@ -101,13 +101,13 @@ Type | Description
 
 #### `track()`
 
-This method will create a new collection that will be tracked and updated as the parent collection changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Observable`. For example, you can create an observable store class, by using `dstore/Observable` as a mixin:
+This method will create a new collection that will be tracked and updated as the parent collection changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Trackable`. For example, you can create an observable store class, by using `dstore/Trackable` as a mixin:
 
-	var ObservableMemory = declare([Memory, Observable]);
+	var TrackableMemory = declare([Memory, Trackable]);
 
 Once we have created a new instance from this store, we can track a collection, which could be the top level store itself, or a downstream filtered or sorted collection:
 
-	var store = new ObservableMemory({data: ...});
+	var store = new TrackableMemory({data: ...});
 	var filteredSorted = store.filter({inStock: true}).sort('price');
 
 At this point, we can do a `fetch()` or `forEach()` to access the items in the filtered collection. Once we have done that, the data will be loaded, or will be loading, and we can track it.
@@ -118,7 +118,7 @@ Alternately, rather than retrieving results prior to tracking, we could call `tr
 
 	tracked.range(0, 10).forEach(...);
 	
-Observable will keep track of each page of data, and send out notifications based on the data it has available.
+Trackable will keep track of each page of data, and send out notifications based on the data it has available.
 
 And then we could listen for notifications:
 

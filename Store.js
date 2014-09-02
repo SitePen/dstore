@@ -418,7 +418,7 @@ define([
 			//		- data - This indicates the object that was create or modified.
 			//		- id - If an object was removed, this indicates the object that was removed.
 			//		The next two properties will only be available if array tracking is employed,
-			//		which is usually provided by dstore/Observable
+			//		which is usually provided by dstore/Trackable
 			//		- previousIndex - The previousIndex parameter indicates the index in the result array where
 			//		the object used to be. If the value is -1, then the object is an addition to
 			//		this result set (due to a new object being created, or changed such that it

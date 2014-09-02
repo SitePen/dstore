@@ -55,7 +55,7 @@ define([
 				};
 			}
 			var objectStore = this;
-			// we call notify on events to mimic the old dojo/store/Observable
+			// we call notify on events to mimic the old dojo/store/Trackable
 			store.on('add,update,remove', function (event) {
 				var type = event.type;
 				var target = event.target;

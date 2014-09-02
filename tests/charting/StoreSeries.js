@@ -4,9 +4,9 @@ define([
 	'dojo/_base/declare',
 	'dojo/json',
 	'dstore/Memory',
-	'dstore/Observable',
+	'dstore/Trackable',
 	'dstore/charting/StoreSeries'
-], function(registerSuite, assert, declare, JSON, Memory, Observable, StoreSeries){
+], function(registerSuite, assert, declare, JSON, Memory, Trackable, StoreSeries){
 
 	var testSeriesObj = {
 		// This is a mock Series object for testing.
@@ -119,7 +119,7 @@ define([
 		},
 
 		'observable store - update': function(){
-			store = new (declare([Memory, Observable]))({
+			store = new (declare([Memory, Trackable]))({
 				data: storeData
 			});
 
@@ -148,11 +148,11 @@ define([
 			assert.include(data, 'data2');
 			assert.include(data, 'data3');
 			assert.include(data, 'data4');
-			// TODO: this fails due to a bug in Observable: assert.include(data, 'mod data 55');
+			// TODO: this fails due to a bug in Trackable: assert.include(data, 'mod data 55');
 		},
 
 		'observable store - delete': function(){
-			store = new (declare([Memory, Observable]))({
+			store = new (declare([Memory, Trackable]))({
 				data: storeData
 			});
 

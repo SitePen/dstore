@@ -68,12 +68,12 @@ require(["dojo/_base/declare", "dojo/request", "dojox/charting/Chart", "dstore/c
 	"dojox/charting/widget/Legend", "dojox/charting/plot2d/Markers",
 	"dojox/charting/plot2d/Columns", "dojox/charting/plot2d/Pie", "dojox/charting/action2d/Tooltip",
 	"dojox/charting/action2d/MoveSlice", "dojox/charting/action2d/Magnify", "dojox/charting/action2d/Shake",
-	"dstore/Memory", "dstore/Observable", "dijit/form/NumberSpinner", "dojo/_base/lang", "dojo/_base/array",
+	"dstore/Memory", "dstore/Trackable", "dijit/form/NumberSpinner", "dojo/_base/lang", "dojo/_base/array",
 	"dojo/dom-construct", "dojo/dom", "dojo/aspect", "dojox/charting/axis2d/Default"
-], function(declare, request, Chart, StoreSeries, ThreeD, Legend, Markers, Columns, Pie, Tooltip, MoveSlice, Magnify, Shake, Memory, Observable, NumberSpinner, lang, array, domConstruct, dom, aspect){
+], function(declare, request, Chart, StoreSeries, ThreeD, Legend, Markers, Columns, Pie, Tooltip, MoveSlice, Magnify, Shake, Memory, Trackable, NumberSpinner, lang, array, domConstruct, dom, aspect){
 
 	request("stock.json", { handleAs: "json" }).then(function(data){
-		var store = new (declare([Memory, Observable]))({
+		var store = new (declare([Memory, Trackable]))({
 			data: data
 		});
 		makeCharts(store);
