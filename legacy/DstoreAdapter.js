@@ -86,6 +86,7 @@ define([
 			//	|		// handle each object
 			//	|	});
 			var results = this.store.filter(query);
+			var queryResults;
 
 			if (options) {
 				// Apply sorting
@@ -100,18 +101,7 @@ define([
 						results = results.sort(sort);
 					}
 				}
-				// Apply a range
-				if ('start' in options) {
-					var start = options.start || 0;
-					// object stores support sync results, so try that if available
-					var queryResults = results[results.fetchRangeSync ? 'fetchRangeSync' : 'fetchRange']({
-						start: start,
-						end: options.count ? (start + options.count) : Infinity
-					});
-					queryResults.total = queryResults.totalLength;
-					return new QueryResults(queryResults);
-				}
- 			}
+			}
  			var tracked;
 			if (results.track) {
 				// if it is trackable, always track, so that observe can
@@ -119,7 +109,17 @@ define([
 				results = results.track();
 				tracked = true;
 			}
-			var queryResults = new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']());
+			if (options && 'start' in options) {
+				// Apply a range
+				var start = options.start || 0;
+				// object stores support sync results, so try that if available
+				queryResults = results[results.fetchRangeSync ? 'fetchRangeSync' : 'fetchRange']({
+					start: start,
+					end: options.count ? (start + options.count) : Infinity
+				});
+				queryResults.total = queryResults.totalLength;
+			}
+			queryResults = queryResults || new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']());
 			queryResults.observe = function (callback, includeObjectUpdates) {
 				// translate observe to event listeners
 				function convertUndefined(value) {
