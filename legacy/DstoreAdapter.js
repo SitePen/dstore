@@ -103,7 +103,7 @@ define([
 				}
 			}
  			var tracked;
-			if (results.track) {
+			if (results.track && !results.tracking) {
 				// if it is trackable, always track, so that observe can
 				// work properly.
 				results = results.track();

@@ -174,7 +174,9 @@ define([
 
 						this.remove = function () {};
 					}
-				}
+				},
+				// make sure track isn't called twice
+				track: null
 			});
 			if (this.fetchSync) {
 				// only add these if we extending a sync-capable store
