@@ -65,7 +65,7 @@ This filters the collection, returning a new subset collection. The query can be
 
 #### `sort(property, [descending])`
 
-This sorts the collection, returning a new ordered collection.
+This sorts the collection, returning a new ordered collection. Note that if sort is called multiple times, previous sort calls may be ignored by the store (it is up to store implementation how to handle that). If a multiple sort order is desired, use the array of sort orders defined by below.
 
 #### `sort([highestSortOrder, nextSortOrder...])`
 
@@ -73,20 +73,20 @@ This also sorts the collection, but can be called to define multiple sort orders
 
 #### `map(callback, thisObject)`
 
-Maps the query results. Note that this may executed asynchronously. The callback may be called after this function returns. This will return a new collection for the mapped results.
+Maps the query results. Note that this may be executed lazily and/or asynchronously, once the data is fetched. The callback may be called after this function returns. This will return a new collection for the mapped results.
 
 #### `forEach(callback, thisObject)`
 
-Iterates over the query results.  Note that this may executed asynchronously. The callback may be called after this function returns. If this is executed asynchronously, a promise will be returned to indicate the completion.
+Iterates over the query results.  Note that this may be executed asynchronously and the callback may be called after this function returns. This will return a promise to indicate the completion of the iteration. This method forces a fetch of the data.
 
 #### `fetch()`
 
-Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed. Calling `fetch()` will force the data to be retrieved, returning an array, or a promise to an array.
+Normally collections may defer the execution (like making an HTTP request) required to retrieve the results until they are actually accessed. Calling `fetch()` will force the data to be retrieved, returning a promise to an array.
 
 #### `fetchRange({start: start, end: end})`
 
-This fetches a range of objects from the collection, returning an array, or a promise to an array. The returned (and resolved) array should have a `totalLength`
-property indicating the total number of objects available in the collection.
+This fetches a range of objects from the collection, returning a promise to an array. The returned (and resolved) promise should have a `totalLength`
+property with a promise that resolves to a number indicating the total number of objects available in the collection.
 
 #### `on(type, listener)`
 
@@ -116,7 +116,7 @@ At this point, we can do a `fetch()` or `forEach()` to access the items in the f
 
 Alternately, rather than retrieving results prior to tracking, we could call `track()`, and then make individual range requests from the tracked collection. 
 
-	tracked.range(0, 10).forEach(...);
+	tracked.fetchRange(0, 10);
 	
 Trackable will keep track of each page of data, and send out notifications based on the data it has available.
 
@@ -128,4 +128,4 @@ And then we could listen for notifications:
 		var object = index.target;
 	});
 
-If you will be calling `range()`, to retrieve pages of data, that should be called on the tracked query (tracked notifications, and their index position will be based on the total collection tracked, and not relative to the individual pages).
+If you will be calling `fetchRange()`, to retrieve pages of data, that should be called on the tracked query (tracked notifications, and their index position will be based on the total collection tracked, and not relative to the individual pages).
