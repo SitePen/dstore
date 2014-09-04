@@ -16,7 +16,7 @@ All the stores can be instantiated with an options argument to the constructor, 
 
 ## Memory
 
-The Memory store is a basic client-side in-memory object store, that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor, or by calling `store.setData(data)`.
+The Memory store is a basic client-side in-memory object store, that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor, or by calling `store.setData(data)`. The data should be an array of objects, and all the objects are considered to be existing objects and must have identities (this is not "creating" new objects, no events are fired for the objects that are provided, nor are identities assigned).
 
 For example:
 
@@ -28,7 +28,7 @@ For example:
         }]
     });
 
-All the methods on `Memory` store return synchronously.
+The `Memory` store provides synchronous equivalents of standard asynchronous store methods, including `getSync(id)`, `addSync(object, options)`, `putSync(object, options)`, and `removeSync(id)`. These methods directly return objects or results, without a promise.
 
 ## Request
 
