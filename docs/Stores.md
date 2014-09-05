@@ -2,13 +2,13 @@
 
 The dstore package includes several store implementations that can be used for the needs of different applications. These include:
 
-* Memory - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
-* Rest - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
-* Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
-* RequestMemory - This is a Memory based store that will retrieve its contents from a server/URL.
-* Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
-* Trackable - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
-* SimpleQuery - This is a base store with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
+* `Memory` - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
+* `Rest` - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
+* `Request` - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
+* `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
+* `Cache` - This is an aggregate store that combines a master and caching store to provide caching functionality.
+* `Trackable` - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
+* `Store` - This is a base store, with the base methods that are used by all other stores.
 
 ## Constructing Stores
 

@@ -13,13 +13,8 @@ require([
 });
 ``` 
 
-In addition to the methods and properties inherited from `dstore/api/Store`, the `StoreAdapter` module also exposes the following method.
+This provides  to the methods and properties inherited from `dstore/api/Store`, the `StoreAdapter` module also exposes the following method.
 
-### Method Summary
-
-Method | Description
------- | -------------
-`StoreAdapter.adapt()` | Adapts an existing `dstore` object to behave like a dstore object.
 
 ## DstoreAdapter
 
@@ -33,7 +28,7 @@ require([
     var adaptedStore = new DstoreAdapter({store: store});
 });
 ```
-
+If the dstore store is trackable (mixed in `dstore/Trackable`), the result sets returned from `query()` calls will be observable (have an `observe()` method).
 
 ## StoreSeries
 
@@ -44,7 +39,7 @@ require([
 ], function (StoreSeries) {
     //... create a store and a chart ...
     // Adds a StoreSeries to the y axis.
-    chart.addSeries('y', new StoreSeries(store);
+    chart.addSeries('y', new StoreSeries(store));
 });
 ```
 
