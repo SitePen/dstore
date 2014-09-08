@@ -32,11 +32,11 @@ The `Memory` store provides synchronous equivalents of standard asynchronous sto
 
 ## Request
 
-This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property.
+This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property. A request for data will be sent to the server when a fetch occurs (due a call to `fetch()`, `fetchRange()`, or `forEach()`).
 
 ## Rest
 
-This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications, trigger HTTP requests to the server, using the corresponding RESTful HTTP methods.
+This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications, trigger HTTP requests to the server, using the corresponding RESTful HTTP methods. A `get()` triggers a `GET`, `remove()` triggers a `DELETE`, and `add()` and `put()` will trigger a `PUT` if an id is available or provided, and a `POST` will be used to create new objects with server provided ids.
 
 For example:
 
@@ -76,10 +76,22 @@ Name | Description
 `canCacheQuery(method, args)' | This can be a boolean or a method that will indicate if a collection can be cached (if it should have `isValidFetchCache` set to true), based on the query method and arguments used to derive the collection.
 `isLoaded(object)` | This can be defined to indicate if a given object in a query can be cached (by default, objects are cached).
 
+## Tree
+
+This is a mixin that provides basic support for hierarchical data. This implements several methods that can then be used by hierarchical UI components (like [dgrid](https://github.com/SitePen/dgrid) with a tree column). This mixin uses a parent-based approach to finding children, retrieving the children of an object by querying for objects that have `parent` property with the id of the parent object. In addition, objects may have a `hasChildren` property to indicate if they have children (if the property is absent, it is assumed that they may have children). This mixin implements the following methods:
+
+* `getChildren(parent)` - This returns a collection representing the children of the provided parent object. This is produced by filtering for objects that have a `parent` property with the id of the parent object.
+* `mayHaveChildren(parent)` - This synchronously returns a boolean indicating whether or not the parent object might have children (the actual children may need to be retrieved asynchronously).
+* `getRootCollection()` - This returns the root collection, the collection of objects with `parent` property that is `null`.
+
+The Tree mixin may serve as an example for alternate hierarchical implementations. By implementing these methods as they are in `dstore/Tree`, one could change the property names for data that uses different parent references or indications of children. Another option would be define the children of an object as direct references from the parent object. In this case, you would define `getChildren` to associate the `parent` object with the returned collection and override `fetch` and `fetchRange` to return a promise to the array of the children of the parent.
+
 ## Resource Query Language
 
-[Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages includes an alternate query engine for using
-RQL as the query language. This can be enabled by setting the <code>queryEngine</code> property:
+[Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages serializes complex filter/queries into RQL (RQL supersets standard query parameters, and so simple queries are simply serialized as standard query parameters).
+
+dstore also includes an alternate query engine for using
+RQL as the query language for filtering. This can be enabled by setting the <code>queryEngine</code> property:
 
     require(['dstore/extensions/rqlQueryEngine'], function (rqlQueryEngine) {
         var rqlStore = new Memory({
