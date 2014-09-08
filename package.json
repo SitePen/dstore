@@ -1,7 +1,7 @@
 {
   "name": "dstore",
   "author": "Kris Zyp",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "A data collection and modelling infrastructure",
   "licenses": [
      {
