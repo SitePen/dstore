@@ -1,10 +1,10 @@
 # Collection
 
-A Collection is the interface for a collection of items, which can be filtered, sorted, and mapped to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. The methods represent a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
+A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. The methods represent a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
 
 ## Querying
 
-Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. Finally, the `map()` method can be called if you want to objects to a different representations. A typical query from a store would look like:
+Several methods are available for querying collections. These methods allow you to define a query through several steps. Normally, stores are queried first by calling `filter()` to specify which objects to be included, if the filtering is needed. Next, if an order needs to be specified, the `sort()` method is called to ensure the results will be sorted. A typical query from a store would look like:
 
     store.filter({priority: 'high'}).sort('dueDate').forEach(function (object) {
             // called for each item in the final result set
@@ -69,10 +69,6 @@ This sorts the collection, returning a new ordered collection. Note that if sort
 #### `sort([highestSortOrder, nextSortOrder...])`
 
 This also sorts the collection, but can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a new collection sorted by lastName, with firstName used to sort identical lastName values.
-
-#### `map(callback, thisObject)`
-
-Maps the query results. Note that this may be executed lazily and/or asynchronously, once the data is fetched. The callback may be called after this function returns. This will return a new collection for the mapped results.
 
 #### `forEach(callback, thisObject)`
 

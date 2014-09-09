@@ -242,8 +242,6 @@ define([
 
 		Filter: Filter,
 
-		map: new QueryMethod({ type: 'map' }),
-
 		sort: new QueryMethod({
 			type: 'sort',
 			normalizeArguments: function (property, descending) {
@@ -377,18 +375,6 @@ define([
 			//		The object to use as |this| in the callback.
 			// returns:
 			//		undefined|Promise
-		},
-		map: function (callback, thisObject) {
-			// summary:
-			//		Maps the query results, based on
-			//		https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/map.
-			//		Note that this may executed asynchronously. The callback may be called
-			//		after this function returns.
-			// callback:
-			//		Function that is called for each object in the query results
-			// thisObject:
-			//		The object to use as |this| in the callback.
-			// returns: Array|Promise
 		},
 		fetch: function () {
 			// summary:

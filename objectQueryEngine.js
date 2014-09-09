@@ -86,6 +86,7 @@ define([
 										} :
 										function(object) {
 											return a(object) || b(object);
+				
 										};
 								})(querier, nextQuerier);
 							} else {
@@ -111,12 +112,6 @@ define([
 			}
 			return function (data) {
 				return arrayUtil.filter(data, querier);
-			};
-		},
-
-		map: function (query) {
-			return function (data) {
-				return arrayUtil.map(data, query);
 			};
 		},
 
