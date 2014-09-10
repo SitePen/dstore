@@ -52,7 +52,7 @@ This is the base class used for all stores, providing basic functionality for tr
 
 ## Validating
 
-This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation TypeError will be thrown, with an `errors` property that lists any validation errors.
+This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation `TypeError` will be thrown, with an `errors` property that lists any validation errors.
 
 ## RequestMemory
 

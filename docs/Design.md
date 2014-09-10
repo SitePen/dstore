@@ -1,3 +1,4 @@
+This document provides some discussion of design decisions, and are rather informal notes.
 dstore is distinct from other data modelling frameworks in a number of ways, and aims to provide a better user experience based on a number of goals that influence various aspects of the design. This document is intended to describe the design rationales in dstore. A few of the key goals of dstore:
 
 * The ultimate goal of dstore is facilitate applications with an amazing user experience. One of the most important ingredients to this experience is high performance components that can quickly and smoothly respond to the user. Consequently, dstore places a high priority on ensuring that data can be accessed as quickly as possible with as little overhead as possible.

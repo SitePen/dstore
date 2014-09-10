@@ -13,8 +13,7 @@ require([
 });
 ``` 
 
-This provides  to the methods and properties inherited from `dstore/api/Store`, the `StoreAdapter` module also exposes the following method.
-
+This provides all the methods and properties inherited from `dstore/api/Store`.
 
 ## DstoreAdapter
 

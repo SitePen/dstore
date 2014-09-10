@@ -10,12 +10,13 @@ Property | Description
 -------- | -----------
 `idProperty` | If the store has a single primary key, this indicates the property to use as the identity property. The values of this property should be unique. This defaults to "id".
 `model` | This is the model class to use for all the data objects that originate from this store. By default this will be set to null, so that all objects will be plain objects, but this property can be set to the class from `dstore/Model` or any other model constructor. You can create your own model classes (and schemas), and assign them to a store. All object that come from the store will have their prototype set such that they will be instances of the model. The default value of `null` will disable any prototype modifications and leave data as plain objects.
+`defaultNewToStart` | If a new object is added to a store, this will indicate it if it should go to the start or end. By default, it will be placed at the end.
 
 ### Method Summary
 
 Method | Description
 ------ | -------------
-`get(id)` | This retrieves an object by its identity. This returnr the object or a promise to the object that was retrieved. If no object was found, this should return undefined.
+`get(id)` | This retrieves an object by its identity. This return the object or a promise to the object that was retrieved. If no object was found, this should return undefined.
 `getIdentity(object)` | This returns an object's identity (note, this should always execute synchronously).
 `put(object, [directives])` | This stores an object. It can be used to update or create an object. This may return the object after it has been saved, or a promise (that resolves to the object) if the operation will be completed asynchronously.
 `add(object, [directives])` | This creates an object, and throws an error if the object already exists. This should return the newly created object (or promise to it).
@@ -24,5 +25,6 @@ Method | Description
 `create(properties)` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object. This should always execute synchronously.
 `getChildren(parent)` | This retrieves the children of the provided parent object. This should return a new collection representing the children.
 `mayHaveChildren(parent)` | This should return true or false indicating whether or not a parent might have children. This should always return synchronously, as a way of checking if children might exist before actually retrieving all the children.
+`getRootCollection()` | This should return a collection of the top level objects in a hierarchical store.
 
-Stores that can perform synchronous operations may provide analogous methods for `get`, `put`, `add`, and `remove` that end with `Sync` to provide synchronous support. For example `getSync(id)` will directly return an object instead of a promise.
+Stores that can perform synchronous operations may provide analogous methods for `get`, `put`, `add`, and `remove` that end with `Sync` to provide synchronous support. For example `getSync(id)` will directly return an object instead of a promise. The `dstore/Memory` store provides `Sync` methods.

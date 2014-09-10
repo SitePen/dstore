@@ -1,6 +1,6 @@
 # Collection
 
-A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. The methods represent a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
+A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included collections implement every method. Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. These fetch methods return a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
 
 ## Querying
 
@@ -18,7 +18,7 @@ Filtering is used to specify a subset of objects to be returned in a filtered co
 
 	var filter = new store.Filter();
 
-We now have a `filter` object, that represent a filter, without any operators applied yet. We can create new filter objects by calling the operator methods on the filter object. The operator methods will return new filter objects that hold the operator condition. For example, to specify that we want to retrieve objects with a `priority` property with a value of `"high"`, and `stars` property with a value greater than `5`, we could write:
+We now have a `filter` object, that represents a filter, without any operators applied yet. We can create new filter objects by calling the operator methods on the filter object. The operator methods will return new filter objects that hold the operator condition. For example, to specify that we want to retrieve objects with a `priority` property with a value of `"high"`, and `stars` property with a value greater than `5`, we could write:
 
 	var highPriorityFiveStarFilter = filter.eq('priority', 'high').gt('stars', 5);
 
@@ -47,20 +47,19 @@ For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializ
 
 ## Collection API
 
-The following properties and methods are available on dstore collections:
+The following property and methods are available on dstore collections:
 
 ### Property Summary
 
 Property | Description
 -------- | -----------
-`model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof store.model`.
-`defaultNewToStart` | If a new object is added to a store, this will indicate it if it should go to the start or end. By default, it will be placed at the end.
+`model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof collection.model`.
 
 ### Method Summary
 
 #### `filter(query)`
 
-This filters the collection, returning a new subset collection. The query can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (those that include `SimpleQuery` like `Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
+This filters the collection, returning a new subset collection. The query can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (like `dstore/Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
 
 #### `sort(property, [descending])`
 
@@ -72,7 +71,7 @@ This also sorts the collection, but can be called to define multiple sort orders
 
 #### `forEach(callback, thisObject)`
 
-Iterates over the query results.  Note that this may be executed asynchronously and the callback may be called after this function returns. This will return a promise to indicate the completion of the iteration. This method forces a fetch of the data.
+This iterates over the query results.  Note that this may be executed asynchronously and the callback may be called after this function returns. This will return a promise to indicate the completion of the iteration. This method forces a fetch of the data.
 
 #### `fetch()`
 

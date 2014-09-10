@@ -3,8 +3,8 @@
 In addition to handling collections of items, dstore also provides robust data modeling capabilities for managing individual objects themselves. dstore provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes.
 
 Objects that are returned from a store (whether it be from iterating over a collection, or performing a get()) can be set to be
- an instance of the store's data model by setting the `model` property of the store to a model class, such as `dstore/Model`. 
- With this setting, the objects are instances of this model, and they all inherit the following properties and methods:
+an instance of the store's data model by setting the `model` property of the store to a model class, such as `dstore/Model`. 
+With this setting, the objects are instances of this model, and they all inherit the following properties and methods:
 
 ### Property Summary
 
@@ -18,7 +18,7 @@ Method | Description
 `get(name)` | This returns the property value with the given name.
 `set(name, value)` | This sets the value of a property.
 `property(name)` | This returns a property object instance for the given name.
-`observe(name, listener, options)` | This will listen for any changes to the value of the given property. See the Property's observe for the options.
+`observe(name, listener, options)` | This will listen for any changes to the value of the given property. See the Property's `observe` method for the options.
 `validate()` | This will validate the object, determining if there are any errors on the object. The errors can be checked on the `errors` property.
 `save()` | This will save the object, validating and then storing the object in the store. This will return the saved object (or a promise if it is saved asynchronously).
 `remove()` | This will delete the object from the object store.
@@ -33,7 +33,7 @@ Method | Description
 ------ | -----------
 `observe(listener, options)` | This registers a listener for any changes to the value of this property. The listener will be called with the current value (if it exists), and will be called with any future changes. The optional `options` object argument may include a `onlyFutureUpdates` set to true if the callback should not be called for the current value (only future updates). This will return an observe handle, with a remove() that can be used to stop listening. The listener will be called with the the new value as the first argument, and the old value as the second argument.
 `put(value)` | This requests a change in the value of this property. This may be coerced before being stored, and/or validated.
-`valueOf()` | This returns the current value of the property object.
+`valueOf()` | This returns the current value of the property.
 `validate()` | Called to validate the current property value. This should return a boolean indicating whether or not validation was successful, or a promise to a boolean. This should also result in the `errors` property being set, if any errors were found in the validation process, and `errors` property being cleared (to null) if no errors were found.
 `addError(error)` | This can be called to add an error to the list of validation errors for a property.
 
@@ -107,7 +107,7 @@ A computed property may be defined on the schema, by using the the `dstore/Compu
 
 With a computed property, we may also want to write a custom `setValue()` method if we wish to support assignments to the computed property. A `setValue()` method may need to interact with the parent object to compute values and determine behavior. The parent is provided as the second argument.
 
-Here is an example of a schema that with a computed property, `fullName`:
+Here is an example of a schema that with a computed property, `fullName`, that represents the concatenation of the `firstName` and the `lastName`:
 
     schema: {
         firstName: 'string'
@@ -185,11 +185,13 @@ Or we can use the validators array to provide a set of validators that should be
         }
     }
 
+This can be particularly useful in our validators may have properties that collide with each other, or we generally just want to keep them distinct from the property.
+
 ### Extensions
 
 #### JSON Schema Based Models
 
-Models can be defined through [JSON Schema](http://json-schema.org/) (v3). A Model based on a JSON Schema can be created with the `dstore/extensions/jsonSchema` module. For example:
+Models can be defined through [JSON Schema](http://json-schema.org/) (v3). A store with a Model based on a JSON Schema can be created with the `dstore/extensions/jsonSchema` module. For example:
 
     define(['dstore/extensions/jsonSchema', ...], function (jsonSchema, ...) {
         var myStore = new Memory({
@@ -226,4 +228,4 @@ This would queue up all the notifications that occur before the next event turn,
 
 ### HiddenProperties Model
 
-The `dstore/extensions/HiddenProperties` module provides an extension of `dstore/Model` where all the model properties are stored on a separate objects, rather than the model instance itself. This can provide a couple of advantages. First, model instances can be restored from persistence quicker since, the model instance simply needs to be instantiated with a reference to an existing object, rather than modifying the prototype chain. Second, this can be useful if you wish to protect properties from being directly accessed on the model object. Since the property values are stored on a separate object, this encourages property access through `get`, `set`, and `property`. This can be used as a model for stores, although you may want to use a custom query engine, depending on how you want property access to function.
+The `dstore/extensions/HiddenProperties` module provides an extension of `dstore/Model` where all the model properties are stored on a separate objects, rather than the model instance itself. This can provide a couple of advantages. First, model instances can be restored from persistence quicker since, the model instance simply needs to be instantiated with a reference to an existing object, rather than modifying the prototype chain. Second, this can be useful if you wish to protect properties from being directly accessed on the model object. Since the property values are stored on a separate object, this encourages property access through `get`, `set`, and `property`. This can be used as a model for stores, although you may want to use a custom query engine, depending on how you want property access to function during querying.
