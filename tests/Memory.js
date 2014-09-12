@@ -21,7 +21,10 @@ define([
 					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
 					{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
 				],
-				model: Model
+				model: Model,
+				filterFunction: function (object) {
+					return object.name === 'two';
+				}
 			});
 
 			// add a method to the model prototype
@@ -135,6 +138,10 @@ define([
 			assert.equal(count, 1);
 			assert.strictEqual(store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).totalLength, 3);
 			assert.strictEqual(store.filter({even: true}).fetchRangeSync({start: 1, end: 2})[0].name, 'four');
+		},
+
+		'filter with string-named function': function () {
+			assert.strictEqual(store.filter('filterFunction').fetchSync().length, 1);
 		},
 
 		'filter with inheritance': function () {

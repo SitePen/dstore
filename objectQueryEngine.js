@@ -57,8 +57,8 @@ define([
 			// create our matching filter function
 			var queryAccessors = this.queryAccessors;
 			var comparators = (this.queryEngine || this).comparators || {};
-			var querier = getQuerier(filter);
 			var collection = this;
+			var querier = getQuerier(filter);
 
 			function getQuerier(filter) {
 				var type = filter.type;
