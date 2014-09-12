@@ -58,6 +58,7 @@ define([
 			var queryAccessors = this.queryAccessors;
 			var comparators = (this.queryEngine || this).comparators || {};
 			var querier = getQuerier(filter);
+			var collection = this;
 
 			function getQuerier(filter) {
 				var type = filter.type;
@@ -98,10 +99,11 @@ define([
 						return args[0];
 					case 'string':
 						// named filter
-						if (!this[args[0]]) {
-							throw new Error('No filter function ' + filter + ' was found in store');
+						var filterFunction = collection[args[0]];
+						if (!filterFunction) {
+							throw new Error('No filter function ' + args[0] + ' was found in the collection');
 						}
-						return this[filter];
+						return filterFunction;
 					case undefined:
 						return function () {
 							return true;
