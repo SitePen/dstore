@@ -180,11 +180,17 @@ define([
 					}),
 					hasDefault: {
 						'default': 'beginning value'
+					},
+					hasDefaultFunction: {
+						'default': function () {
+							return 'start with this';
+						}
 					}
 				},
 				validateOnSet: false
 			}))();
 			assert.strictEqual(model.get('hasDefault'), 'beginning value');
+			assert.strictEqual(model.get('hasDefaultFunction'), 'start with this');
 			model.set('requiredString', 'a string');
 			model.set('range', 15);
 			assert.isTrue(model.validate());

@@ -138,7 +138,8 @@ define([
 				var definition = this.schema[key];
 				if (definition && typeof definition === 'object' && 'default' in definition &&
 						!values.hasOwnProperty(key)) {
-					values[key] = definition['default'];
+					var defaultValue = definition['default'];
+					values[key] = typeof defaultValue === 'function' ? defaultValue.call(this) : defaultValue;
 				}
 			}
 			
