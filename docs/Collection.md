@@ -123,3 +123,24 @@ And then we could listen for notifications:
 	});
 
 If you will be calling `fetchRange()`, to retrieve pages of data, that should be called on the tracked query. Tracked events, and their index position that they report will be based on the total collection tracked, and are not relative to the individual pages. Tracked events will also include a `totalLength` property indicating the total length of the collection.
+
+### Custom Querying
+
+Custom query methods can be created using the `dstore/QueryMethod` module. We can define our own query method, by extending a store, and defining a method with the `QueryMethod`. The QueryMethod constructor should be passed an object with the following possible properties:
+* `type` - This is a string, identifying the query method type.
+* `normalizeArguments` - This can be a function that takes the arguments passed to the method, and normalizes them for later execution.
+* `applyQuery` - This is an optional function that can be called on the resulting collection that is returned from the generated query method.
+* `querier` - This is an optional function that can be used to define the computation of the set of objects returned from a query, on client side/in-memory stores. It is called with the normalized arguments, and then returns a new function that will be called with an array, and is expected to return a new array.
+
+For example, we could create a `getChildren` method that queried for children object, by simply returning the children property array from a parent:
+
+	declare([Memory], {
+		getChildren: new QueryMethod({
+			type: 'children',
+			querier: function (parent) {
+				return function () {
+					// return the children of the parent
+					return parent.children;
+				};
+			}
+		})

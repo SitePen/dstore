@@ -40,7 +40,6 @@ define([], function () {
 			// returns: dstore/Collection
 			//		A collection representing the query results
 
-			// TODO: Test calling log
 			var originalArguments = Array.prototype.slice.call(arguments),
 				normalizedArguments = normalizeArguments
 					? normalizeArguments.apply(this, originalArguments)
@@ -61,7 +60,6 @@ define([], function () {
 				queryLog: this.queryLog.concat(logEntry)
 			});
 
-			// TODO: Test calling applyQuery
 			return applyQuery ? applyQuery.call(this, newCollection, logEntry) : newCollection;
 		};
 	};

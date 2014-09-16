@@ -173,8 +173,9 @@ define([
 				data: [
 					{id: 1, name: 'one', prime: false},
 					{id: 2, name: 'two', even: true, prime: true},
-					{id: 2.1, name: 'two point one', whole: false},
-					{id: 2.2, name: 'two point two', whole: false}
+					{id: 2.1, name: 'two point one', whole: false, even: false},
+					{id: 2.2, name: 'two point two', whole: false, even: true},
+					{id: 2.3, name: 'two point three', whole: false, even: false}
 				],
 				getChildren: new QueryMethod({
 					type: 'children',
@@ -182,19 +183,28 @@ define([
 						return function () {
 							return parent.children;
 						};
+					},
+					applyQuery: function(newCollection) {
+						newCollection.isAChildCollection = true;
+						return newCollection;
 					}
 				})
 			});
 			// make the children
 			var two = store.getSync(2);
-			two.children = [store.getSync(2.1), store.getSync(2.2)];
+			two.children = [store.getSync(2.1), store.getSync(2.2), store.getSync(2.3)];
 			store.put(two);
 			// and test the new query method
 			var ids = [];
-			store.getChildren(two).forEach(function (child) {
+			var filteredChildren = store.getChildren(two).filter({even: false});
+			filteredChildren.forEach(function (child) {
 				ids.push(child.id);
 			});
-			assert.deepEqual(ids, [2.1, 2.2]);
+			assert.equal(filteredChildren.queryLog.length, 2);
+			assert.equal(filteredChildren.queryLog[0].type, 'children');
+			assert.equal(filteredChildren.queryLog[1].type, 'filter');
+			assert.isTrue(filteredChildren.isAChildCollection);
+			assert.deepEqual(ids, [2.1, 2.3]);
 		},
 
 		'put update': function () {
