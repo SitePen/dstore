@@ -25,12 +25,15 @@ define([], function () {
 		//		* Applying the query engine
 		// kwArgs:
 		//		The properties that define the query method
+		// returns: Function
+		//		Returns a function that takes query arguments and returns a new collection with
+		//		the query associated with it.
 
 		var type = kwArgs.type,
 			normalizeArguments = kwArgs.normalizeArguments,
-			applyQuery = kwArgs.applyQuery;
+			applyQuery = kwArgs.applyQuery,
+			querier = kwArgs.querier;
 
-		// TODO: How can we document the return type of the query method
 		return function () {
 			// summary:
 			//		A query method whose arguments are determined by the query type
@@ -48,10 +51,10 @@ define([], function () {
 					normalizedArguments: normalizedArguments
 				};
 
-			if (this.queryEngine) {
+			if (this.queryEngine || querier) {
 				// Call the query factory in store context to support things like
 				// mapping a filter query's string argument to a custom filter method on the collection
-				logEntry.querier = this.queryEngine[type].apply(this, normalizedArguments);
+				logEntry.querier = (querier || this.queryEngine[type]).apply(this, normalizedArguments);
 			}
 
 			var newCollection = this._createSubCollection({

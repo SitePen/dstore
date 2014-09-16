@@ -4,8 +4,9 @@ define([
 	'dojo/_base/declare',
 	'./sorting',
 	'dstore/Model',
-	'dstore/Memory'
-], function (registerSuite, assert, declare, sorting, Model, Memory) {
+	'dstore/Memory',
+	'dstore/QueryMethod'
+], function (registerSuite, assert, declare, sorting, Model, Memory, QueryMethod) {
 
 	var store;
 
@@ -165,6 +166,35 @@ define([
 			assert.strictEqual(filtered.newMethod(), 'hello');
 			store.remove('id-1');
 			assert.strictEqual(filtered.getSync('id-1'), undefined);
+		},
+
+		'alternate query method': function () {
+			var store = new Memory({
+				data: [
+					{id: 1, name: 'one', prime: false},
+					{id: 2, name: 'two', even: true, prime: true},
+					{id: 2.1, name: 'two point one', whole: false},
+					{id: 2.2, name: 'two point two', whole: false}
+				],
+				getChildren: new QueryMethod({
+					type: 'children',
+					querier: function (parent) {
+						return function () {
+							return parent.children;
+						};
+					}
+				})
+			});
+			// make the children
+			var two = store.getSync(2);
+			two.children = [store.getSync(2.1), store.getSync(2.2)];
+			store.put(two);
+			// and test the new query method
+			var ids = [];
+			store.getChildren(two).forEach(function (child) {
+				ids.push(child.id);
+			});
+			assert.deepEqual(ids, [2.1, 2.2]);
 		},
 
 		'put update': function () {
