@@ -172,10 +172,11 @@ define([
 			var store = new Memory({
 				data: [
 					{id: 1, name: 'one', prime: false},
-					{id: 2, name: 'two', even: true, prime: true},
-					{id: 2.1, name: 'two point one', whole: false, even: false},
-					{id: 2.2, name: 'two point two', whole: false, even: true},
-					{id: 2.3, name: 'two point three', whole: false, even: false}
+					{id: 2, name: 'two', even: true, prime: true, children: [
+						{id: 2.1, name: 'two point one', whole: false, even: false},
+						{id: 2.2, name: 'two point two', whole: false, even: true},
+						{id: 2.3, name: 'two point three', whole: false, even: false}
+					]}
 				],
 				getChildren: new QueryMethod({
 					type: 'children',
@@ -192,8 +193,6 @@ define([
 			});
 			// make the children
 			var two = store.getSync(2);
-			two.children = [store.getSync(2.1), store.getSync(2.2), store.getSync(2.3)];
-			store.put(two);
 			// and test the new query method
 			var ids = [];
 			var filteredChildren = store.getChildren(two).filter({even: false});
