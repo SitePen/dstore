@@ -205,7 +205,7 @@ define([
 			return new Error('Validation error');
 		},
 
-		property: function (/*String...*/ key, nextKey) {
+		property: function (/*String...*/ property, nextKey) {
 			//	summary:
 			//		Gets a new reactive property object, representing the present and future states
 			//		of the provided property. The returned property object gives access to methods for changing,
@@ -215,91 +215,112 @@ define([
 			//		nested property access.
 
 			// create the properties object, if it doesn't exist yet
+			var key;
+			if (property instanceof Property) {
+				key = property.name;
+			} else {
+				key = property;
+				property = false;
+			}
 			var properties = this.hasOwnProperty('_properties') ? this._properties :
 				(this._properties = new Hidden());
-			var property = properties[key];
+			var propertyInstance = properties[key];
 			// if it doesn't exist, create one, delegated from the schema's property definition
 			// (this gives an property instance, owning the current property value and listeners,
 			// while inheriting metadata from the schema's property definitions)
-			if (!property) {
-				property = getSchemaProperty(this, key);
+			if (!propertyInstance) {
+				propertyInstance = getSchemaProperty(this, key) || property;
 				// delegate, or just create a new instance if no schema definition exists
-				property = properties[key] = property ? lang.delegate(property) : new Property();
-				property.name = key;
+				propertyInstance = properties[key] = propertyInstance ? lang.delegate(propertyInstance) : new Property();
+				propertyInstance.name = key;
 				// give it the correct initial value
-				property._parent = this;
+				propertyInstance._parent = this;
 			}
 			if (nextKey) {
 				// go to the next property, if there are multiple
-				return property.property.apply(property, slice.call(arguments, 1));
+				return propertyInstance.property.apply(propertyInstance, slice.call(arguments, 1));
 			}
-			return property;
+			return propertyInstance;
 		},
 
-		get: function (/*string*/ key) {
-			// TODO: add listener parameter back in
+		get: function (/*string|Property*/ property) {
 			//	summary:
 			//		Standard get() function to retrieve the current value
 			//		of a property, augmented with the ability to listen
 			//		for future changes
 
-			var property, definition = this.schema[key];
+			var key;
+			if (property instanceof Property) {
+				key = property.name;
+			} else {
+				key = property;
+				property = false;
+			}
+			var definition = this.schema[key] || property;
 			// now we need to see if there is a custom get involved, or if we can just
 			// shortcut to retrieving the property value
-			definition = property || this.schema[key];
 			if (definition && definition.valueOf &&
 					(definition.valueOf !== simplePropertyValueOf || definition.hasCustomGet)) {
 				// we have custom get functionality, need to create at least a temporary property
 				// instance
-				property = property || (this.hasOwnProperty('_properties') && this._properties[key]);
-				if (!property) {
+				var propertyInstance = this.hasOwnProperty('_properties') && this._properties[key];
+				if (!propertyInstance) {
 					// no property instance, so we create a temporary one
-					property = lang.delegate(getSchemaProperty(this, key), {
+					propertyInstance = lang.delegate(getSchemaProperty(this, key), {
 						name: key,
 						_parent: this
 					});
 				}
 				// let the property instance handle retrieving the value
-				return property.valueOf();
+				return propertyInstance.valueOf();
 			}
 			// default action of just retrieving the property value
 			return this._getValues()[key];
 		},
 
-		set: function (/*string*/ key, /*any?*/ value) {
+		set: function (/*string|Property*/ property, /*any?*/ value) {
 			//	summary:
 			//		Only allows setting keys that are defined in the schema,
 			//		and remove any error conditions for the given key when
 			//		its value is set.
-			if (typeof key === 'object') {
-				startOperation();
-				try {
-					for (var i in key) {
-						value = key[i];
-						if (key.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
-							this.set(i, value);
+			var key;
+			if (typeof property === 'object') {
+				if (property instanceof Property) {
+					key = property.name;
+				} else {
+					// this is a hash of properties to set in a batch
+					startOperation();
+					try {
+						for (var i in property) {
+							value = property[i];
+							if (property.hasOwnProperty(i) && !(value && value.toJSON === toJSONHidden)) {
+								this.set(i, value);
+							}
 						}
+					} finally {
+						endOperation();
 					}
-				} finally {
-					endOperation();
+					return;
 				}
-				return;
+			} else {
+				key = property;
+				property = false;
 			}
-			var definition = this.schema[key];
+			var definition = this.schema[key] || property;
 			if (!definition && !this.additionalProperties) {
 				// TODO: Shouldn't this throw an error instead of just giving a warning?
 				return console.warn('Schema does not contain a definition for', key);
 			}
-			var property = this.hasOwnProperty('_properties') && this._properties[key];
-			if (!property &&
+			var propertyInstance = this.hasOwnProperty('_properties') && this._properties[key];
+			if (!propertyInstance &&
 					// we need a real property instance if it is an object or if we have a custom put method
 					((value && typeof value === 'object') ||
 						(definition && definition.put !== simplePropertyPut))) {
-				property = this.property(key);
+				propertyInstance = this.property(key);
 			}
-			if (property) {
+			if (propertyInstance) {
 				// if the property instance exists, use this to do the set
-				property.put(value);
+				propertyInstance.put(value);
 			} else {
 				if (definition && definition.coerce) {
 					// if a schema definition exists, and has a coerce method,
@@ -501,6 +522,7 @@ define([
 		_has: function () {
 			return this.hasOwnProperty('value');
 		},
+
 		setValue: function (value) {
 			//	summary:
 			//		This method is responsible for storing the value. This can
@@ -756,6 +778,7 @@ define([
 			parent._getValues()[this.name] = value;
 		}
 	});
+
 	var simplePropertyValueOf = Property.prototype.valueOf;
 	var simplePropertyPut = Property.prototype.put;
 	return Model;

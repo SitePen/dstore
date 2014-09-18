@@ -163,10 +163,12 @@ define([
 		},
 
 		'property definitions': function () {
+			var requiredString;
 			var model = new (declare(Model, {
 				schema: {
-					requiredString: new Property({
+					requiredString: requiredString = new Property({
 						type: 'string',
+						name: 'requiredString',
 						required: true
 					}),
 					range: new Property({
@@ -199,6 +201,15 @@ define([
 				lastReceivedErrors = errors;
 			});
 			model.set('requiredString', '');
+			assert.isFalse(model.validate());
+			assert.equal(model.get(requiredString), '');
+			// try with property as a key
+			model.set(requiredString, 'a string');
+			assert.equal(model.get(requiredString), 'a string');
+			assert.equal(model.property(requiredString).valueOf(), 'a string');
+			assert.equal(model.get('requiredString'), 'a string');
+			assert.isTrue(model.validate());
+			model.set(requiredString, '');
 			assert.isFalse(model.validate());
 			model.set('range', 33);
 			assert.isFalse(model.validate());
