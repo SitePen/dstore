@@ -15,7 +15,7 @@ define([
 			definition._parent = object;
 		}
 		if (definition) {
-			definition.name = key;
+			definition[Model.propertyName] = key;
 		}
 		return definition;
 	}
@@ -136,9 +136,9 @@ define([
 			// set any defaults
 			for (var key in this.schema) {
 				var definition = this.schema[key];
-				if (definition && typeof definition === 'object' && 'default' in definition &&
+				if (definition && typeof definition === 'object' && Model['default'] in definition &&
 						!values.hasOwnProperty(key)) {
-					var defaultValue = definition['default'];
+					var defaultValue = definition[Model['default']];
 					values[key] = typeof defaultValue === 'function' ? defaultValue.call(this) : defaultValue;
 				}
 			}
@@ -166,7 +166,7 @@ define([
 			var object = this;
 			return when((options && options.skipValidation) ? true : this.validate(), function (isValid) {
 				if (!isValid) {
-					throw object.createValidationError(object.errors);
+					throw object.createValidationError(object[Model.errors]);
 				}
 				var scenario = object._scenario;
 				// suppress any non-date from serialization output
@@ -217,7 +217,7 @@ define([
 			// create the properties object, if it doesn't exist yet
 			var key;
 			if (property instanceof Property) {
-				key = property.name;
+				key = property[Model.propertyName];
 			} else {
 				key = property;
 				property = false;
@@ -232,7 +232,7 @@ define([
 				propertyInstance = getSchemaProperty(this, key) || property;
 				// delegate, or just create a new instance if no schema definition exists
 				propertyInstance = properties[key] = propertyInstance ? lang.delegate(propertyInstance) : new Property();
-				propertyInstance.name = key;
+				propertyInstance[Model.propertyName] = key;
 				// give it the correct initial value
 				propertyInstance._parent = this;
 			}
@@ -251,7 +251,7 @@ define([
 
 			var key;
 			if (property instanceof Property) {
-				key = property.name;
+				key = property[Model.propertyName];
 			} else {
 				key = property;
 				property = false;
@@ -286,7 +286,7 @@ define([
 			var key;
 			if (typeof property === 'object') {
 				if (property instanceof Property) {
-					key = property.name;
+					key = property[Model.propertyName];
 				} else {
 					// this is a hash of properties to set in a batch
 					startOperation();
@@ -390,14 +390,14 @@ define([
 					}
 				}
 			}), function () {
-				object.set('errors', isValid ? undefined : errors);
+				object.set(Model.errors, isValid ? undefined : errors);
 				// it wasn't async, so we just return the synchronous result
 				return isValid;
 			});
 			function notValid(key) {
 				// found an error, mark valid state and record the errors
 				isValid = false;
-				errors.push.apply(errors, object.property(key).errors);
+				errors.push.apply(errors, object.property(key)[Model.errors]);
 			}
 		},
 
@@ -414,7 +414,7 @@ define([
 
 			for (key in this.schema) {
 				var property = this.hasOwnProperty('_properties') && this._properties[key];
-				if (property && property.errors && property.errors.length) {
+				if (property && property[Model.errors] && property[Model.errors].length) {
 					isValid = false;
 				}
 			}
@@ -541,9 +541,9 @@ define([
 			// notify all the listeners of this object, that the value has changed
 			var oldValue = this._get();
 			value = this.coerce(value);
-			if (this.errors) {
+			if (this[Model.errors]) {
 				// clear any errors
-				this.set('errors', undefined);
+				this.set(Model.errors, undefined);
 			}
 			var property = this;
 			// call the setter and wait for it
@@ -602,7 +602,7 @@ define([
 			//		Given an input value, this method is responsible
 			//		for converting it to the appropriate type for storing on the object.
 
-			var type = this.type;
+			var type = this[Model.type];
 			if (type) {
 				if (type === 'string') {
 					value = '' + value;
@@ -630,7 +630,7 @@ define([
 			//		Add an error to the current list of validation errors
 			//	error: String
 			//		Error to add
-			this.set('errors', (this.errors || []).concat([error]));
+			this.set(Model.errors, (this[Model.errors] || []).concat([error]));
 		},
 
 		checkForErrors: function (value) {
@@ -643,12 +643,12 @@ define([
 			//	value:
 			//		This is the value to validate.
 			var errors = [];
-			if (this.type && !(typeof this.type === 'function' ? (value instanceof this.type) :
-				(this.type === typeof value))) {
-				errors.push(value + ' is not a ' + this.type);
+			if (this[Model.type] && !(typeof this[Model.type] === 'function' ? (value instanceof this[Model.type]) :
+				(this[Model.type] === typeof value))) {
+				errors.push(value + ' is not a ' + this[Model.type]);
 			}
 			
-			if (this.required && !(value != null && value !== '')) {
+			if (this[Model.required] && !(value != null && value !== '')) {
 				errors.push('required, and it was not present');
 			}
 			return errors;
@@ -682,12 +682,12 @@ define([
 			}), function () {
 				if (totalErrors.length) {
 					// errors exist
-					property.set('errors', totalErrors);
+					property.set(Model.errors, totalErrors);
 					return false;
 				}
 				// no errors, valid value, if there were errors before, remove them
-				if(property.get('errors') !== undefined){
-					property.set('errors', undefined);
+				if(property.get(Model.errors) !== undefined){
+					property.set(Model.errors, undefined);
 				}
 				return true;
 			});
@@ -769,15 +769,21 @@ define([
 		},
 
 		_get: function () {
-			return this._parent._getValues()[this.name];
+			return this._parent._getValues()[this[Model.propertyName]];
 		},
 		_has: function () {
-			return this.name in this._parent._getValues();
+			return this[Model.propertyName] in this._parent._getValues();
 		},
 		setValue: function (value, parent) {
-			parent._getValues()[this.name] = value;
+			parent._getValues()[this[Model.propertyName]] = value;
 		}
 	});
+
+	Model.errors = 'errors';
+	Model['default'] = 'default';
+	Model.propertyName = 'name';
+	Model.type = 'type';
+	Model.required = 'required';
 
 	var simplePropertyValueOf = Property.prototype.valueOf;
 	var simplePropertyPut = Property.prototype.put;
