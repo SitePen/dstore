@@ -155,8 +155,7 @@ define([
 
 		save: function (/*Object*/ options) {
 			//	summary:
-			//		Saves this object. By default, this is a no-op. Implementations should call `commit` after saving
-			//		has completed.
+			//		Saves this object, calling put or add on the attached store.
 			//	options.skipValidation:
 			//		Normally, validation is performed to ensure that the object
 			//		is not invalid before being stored. Set `skipValidation` to
