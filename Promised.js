@@ -31,6 +31,6 @@ define([
 		add: promised('addSync'),
 		remove: promised('removeSync'),
 		fetch: promised('fetchSync', true),
-		fetchRange: promised('fetchRangeSync', true),
+		fetchRange: promised('fetchRangeSync', true)
 	});
 });
