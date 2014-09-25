@@ -77,24 +77,14 @@ define([
 	return declare(null, {
 		currentRange: [],
 
-		queryTrackers: {
-			map: function (executor, data, target) {
-				// handling of map queries, when we are tracking a target,
-				// we need the target needs to be transformed, but the rest of
-				// the data has already been transformed
-				var index = arrayUtil.indexOf(data, target);
-				data._target = target = executor([target])[0];
-				data.splice(index, 1, target);
-				return data;
-			}
-		},
+		queryTrackers: {},
 
 		track: function () {
 			var store = this.store || this;
 
 			// monitor for updates by listening to these methods
 			var handles = [];
-			var eventTypes = {add: 1, update: 1, remove: 1};
+			var eventTypes = {add: 1, update: 1, remove: 1, refresh: 1};
 			// register to listen for updates
 			for (var type in eventTypes) {
 				handles.push(
@@ -210,12 +200,17 @@ define([
 						// substitute it in to handle the data, and be able to modify the target
 						var originalQuerier = querier;
 						querier = function (data, target) {
-							return queryTracker(originalQuerier, data, target);
-						}
+							return queryTracker.call(observed, entry.normalizedArguments, data, target);
+						};
 					}
 					queryExecutor = existingQuerier
-						? function (data, target) { return querier(existingQuerier(data, target), target); }
-						: querier;
+						? function (data, target) {
+							var results = existingQuerier(data, target);
+							var refresh = results.refresh;
+							results = querier(results, results.target || target);
+							results.refresh = results.refresh || refresh;
+							return results;
+						} : querier;
 				});
 			}
 
@@ -228,7 +223,7 @@ define([
 					start = start !== undefined ? start : 0;
 					end = end !== undefined ? end : data.length;
 					for (var i = start; i < end; ++i) {
-						if (store.getIdentity(data[i]) === id) {
+						if (observed.getIdentity(data[i]) === id) {
 							return i;
 						}
 					}
@@ -276,7 +271,7 @@ define([
 								// often ids can be converted strings (if they are used as keys in objects),
 								// so we do a coercive equality check
 								/* jshint eqeqeq: false */
-								if (store.getIdentity(object) == targetId) {
+								if (observed.getIdentity(object) == targetId) {
 									removedFrom = event.previousIndex = j;
 									removalRangeIndex = i;
 									resultsArray.splice(removedFrom, 1);
@@ -331,8 +326,15 @@ define([
 									sampleArray.splice(candidateIndex, 0, target);
 
 									var filteredSampleArray = queryExecutor(sampleArray, target);
+									if (filteredSampleArray.refresh) {
+										observed.on_trackedrefresh && observed.on_trackedrefresh({
+											type: 'refresh'
+										});
+										return;
+
+									}
 									// the target may have been updated by the tracked query execution
-									event.target = target = filteredSampleArray._target || target;
+									event.target = target = filteredSampleArray.target || target;
 									sortedIndex = arrayUtil.indexOf(filteredSampleArray, target);
 									adjustedIndex = range.start + sortedIndex;
 
@@ -344,6 +346,7 @@ define([
 									} else {
 										insertedInto = adjustedIndex;
 										insertionRangeIndex = i;
+										break;
 									}
 								}
 							}

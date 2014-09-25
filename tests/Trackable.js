@@ -8,8 +8,9 @@ define([
 	'dstore/Memory',
 	'dstore/Store',
 	'dstore/Trackable',
+	'dstore/QueryMethod',
 	'dstore/objectQueryEngine'
-], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Trackable, objectQueryEngine) {
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Trackable, QueryMethod, objectQueryEngine) {
 	var MyStore = declare([Memory, Trackable], {
 		get: function () {
 			// need to make sure that this.inherited still works with Trackable
@@ -610,20 +611,41 @@ define([
 			store.put({ id: 12, name: 'item-12', order: 12 });
 			assert.isNull(lastEvent);
 		},
-		'index direct from Memory': function () {
+		'map query methods from Memory': function () {
 			var myData = [
-				{ id: "foo", name: "Foo" },
-				{ id: "bar", name: "Bar" }
+				{ id: 'foo', name: 'Foo' },
+				{ id: 'bar', name: 'Bar' }
 			];
 
-			var M = declare([Memory, Observable], {});
+			var M = declare([Memory, Trackable], {
+				map: new QueryMethod({ type: 'map' }),
+
+				queryTrackers: {
+					map: function (args, data, target) {
+						// handling of map queries, when we are tracking a target,
+						// we need the target needs to be transformed, but the rest of
+						// the data has already been transformed
+						var index = arrayUtil.indexOf(data, target);
+						data.target = target = args[0](target);
+						data.splice(index, 1, target);
+						return data;
+					}
+				},
+				queryEngine: lang.delegate(objectQueryEngine, {
+					map: function (query) {
+						return function (data) {
+							return arrayUtil.map(data, query);
+						};
+					}
+				})
+			});
 
 			// use empty model to easy comparison
-			var myStore = new M({ data: myData, model: null, idProperty: "id" });
+			var myStore = new M({ data: myData, model: null, idProperty: 'id' });
 
 			var collection = myStore.filter({});
 
-			collection = collection.map(function(item){
+			collection = collection.map(function (item) {
 				if (item.beenMapped) {
 					assert.fail('Item has already been mapped');
 				}
@@ -635,22 +657,90 @@ define([
 				return newItem;
 			});
 
-			tracked = collection.track();
-			tracked.on("add", function(){ console.log("add"); });
+			var tracked = collection.track();
+			tracked.on('add', function () { console.log('add'); });
 			var updateReceived;
-			tracked.on("update", function(event) {
+			tracked.on('update', function (event) {
 				updateReceived = true;
 				assert.isTrue(event.target.beenMapped);
-				console.log("update, index = ", event.index, " previousIndex = ", event.previousIndex);
+				console.log('update, index = ', event.index, ' previousIndex = ', event.previousIndex);
 			});
-			tracked.on("remove", function(){ console.log("remove"); });
+			tracked.on('remove', function () { console.log('remove'); });
 
 			var items = tracked.fetch();
-			console.log("fetched items: ", items);
+			console.log('fetched items: ', items);
 
 			// This should cause an update notification with index == previousIndex == 0
-			myStore.put({ id: "foo", name: "Foo2" });
+			myStore.put({ id: 'foo', name: 'Foo2' });
 			assert.isTrue(updateReceived);
+		},
+		'getChildren query method': function () {
+			var bar, bar1, bar2, bar3;
+			var myData = [
+				{ id: 'foo', name: 'Foo' },
+				bar = { id: 'bar', name: 'Bar' },
+				bar1 = { id: 'bar1', name: 'Bar 1' },
+				bar2 = { id: 'bar2', name: 'Bar 2' },
+				bar3 = { id: 'bar3', name: 'Bar 3' }
+			];
+			bar.children = [bar1, bar2, bar3];
+			var M = declare([Memory, Trackable], {
+				getChildren: new QueryMethod({type: 'children'}),
+
+				queryTrackers: {
+					children: function (args, data, target) {
+						var parent = args[0];
+						if (parent === target) {
+							// if the target is the parent, we just assume a full refresh,
+							// since the children property may be completely new or different
+							data = data.slice(0);
+							data.refresh = true;
+							return data;
+						}
+						// otherwise, we just leave the children data alone
+						return parent.children;
+					}
+				},
+				queryEngine: lang.delegate(objectQueryEngine, {
+					children: function (parent) {
+						return function () {
+							return parent.children;
+						};
+					}
+				})
+			});
+
+			// use empty model to easy comparison
+			var myStore = new M({ data: myData, model: null, idProperty: 'id' });
+
+			var collection = myStore.filter({});
+			// now for getChildren tests
+			var bar = myStore.getSync('bar');
+			var barChildren = collection.getChildren(bar);
+			var trackedChildren = barChildren.track();
+			var updateReceived = false;
+			var refreshesReceived = 0;
+			trackedChildren.on('update', function (event) {
+				if (event.index > -1) {
+					assert.equal(event.target.id, 'bar1');
+					assert.isTrue(event.target.changed);
+					assert.equal(event.index, 0);
+					assert.equal(event.previousIndex, 0);
+					updateReceived = true;
+				}
+				console.log('update of children, index = ', event.index, ' previousIndex = ', event.previousIndex);
+			});
+			trackedChildren.on('refresh', function () {
+				refreshesReceived++;
+			});
+			var firstChild = trackedChildren.fetchSync()[0];
+			firstChild.changed = true;
+			myStore.put(firstChild);
+			myStore.put({ id: 'foo', name: 'Foo3' });
+			bar.children = bar.children.slice(1);
+			myStore.put(bar);
+			assert.isTrue(updateReceived);
+			assert.equal(refreshesReceived, 1);
 		}
 
 	});
