@@ -90,7 +90,7 @@ Type | Description
 -------- | -----------
 `add` | This indicates that a new object was added to the store. The new object is available on the `target` property.
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
-`remove` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
+`delete` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
 `refresh` | (Note, this is not emitted in the current stores, but may be used in the future). This indicates that the collection has changed substantially such that the user interface should iterate over the collection again to retrieve the latest list of objects. This event is issued in lieu of individual updates, and doesn't guarantee any specific change or update to any specific item.
 
 #### `track()`
@@ -116,7 +116,7 @@ Trackable will keep track of each page of data, and send out notifications based
 
 And then we could listen for notifications:
 
-	tracked.on('add, update, remove', function(event){
+	tracked.on('add, update, delete', function(event){
 		var newIndex = event.index;
 		var oldIndex = event.previousIndex;
 		var object = event.target;

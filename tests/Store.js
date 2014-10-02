@@ -162,7 +162,7 @@ define([
 				events.push(event.type);
 			});
 			// test comma delimited as well
-			store.on('update, remove', function (event) {
+			store.on('update, delete', function (event) {
 				events.push(event.type);
 			});
 			store.put({});
@@ -170,7 +170,7 @@ define([
 			store.remove(1);
 
 			assert.deepEqual(methodCalls, ['put', 'add', 'remove']);
-			assert.deepEqual(events, ['update', 'add', 'remove']);
+			assert.deepEqual(events, ['update', 'add', 'delete']);
 		},
 
 		'events with beforeId': function () {

@@ -67,7 +67,7 @@ define([
 				aspect.after(this, 'put', emitUpdateEvent('update'));
 				aspect.after(this, 'remove', function (result, args) {
 					when(result, function () {
-						store.emit('remove', {id: args[0]});
+						store.emit('delete', {id: args[0]});
 					});
 					return result;
 				});
@@ -222,7 +222,7 @@ define([
 				}
 			}
 
-			return lang.mixin(newCollection, kwArgs);
+			return declare.safeMixin(newCollection, kwArgs);
 		},
 
 		// queryLog: __QueryLogEntry[]
