@@ -94,7 +94,7 @@ define([
 				);
 			}
 
-				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
+			// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 			function makeFetch() {
 				return function () {
 					var self = this;
@@ -183,6 +183,16 @@ define([
 				// make sure track isn't called twice
 				track: null
 			});
+
+			// TODO: Address the race condition where a refresh event arrives before a promise for incoming data resolves
+			handles.push(
+				// TODO: Test this
+				this.on('refresh', function () {
+					observed._partialResults = observed._results = undefined;
+					observed._ranges = [];
+				})
+			);
+
 			if (this.fetchSync) {
 				// only add these if we extending a sync-capable store
 				declare.safeMixin(observed, {
