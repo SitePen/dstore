@@ -139,7 +139,7 @@ define([
 				// now we have to reindex
 				this._reindex();
 				// TODO: The id property makes it seem like an event id. Maybe targetId would be better.
-				this.emit('remove', {id: id, target: removed});
+				this.emit('delete', {id: id, target: removed});
 				return true;
 			}
 		},

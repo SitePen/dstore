@@ -79,7 +79,7 @@ define([
 			});
 			if (store.track) {
 				var tracked = this.tracked = store.track();
-				tracked.on('add, update, remove', update);
+				tracked.on('add, update, delete', update);
 			}
 			function update() {
 				self.objects = tracked.data;

@@ -110,13 +110,13 @@ define([
 			var tracked = filteredCollection.track();
 			tracked.fetch();
 			assert.strictEqual(tracked._results.length, 3);
-			tracked.on('add, update, remove', function (event) {
+			tracked.on('add, update, delete', function (event) {
 				changes.push(event);
 			});
 			var secondObserverUpdate = tracked.on('update', function (event) {
 				secondChanges.push(event);
 			});
-			var secondObserverRemove = tracked.on('remove', function (event) {
+			var secondObserverRemove = tracked.on('delete', function (event) {
 				secondChanges.push(event);
 			});
 			var secondObserverAdd = tracked.on('add', function (event) {
@@ -177,7 +177,7 @@ define([
 			var three = store.getSync(3);
 			store.remove(3);
 			expectedChanges.push({
-				type: 'remove',
+				type: 'delete',
 				id: 3,
 				target: store._restore(three),
 				previousIndex: 0,
@@ -220,7 +220,7 @@ define([
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
-			bigObserved.on('remove', function (event) {
+			bigObserved.on('delete', function (event) {
 				observations.push(event);
 				console.log(' observed: ', event);
 			});
@@ -254,7 +254,7 @@ define([
 						&& !('index' in expectedObservation)) {
 						expectedObservation.index = undefined;
 					}
-					if (expectedObservation.type in { update: 1, remove: 1 }
+					if (expectedObservation.type in { update: 1, 'delete': 1 }
 						&& !('previousIndex' in expectedObservation)) {
 						expectedObservation.previousIndex = undefined;
 					}
@@ -266,7 +266,7 @@ define([
 			bigObserved.on('add', function (event) {
 				latestObservation = event;
 			});
-			bigObserved.on('remove', function (event) {
+			bigObserved.on('delete', function (event) {
 				latestObservation = event;
 			});
 			// TODO: Fix names bigXyz names. Probably use the term collection instead of store for return value of filter and sort
@@ -284,7 +284,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id });
+			assertObservationIs({ type: 'delete', id: item.id });
 
 			// An update sorted to the beginning of a range and the data has a known index
 			bigObserved.fetchRange({ start: 0, end: 25 });
@@ -300,7 +300,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 0, totalLength: 100 });
+			assertObservationIs({ type: 'delete', id: item.id, previousIndex: 0, totalLength: 100 });
 
 			// An update sorted to the end of a range has an indeterminate index
 			item = bigStore.getSync(24);
@@ -315,7 +315,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, totalLength: 99 });
+			assertObservationIs({ type: 'delete', id: item.id, totalLength: 99 });
 
 			// The previous update with an undetermined index resulted in an item dropping from the first range
 			// and the first range being reduced to 0-23 instead of 0-24.
@@ -336,7 +336,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24, totalLength: 100 });
+			assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
 
 			// An update sorted to the beginning of a range but adjacent to another range has a known index
 			item = bigStore.getSync(25);
@@ -351,7 +351,7 @@ define([
 
 			// Remove additional item to make subsequent item indices and id's line up
 			bigStore.remove(item.id);
-			assertObservationIs({ type: 'remove', id: item.id, previousIndex: 24, totalLength: 100 });
+			assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
 
 			// Request range at end of data
 			bigObserved.fetchRange({ start: 75, end: 100 });

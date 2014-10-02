@@ -56,12 +56,12 @@ define([
 			}
 			var objectStore = this;
 			// we call notify on events to mimic the old dojo/store/Trackable
-			store.on('add,update,remove', function (event) {
+			store.on('add,update,delete', function (event) {
 				var type = event.type;
 				var target = event.target;
 				objectStore.notify(
 					(type === 'add' || type === 'update') ? target : undefined,
-					(type === 'remove' || type === 'update') ?
+					(type === 'delete' || type === 'update') ?
 						('id' in event ? event.id : store.getIdentity(target)) : undefined);
 			});
 		},
@@ -136,7 +136,7 @@ define([
 						callback(event.target, convertUndefined(event.previousIndex), convertUndefined(event.index));
 					}
 				});
-				var removeHandle = results.on('remove', function (event) {
+				var removeHandle = results.on('delete', function (event) {
 					callback(event.target, convertUndefined(event.previousIndex), -1);
 				});
 				var handle = {

@@ -128,7 +128,7 @@ define([
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
 				var target = response && store.parse(response);
-				store.emit('remove', {id: id, target: target});
+				store.emit('delete', {id: id, target: target});
 				return response ? target : true;
 			});
 		}

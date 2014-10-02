@@ -82,7 +82,7 @@ define([
 
 			// monitor for updates by listening to these methods
 			var handles = [];
-			var eventTypes = {add: 1, update: 1, remove: 1};
+			var eventTypes = {add: 1, update: 1, 'delete': 1};
 			// register to listen for updates
 			for (var type in eventTypes) {
 				handles.push(
@@ -205,7 +205,7 @@ define([
 			var defaultEventProps = {
 					'add': { index: undefined },
 					'update': { previousIndex: undefined, index: undefined },
-					'remove': { previousIndex: undefined }
+					'delete': { previousIndex: undefined }
 				},
 				findObject = function (data, id, start, end) {
 					start = start !== undefined ? start : 0;
@@ -250,7 +250,7 @@ define([
 						removalRangeIndex = -1,
 						insertedInto = -1,
 						insertionRangeIndex = -1;
-					if (type === 'remove' || type === 'update') {
+					if (type === 'delete' || type === 'update') {
 						// remove the old one
 						for (i = 0; removedFrom === -1 && i < ranges.length; ++i) {
 							range = ranges[i];
