@@ -137,7 +137,12 @@ define([
 			// a new collection, just decorating an existing collection with item index tracking.
 			// If we use _createSubCollection, it will return a new collection that may exclude
 			// important, defining properties from the tracked collection.
-			var observed = declare.safeMixin(lang.delegate(this), {
+			var observed = lang.delegate(this);
+
+			observed.fetchSync && declare.safeMixin(observed, { fetchSync: makeFetch() });
+			observed.fetchRangeSync && declare.safeMixin(observed, { fetchRangeSync: makeFetchRange() });
+
+			declare.safeMixin(observed, {
 				_ranges: [],
 
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
