@@ -143,8 +143,6 @@ define([
 				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 				fetch: makeFetch(),
 				fetchRange: makeFetchRange(),
-				fetchSync: makeFetch(),
-				fetchRangeSync: makeFetchRange(),
 
 				releaseRange: function (start, end) {
 					if (this._partialResults) {
