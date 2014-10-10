@@ -17,7 +17,7 @@ This provides all the methods and properties inherited from `dstore/api/Store`.
 
 ## DstoreAdapter
 
-The `dstore/legacy/DstoreAdapter` module allows a dstore store to be used as a legacy Dojo object stores. Create an adapted version of an existing dstore store by creating a `DstoreAdapter` instance with the `store` property referencing the dstore:
+The `dstore/legacy/DstoreAdapter` module allows a dstore store to be used as a legacy Dojo object store. Create an adapted version of an existing dstore store by creating a `DstoreAdapter` instance with the `store` property referencing the dstore:
 ```js
 require([
     'dstore/legacy/DstoreAdapter',

@@ -2,7 +2,7 @@
   "name": "dstore",
   "author": "Kris Zyp",
   "version": "0.2.1",
-  "description": "A data collection and modelling infrastructure",
+  "description": "A data collection infrastructure",
   "licenses": [
      {
          "type": "AFLv2.1",
@@ -18,12 +18,12 @@
     "url": "http://github.com/SitePen/dstore"
   },
   "dependencies": {
-    "dojo": "https://github.com/dojo/dojo/archive/1.8.6.tar.gz",
-	"rql": "git+https://github.com/persvr/rql.git#master",
-	"json-schema": "git+https://github.com/kriszyp/json-schema.git#v0.2.1"
+    "dojo": "1.8.6"
   },
   "devDependencies": {
-	"intern-geezer": "1.6.*"
+    "intern-geezer": "1.6.*",
+    "rql": "0.3.1",
+    "dmodel": "0.1.0"
   },
   "directories": {
     "lib": "."

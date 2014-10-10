@@ -65,7 +65,7 @@ define({
 					'..'
 			},
 			{ name: 'rql', location: 'rql' },
-			{ name: 'json-schema', location: 'json-schema' }
+			{ name: 'dmodel', location: 'dmodel' }
 		]
 	},
 

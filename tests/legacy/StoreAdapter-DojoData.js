@@ -9,7 +9,7 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dstore/legacy/StoreAdapter',
-	'dstore/Model',
+	'dmodel/Model',
 	'../data/testData'
 ], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, Model, testData) {
 

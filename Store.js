@@ -152,7 +152,7 @@ define([
 		// model: Function
 		//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 		//		used as the prototype for all objects returned from this store. One can set
-		//		this to the Model from dstore/Model to return Model objects, or leave this
+		//		this to the Model from dmodel/Model to return Model objects, or leave this
 		//		to null if you don't want any methods to decorate the returned
 		//		objects (this can improve performance by avoiding prototype setting),
 		model: null,
@@ -354,12 +354,12 @@ define([
 			//		Indicate if the sort order should be descending (defaults to ascending)
 			// returns: Collection
 		},
-		range: function (start, end) {
+		fetchRange: function (kwArgs) {
 			// summary:
-			//		Retrieves a range of objects from the collection, returning a new collection with the objects indicated by the range
-			// start: Number
+			//		Retrieves a range of objects from the collection, returning a promise to an array.
+			// kwArgs.start: Number
 			//		The starting index of objects to return (0-indexed)
-			// end?: Number
+			// kwArgs.end: Number
 			//		The exclusive end of objects to return
 			// returns: Collection
 		},

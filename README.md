@@ -33,9 +33,9 @@ A store is an extension of a collection and is an entity that not only contains 
 
 # [Data Modelling](./docs/DataModelling.md)
 
-In addition to handling collections of items, dstore also provides robust data modeling capabilities for managing individual objects themselves. dstore provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes. By setting a model on stores, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model.
+In addition to handling collections of items, dstore works with the dmodel package to provides robust data modeling capabilities for managing individual objects themselves. dmodel provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes. By setting a model on stores, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model.
 
-For more information, please see the [Data Modelling section](./docs/DataModelling.md).
+For more information, please see the [dmodel project](https://github.com/SitePen/dmodel).
 
 # [Adapters](./docs/Adapters.md)
 

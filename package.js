@@ -28,9 +28,8 @@ var profile = {
 		},
 
 		copyOnly: function (filename, mid) {
-			// conditionally omit modules dependent on rql or json-schema packages
-			return (!packages.rql && /rqlQueryEngine\.js/.test(filename)) ||
-				(!packages['json-schema'] && /jsonSchema\.js/.test(filename));
+			// conditionally omit modules dependent on rql packages
+			return (!packages['json-schema'] && /jsonSchema\.js/.test(filename));
 		}
 	}
 };

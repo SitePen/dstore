@@ -4,7 +4,7 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'../sorting',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
 ], function (declare, registerSuite, assert, Memory, sorting, Model, StoreAdapter) {
 

@@ -4,8 +4,10 @@ define([
 	'require',
 	'dojo/when',
 	'dojo/_base/array',
-	'../RequestMemory'
-], function (registerSuite, assert, require, when, arrayUtil, RequestMemory) {
+	'dojo/_base/declare',
+	'../RequestMemory',
+	'../Trackable'
+], function (registerSuite, assert, require, when, arrayUtil, declare, RequestMemory, Trackable) {
 
 	var store;
 	function mapResultIds(results) {
@@ -17,7 +19,7 @@ define([
 		name: 'RequestMemory',
 
 		beforeEach: function () {
-			store = new RequestMemory({
+			store = new (declare([RequestMemory, Trackable]))({
 				target: require.toUrl('dstore/tests/data/treeTestRoot')
 			});
 		},

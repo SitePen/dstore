@@ -9,7 +9,7 @@ In addition to the methods and properties inherited from [Collections](./Collect
 Property | Description
 -------- | -----------
 `idProperty` | If the store has a single primary key, this indicates the property to use as the identity property. The values of this property should be unique. This defaults to "id".
-`model` | This is the model class to use for all the data objects that originate from this store. By default this will be set to null, so that all objects will be plain objects, but this property can be set to the class from `dstore/Model` or any other model constructor. You can create your own model classes (and schemas), and assign them to a store. All object that come from the store will have their prototype set such that they will be instances of the model. The default value of `null` will disable any prototype modifications and leave data as plain objects.
+`model` | This is the model class to use for all the data objects that originate from this store. By default this will be set to null, so that all objects will be plain objects, but this property can be set to the class from `dmodel/Model` or any other model constructor. You can create your own model classes (and schemas), and assign them to a store. All object that come from the store will have their prototype set such that they will be instances of the model. The default value of `null` will disable any prototype modifications and leave data as plain objects.
 `defaultNewToStart` | If a new object is added to a store, this will indicate it if it should go to the start or end. By default, it will be placed at the end.
 
 ### Method Summary

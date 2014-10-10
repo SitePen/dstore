@@ -6,7 +6,7 @@ define([
 	'dojo/store/Memory',
 	'dojo/store/util/QueryResults',
 	'../sorting',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
 ], function (declare, Deferred, registerSuite, assert, Memory, QueryResults, sorting, Model, StoreAdapter) {
 

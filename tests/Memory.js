@@ -3,7 +3,7 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'./sorting',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/Memory',
 	'dstore/QueryMethod'
 ], function (registerSuite, assert, declare, sorting, Model, Memory, QueryMethod) {

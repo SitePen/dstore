@@ -7,7 +7,7 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dojo/store/JsonRest',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
 ], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, Model, StoreAdapter) {
 

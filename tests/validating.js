@@ -5,9 +5,9 @@ define([
 	'dojo/json',
 	'dojo/_base/declare',
 	'dstore/Memory',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/Validating',
-	'dstore/validators/NumericValidator'
+	'dmodel/validators/NumericValidator'
 ], function (registerSuite, assert, lang, JSON, declare, Memory, Model, Validating, NumericValidator) {
 
 	var validatingMemory = new (declare([Memory, Validating]))({

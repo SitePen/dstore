@@ -8,7 +8,7 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Request',
-	'dstore/Model',
+	'dmodel/Model',
 	'dstore/objectQueryEngine',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'

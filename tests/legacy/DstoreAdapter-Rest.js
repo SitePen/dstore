@@ -7,7 +7,7 @@ define([
 	'dojo/aspect',
 	'../mockRequest',
 	'dstore/legacy/DstoreAdapter',
-	'dstore/Model',
+	'dmodel/Model',
 	'dojo/text!../data/node1.1',
 	'dojo/text!../data/treeTestRoot'
 ], function (
