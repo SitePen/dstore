@@ -2,9 +2,9 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/_base/declare',
-	'dstore/extensions/rqlQueryEngine',
+	'dstore/extensions/RqlQuery',
 	'dstore/Memory'
-], function (registerSuite, assert, declare, rqlQueryEngine, Memory) {
+], function (registerSuite, assert, declare, RqlQuery, Memory) {
 
 	var TestModel = declare(null, {
 		describe: function () {
@@ -12,8 +12,9 @@ define([
 		}
 	});
 
-	var rqlMemory = new Memory({
-		queryEngine: rqlQueryEngine,
+	var TestStore = declare([ Memory, RqlQuery ]);
+
+	var rqlMemory = new TestStore({
 		data: [
 			{id: 1, name: 'one', prime: false, mappedTo: 'E'},
 			{id: 2, name: 'two', prime: true, mappedTo: 'D', even: true},

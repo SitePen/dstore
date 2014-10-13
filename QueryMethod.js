@@ -32,7 +32,8 @@ define([], function () {
 		var type = kwArgs.type,
 			normalizeArguments = kwArgs.normalizeArguments,
 			applyQuery = kwArgs.applyQuery,
-			querier = kwArgs.querier;
+			// TODO: Should this be renamed to querier factory?
+			defaultQuerierFactory = kwArgs.querier;
 
 		return function () {
 			// summary:
@@ -48,12 +49,13 @@ define([], function () {
 					type: type,
 					arguments: originalArguments,
 					normalizedArguments: normalizedArguments
-				};
+				},
+				querierFactory = this._getQuerierFactory(type) || defaultQuerierFactory;
 
-			if (this.queryEngine || querier) {
+			if (querierFactory) {
 				// Call the query factory in store context to support things like
 				// mapping a filter query's string argument to a custom filter method on the collection
-				logEntry.querier = (querier || this.queryEngine[type]).apply(this, normalizedArguments);
+				logEntry.querier = querierFactory.apply(this, normalizedArguments);
 			}
 
 			var newCollection = this._createSubCollection({

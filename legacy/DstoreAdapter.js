@@ -24,16 +24,16 @@ define([
 		constructor: function (store) {
 			this.store = store;
 
-			if (this.store.queryEngine) {
-				var queryEngine = this.store.queryEngine;
+			if (store._getQuerierFactory('filter') || store._getQuerierFactory('sort')) {
 				this.queryEngine = function (query, options) {
 					options = options || {};
 
-					var filter = queryEngine.filter(query);
-					var sort = passthrough;
-					var range = passthrough;
+					var filterQuerierFactory = store._getQuerierFactory('filter');
+					var filter = filterQuerierFactory ? filterQuerierFactory(query) : passthrough;
 
-					if (queryEngine.sort && options.sort) {
+					var sortQuerierFactory = store._getQuerierFactory('sort');
+					var sort = passthrough;
+					if (sortQuerierFactory) {
 						sort = queryEngine.sort(arrayUtil.map(options.sort, function (criteria) {
 							return {
 								property: criteria.attribute,
@@ -42,11 +42,16 @@ define([
 						}));
 					}
 
+					var range = passthrough;
 					if (!isNaN(options.start) || !isNaN(options.count)) {
-						range = queryEngine.range({
-							start: options.start,
-							end: (options.start || 0) + (isNaN(options.count) ? Infinity : options.count)
-						});
+						range = function (data) {
+							var start = options.start || 0,
+								count = options.count || Infinity;
+
+							var results = data.slice(start, start + count);
+							results.total = data.length;
+							return results;
+						};
 					}
 
 					return function (data) {
@@ -85,23 +90,24 @@ define([
 			//	|	store.query({ prime: true }).forEach(function(object){
 			//	|		// handle each object
 			//	|	});
+			options = options || {};
+
 			var results = this.store.filter(query);
 			var queryResults;
 
-			if (options) {
-				// Apply sorting
-				var sort = options.sort;
-				if (sort) {
-					if (Object.prototype.toString.call(sort) === '[object Array]') {
-						var sortOptions;
-						while ((sortOptions = sort.pop())) {
-							results = results.sort(sortOptions.attribute, sortOptions.descending);
-						}
-					} else {
-						results = results.sort(sort);
+			// Apply sorting
+			var sort = options.sort;
+			if (sort) {
+				if (Object.prototype.toString.call(sort) === '[object Array]') {
+					var sortOptions;
+					while ((sortOptions = sort.pop())) {
+						results = results.sort(sortOptions.attribute, sortOptions.descending);
 					}
+				} else {
+					results = results.sort(sort);
 				}
 			}
+
  			var tracked;
 			if (results.track && !results.tracking) {
 				// if it is trackable, always track, so that observe can
@@ -109,7 +115,7 @@ define([
 				results = results.track();
 				tracked = true;
 			}
-			if (options && 'start' in options) {
+			if ('start' in options) {
 				// Apply a range
 				var start = options.start || 0;
 				// object stores support sync results, so try that if available

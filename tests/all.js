@@ -1,7 +1,7 @@
 define([
 	'./Store',
 	'./Model',
-	'./objectQueryEngine',
+	'./SimpleQuery',
 	'./Memory',
 	// TODO: Examing the following has!host-browser checks to see if the tests can be made to run outside of a browser
 	'./Request',
@@ -12,7 +12,7 @@ define([
 	'./Tree',
 	'./Csv',
 	'./Tree',
-	'./extensions/rqlQueryEngine',
+	'./extensions/RqlQuery',
 	'./validating',
 	'./extensions/validating-jsonSchema',
 	'./validators',
