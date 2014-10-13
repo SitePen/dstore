@@ -42,7 +42,7 @@ define([
 	});
 	var AsyncMaster = declare([AsyncMemory, Master], {});
 	function createTests(name, Master, cachingStore, createAfter){
-		var store; 
+		var store;
 		return {
 			setup: function () {
 				var mixins = [Master];
@@ -184,7 +184,7 @@ define([
 					id: 7,
 					prime: true
 				})).then(function () {
-					return store.get(7);	
+					return store.get(7);
 				}).then(function (seven) {
 					assert.isTrue(seven.prime);
 					return cachingStore.get(7);
@@ -204,13 +204,24 @@ define([
 					assert.isFalse(masterFetchCalled);
 				});
 			},
-			'defaults to queryEngine of the cachingStore': function () {
-				var store = new (declare([ Store, Cache ]))({
-					cachingStore: new Memory()
+			'defaults to querier factories of the cachingStore': function () {
+				var store = new Store();
+				assert.isUndefined(store._getQuerierFactory('filter'));
+
+				var expectedQuerier = function () {};
+				var cachedStore = Cache.create(store, {
+					cachingStore: new Memory({
+						_createFilterQuerier: function () {
+							return expectedQuerier;
+						}
+					})
 				});
 
-				assert.property(store.cachingStore, 'queryEngine');
-				assert.strictEqual(store.queryEngine, store.cachingStore.queryEngine);
+				var cachedStoreQuerierFactory = cachedStore._getQuerierFactory('filter');
+				var cachingStoreQuerierFactory = cachedStore.cachingStore._getQuerierFactory('filter');
+
+				assert.strictEqual(cachedStoreQuerierFactory(), expectedQuerier);
+				assert.strictEqual(cachedStoreQuerierFactory(), cachingStoreQuerierFactory());
 			}
 		};
 	}

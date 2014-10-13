@@ -1,8 +1,7 @@
 define([
 	'./Store',
-	'./objectQueryEngine',
+	'./SimpleQuery',
 	'./Memory',
-	// TODO: Examing the following has!host-browser checks to see if the tests can be made to run outside of a browser
 	'./Request',
 	'./Rest',
 	'intern/node_modules/dojo/has!host-browser?./RequestMemory',
@@ -11,7 +10,7 @@ define([
 	'./Tree',
 	'./Csv',
 	'./Tree',
-	'./extensions/rqlQueryEngine',
+	'./extensions/RqlQuery',
 	'./validating',
 	'./legacy/DstoreAdapter-Memory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/DstoreAdapter-Rest',

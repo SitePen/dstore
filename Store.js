@@ -268,7 +268,12 @@ define([
 				}
 				return sorted;
 			}
-		})
+		}),
+
+		_getQuerierFactory: function (type) {
+			var uppercaseType = type[0].toUpperCase() + type.substr(1);
+			return this['_create' + uppercaseType + 'Querier'];
+		}
 
 /*====,
 		get: function (id) {

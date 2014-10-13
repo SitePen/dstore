@@ -90,12 +90,15 @@ The Tree mixin may serve as an example for alternate hierarchical implementation
 
 [Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages serializes complex filter/queries into RQL (RQL supersets standard query parameters, and so simple queries are simply serialized as standard query parameters).
 
-dstore also includes an alternate query engine for using
-RQL as the query language for filtering. This can be enabled by setting the <code>queryEngine</code> property:
+dstore also includes support for using RQL as the query language for filtering. This can be enabled by mixin `dstore/extensions/RqlQuery` into your collection type:
 
-    require(['dstore/extensions/rqlQueryEngine'], function (rqlQueryEngine) {
-        var rqlStore = new Memory({
-            queryEngine: rqlQueryEngine,
+    require([
+        'dojo/_base/declare',
+        'dstore/Memory',
+        'dstore/extensions/RqlQuery'
+    ], function (declare, Memory, RqlQuery) {
+        var RqlStore = declare([ Memory, RqlQuery ]);
+        var rqlStore = new RqlStore({
             ...
         });
 

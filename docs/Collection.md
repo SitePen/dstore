@@ -41,7 +41,7 @@ The following are combinatorial methods:
 
 Different stores may implement filtering in different ways. The `dstore/Memory` will perform filtering in memory. The `dstore/Request`/`dstore/Rest` stores will translate the filters into URL query strings to send to the server. Simple queries will be in standard URL-encoded query format and complex queries will conform to [RQL](https://github.com/persvr/rql) syntax (which is a superset of standard query format).
 
-New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with memory stores, you can also add filter handlers to `dstore/objectQueryEngine` by adding new methods to the `comparators` object on this module.
+New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with stores that mix in `SimpleQuery` like memory stores, you can also add filter comparators by overriding the `_getFilterComparator` method, returning comparators for your additional type, and delegating to `this.inherited` for the rest.
 
 For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializations of filters to URL queries for existing or new methods by overriding the `_renderFilterParams`. This method is called with a filter object (and by default is recursively called by combinatorial operators), and should return a string serialization of the filter, that will be inserted into the query string of the URL sent to the server.
 
@@ -108,10 +108,10 @@ At this point, we can do a `fetch()` or `forEach()` to access the items in the f
 
 	var tracked = filteredSorted.track();
 
-Alternately, rather than retrieving results prior to tracking, we could call `track()`, and then make individual range requests from the tracked collection. 
+Alternately, rather than retrieving results prior to tracking, we could call `track()`, and then make individual range requests from the tracked collection.
 
 	tracked.fetchRange(0, 10);
-	
+
 Trackable will keep track of each page of data, and send out notifications based on the data it has available, along with index information, indicating the new and old position of the object that was modified.
 
 And then we could listen for notifications:
@@ -137,7 +137,7 @@ For example, we could create a `getChildren` method that queried for children ob
 	declare([Memory], {
 		getChildren: new QueryMethod({
 			type: 'children',
-			querier: function (parent) {
+			querierFactory: function (parent) {
 				return function () {
 					// return the children of the parent
 					return parent.children;

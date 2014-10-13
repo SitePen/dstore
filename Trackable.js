@@ -185,15 +185,16 @@ define([
 			}
 
 			var queryExecutor;
-			if (this.queryEngine) {
-				arrayUtil.forEach(this.queryLog, function (entry) {
-					var existingQuerier = queryExecutor,
-						querier = entry.querier;
+			arrayUtil.forEach(this.queryLog, function (entry) {
+				var existingQuerier = queryExecutor,
+					querier = entry.querier;
+
+				if (querier) {
 					queryExecutor = existingQuerier
 						? function (data) { return querier(existingQuerier(data)); }
 						: querier;
-				});
-			}
+				}
+			});
 
 			var defaultEventProps = {
 					'add': { index: undefined },

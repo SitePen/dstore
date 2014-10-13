@@ -1,69 +1,52 @@
 define([
+	'dojo/_base/declare',
 	'dojo/_base/array'
-], function (arrayUtil) {
+], function (declare, arrayUtil) {
 
 	// module:
-	//		dstore/objectQueryEngine
+	//		dstore/SimpleQuery
 
-	return {
-		_combine: function(args, type) {
-			var querier;
-			for (var i = 0, l = args.length; i < l; i++) {
-				var nextQuerier = this.filter(args[0]);
-				if (querier) {
-					// combine the last querier with a new one
-					querier = (function(a, b) {
-						return type === 'and' ?
-							function(object) {
-								return a(object) && b(object);
-							} :
-							function(object) {
-								return a(object) || b(object);
-							};
-					})(querier, nextQuerier);
-				} else {
-					querier = nextQuerier;
-				}
-			}
-			return querier;
+	var comparators = {
+		eq: function (value, required) {
+			return value === required;
 		},
-		comparators: {
-			eq: function (value, required) {
-				return value === required;
-			},
-			'in': function(value, required) {
-				return arrayUtil.indexOf(required, value) > -1;
-			},
-			ne: function (value, required) {
-				return value !== required;
-			},
-			lt: function (value, required) {
-				return value < required;
-			},
-			lte: function (value, required) {
-				return value <= required;
-			},
-			gt: function (value, required) {
-				return value > required;
-			},
-			gte: function (value, required) {
-				return value >= required;
-			},
-			match: function (value, required, object) {
-				return required.test(value, object);
-			}
+		'in': function(value, required) {
+			return arrayUtil.indexOf(required, value) > -1;
 		},
-		filter: function (filter) {
+		ne: function (value, required) {
+			return value !== required;
+		},
+		lt: function (value, required) {
+			return value < required;
+		},
+		lte: function (value, required) {
+			return value <= required;
+		},
+		gt: function (value, required) {
+			return value > required;
+		},
+		gte: function (value, required) {
+			return value >= required;
+		},
+		match: function (value, required, object) {
+			return required.test(value, object);
+		}
+	};
+
+	return declare(null, {
+		// summary:
+		//		Mixin providing querier factories for core query types
+
+		_createFilterQuerier: function (filter) {
 			// create our matching filter function
 			var queryAccessors = this.queryAccessors;
-			var comparators = (this.queryEngine || this).comparators || {};
 			var collection = this;
 			var querier = getQuerier(filter);
 
 			function getQuerier(filter) {
 				var type = filter.type;
 				var args = filter.args;
-				var comparator = comparators[type];
+				var comparator = collection._getFilterComparator(type);
 				if (comparator) {
 					// it is a comparator
 					var firstArg = args[0];
@@ -87,7 +70,7 @@ define([
 										} :
 										function(object) {
 											return a(object) || b(object);
-				
+
 										};
 								})(querier, nextQuerier);
 							} else {
@@ -117,8 +100,16 @@ define([
 			};
 		},
 
+		_getFilterComparator: function (type) {
+			// summary:
+			//		Get the comparator for the specified type
+			// returns: Function?
+
+			return comparators[type] || this.inherited(arguments);
+		},
+
 		/* jshint ignore:start */
-		sort: function (sorted) {
+		_createSortQuerier: function (sorted) {
 			return function (data) {
 				data = data.slice();
 				data.sort(typeof sorted == 'function' ? sorted : function (a, b) {
@@ -148,13 +139,7 @@ define([
 				});
 				return data;
 			};
-		},
-		/* jshint ignore:end */
-
-		range: function (range) {
-			return function (data) {
-				return data.slice(range.start, range.end);
-			};
 		}
-	};
+		/* jshint ignore:end */
+	});
 });

@@ -180,7 +180,7 @@ define([
 				],
 				getChildren: new QueryMethod({
 					type: 'children',
-					querier: function (parent) {
+					querierFactory: function (parent) {
 						return function () {
 							return parent.children;
 						};

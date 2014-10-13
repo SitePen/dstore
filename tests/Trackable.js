@@ -8,8 +8,8 @@ define([
 	'dstore/Memory',
 	'dstore/Store',
 	'dstore/Trackable',
-	'dstore/objectQueryEngine'
-], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Trackable, objectQueryEngine) {
+	'dstore/SimpleQuery'
+], function (registerSuite, assert, arrayUtil, declare, lang, when, Memory, Store, Trackable, SimpleQuery) {
 	var MyStore = declare([Memory, Trackable], {
 		get: function () {
 			// need to make sure that this.inherited still works with Trackable
@@ -42,14 +42,12 @@ define([
 	}
 
 	// A store for testing Trackable with only partial in-memory data
-	var TrackablePartialDataStore = declare([ Store, Trackable ], (function () {
+	var TrackablePartialDataStore = declare([ Store, Trackable, SimpleQuery ], (function () {
 		var proto = {
 			constructor: function (kwArgs) {
 				delete this.data;
 				this.backingMemoryStore = new MyStore(kwArgs);
-			},
-
-			queryEngine: objectQueryEngine
+			}
 		};
 
 		arrayUtil.forEach(['getIdentity', 'get', 'add', 'put', 'remove', 'getSync', 'addSync', 'putSync', 'removeSync'], function (method) {

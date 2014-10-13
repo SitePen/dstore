@@ -9,7 +9,7 @@ define([
 	'dojo/promise/all',
 	'dstore/Request',
 	'dmodel/Model',
-	'dstore/objectQueryEngine',
+	'dstore/SimpleQuery',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
 
@@ -24,7 +24,7 @@ define([
 	whenAll,
 	Request,
 	Model,
-	objectQueryEngine,
+	SimpleQuery,
 	mockRequest,
 	treeTestRootData
 ) {
@@ -259,10 +259,9 @@ define([
 
 			// TODO: Add test of all permutations of filter, sort, and range calls w/ Range header enabled
 
-			'composition with client-side query engine': function () {
-				var RestWithQueryEngine = declare(Store, {
-					target: '/mockRequest/',
-					queryEngine: objectQueryEngine
+			'composition with client-side queriers': function () {
+				var RestWithQueryEngine = declare([ Store, SimpleQuery ], {
+					target: '/mockRequest/'
 				});
 
 				var store = new RestWithQueryEngine(),
@@ -275,7 +274,6 @@ define([
 				var filter = { odd: true },
 					filteredCollection = store.filter(filter),
 					sortedCollection,
-					rangeResults,
 					getTopQueryLogEntry = function (collection) {
 						var queryLog = collection.queryLog;
 						return queryLog[queryLog.length - 1];

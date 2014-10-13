@@ -1,10 +1,10 @@
 define([
-	'../objectQueryEngine',
+	'../SimpleQuery',
 	'dojo/_base/declare',
 	'../Filter',
 	'intern!object',
 	'intern/chai!assert'
-], function (objectQueryEngine, declare, Filter, registerSuite, assert) {
+], function (SimpleQuery, declare, Filter, registerSuite, assert) {
 	var testData = [
 		{ id: 1, name: 'one', odd: true },
 		{ id: 2, name: 'two', odd: false },
@@ -13,11 +13,13 @@ define([
 		{ id: 5, name: 'five', odd: true }
 	];
 
+	var simpleQuery = new SimpleQuery();
+
 	registerSuite({
-		name: 'objectQueryEngine',
+		name: 'SimpleQuery',
 
 		'filter with predicate': function () {
-			var filter = objectQueryEngine.filter({
+			var filter = simpleQuery._createFilterQuerier({
 				type: 'function',
 				args: [function (o) { return o.odd; }]
 			});
@@ -31,7 +33,7 @@ define([
 
 		'filter with object': function () {
 			var filterExpression = new Filter();
-			var filter = objectQueryEngine.filter(filterExpression.eq('odd', false));
+			var filter = simpleQuery._createFilterQuerier(filterExpression.eq('odd', false));
 
 			assert.deepEqual(filter(testData), [
 				{ id: 2, name: 'two', odd: false },
@@ -40,7 +42,7 @@ define([
 		},
 
 		'sort with array of sort attributes': function () {
-			var sort = objectQueryEngine.sort([
+			var sort = simpleQuery._createSortQuerier([
 				{ property: 'odd' },
 				{ property: 'name', descending: true }
 			]);
@@ -55,7 +57,7 @@ define([
 		},
 
 		'sort with comparator': function () {
-			var sort = objectQueryEngine.sort(function (a, b) {
+			var sort = simpleQuery._createSortQuerier(function (a, b) {
 				a = a.name;
 				b = b.name;
 				return (a < b) ? -1 : (a === b ? 0 : 1);
@@ -67,16 +69,6 @@ define([
 				{ id: 1, name: 'one', odd: true },
 				{ id: 3, name: 'three', odd: true },
 				{ id: 2, name: 'two', odd: false }
-			]);
-		},
-
-		'range': function () {
-			var range = objectQueryEngine.range({ start: 1, end: 4 });
-
-			assert.deepEqual(range(testData), [
-				{ id: 2, name: 'two', odd: false },
-				{ id: 3, name: 'three', odd: true },
-				{ id: 4, name: 'four', odd: false }
 			]);
 		}
 	});

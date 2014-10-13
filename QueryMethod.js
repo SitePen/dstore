@@ -10,6 +10,9 @@ define([], function () {
 		//		A function that takes the query's new subcollection and the query's log entry
 		//		and applies it to the new subcollection. This is useful for collections that need
 		//		to both declare and implement new query methods.
+		// querierFactory: Function?
+		//		A factory function that provides a default querier implementation to use when
+		//		a collection does not define its own querier factory method for this query type.
 	};
 	=====*/
 	// TODO: Add QueryMethod tests
@@ -32,7 +35,7 @@ define([], function () {
 		var type = kwArgs.type,
 			normalizeArguments = kwArgs.normalizeArguments,
 			applyQuery = kwArgs.applyQuery,
-			querier = kwArgs.querier;
+			defaultQuerierFactory = kwArgs.querierFactory;
 
 		return function () {
 			// summary:
@@ -48,12 +51,13 @@ define([], function () {
 					type: type,
 					arguments: originalArguments,
 					normalizedArguments: normalizedArguments
-				};
+				},
+				querierFactory = this._getQuerierFactory(type) || defaultQuerierFactory;
 
-			if (this.queryEngine || querier) {
+			if (querierFactory) {
 				// Call the query factory in store context to support things like
 				// mapping a filter query's string argument to a custom filter method on the collection
-				logEntry.querier = (querier || this.queryEngine[type]).apply(this, normalizedArguments);
+				logEntry.querier = querierFactory.apply(this, normalizedArguments);
 			}
 
 			var newCollection = this._createSubCollection({
