@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "intern-geezer": "1.6.*",
-    "rql": "0.3.1",
+    "rql": "0.3.3",
     "dmodel": "0.1.0"
   },
   "directories": {
