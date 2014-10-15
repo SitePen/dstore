@@ -6,9 +6,10 @@ define([
 	'dojo/store/Memory',
 	'dojo/store/util/QueryResults',
 	'../sorting',
-	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
-], function (declare, Deferred, registerSuite, assert, Memory, QueryResults, sorting, Model, StoreAdapter) {
+], function (declare, Deferred, registerSuite, assert, Memory, QueryResults, sorting, StoreAdapter) {
+
+	var Model = function () {};
 
 	function makeAsync(query){
 		return function(){

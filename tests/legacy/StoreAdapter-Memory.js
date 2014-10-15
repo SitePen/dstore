@@ -4,9 +4,10 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'../sorting',
-	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
-], function (declare, registerSuite, assert, Memory, sorting, Model, StoreAdapter) {
+], function (declare, registerSuite, assert, Memory, sorting, StoreAdapter) {
+
+	var Model = function () {};
 
 	function getResultsArray(store) {
 		var results = [];

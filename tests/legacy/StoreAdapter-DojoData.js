@@ -9,9 +9,10 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dstore/legacy/StoreAdapter',
-	'dmodel/Model',
 	'../data/testData'
-], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, Model, testData) {
+], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, testData) {
+
+	var Model = function () {};
 
 	function getResultsArray(store) {
 		var results = [];

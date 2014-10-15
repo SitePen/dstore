@@ -1,12 +1,16 @@
 define([
 	'../Store',
-	'dmodel/Model',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'intern!object',
 	'intern/chai!assert'
-], function (Store, Model, declare, lang, registerSuite, assert) {
+], function (Store, declare, lang, registerSuite, assert) {
 
+	var Model = declare(null, {
+		constructor: function (args) {
+			declare.safeMixin(this, args);
+		}
+	});
 	var store;
 	registerSuite({
 		name: 'dstore Store',

@@ -7,7 +7,6 @@ define([
 	'dojo/aspect',
 	'../mockRequest',
 	'dstore/legacy/DstoreAdapter',
-	'dmodel/Model',
 	'dojo/text!../data/node1.1',
 	'dojo/text!../data/treeTestRoot'
 ], function (
@@ -19,10 +18,11 @@ define([
 	aspect,
 	mockRequest,
 	DstoreAdapter,
-	Model,
 	nodeData_1_1,
 	treeTestRootData
 ) {
+
+	var Model = function () {};
 
 	function runHeaderTest(method, args) {
 		return store[method].apply(store, args).then(function () {
@@ -110,9 +110,6 @@ define([
 			return store.query('data/treeTestRoot').forEach(function (object) {
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
-				// the intrinsic methods
-				assert.equal(typeof object.save, 'function');
-				assert.equal(typeof object.remove, 'function');
 			});
 		}
 	});

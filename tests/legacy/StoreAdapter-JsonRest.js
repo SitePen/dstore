@@ -7,9 +7,10 @@ define([
 	'dojo/_base/lang',
 	'dojo/when',
 	'dojo/store/JsonRest',
-	'dmodel/Model',
 	'dstore/legacy/StoreAdapter'
-], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, Model, StoreAdapter) {
+], function (require, registerSuite, assert, declare, JSON, lang, when, JsonRest, StoreAdapter) {
+
+	var Model = function () {};
 
 	var legacyStore = new JsonRest({
 		target: require.toUrl('dstore/tests/x.y').match(/(.+)x\.y$/)[1],
