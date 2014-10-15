@@ -50,10 +50,6 @@ All modification or retrieval methods (except `getIdentity()`) on `Request` and 
 
 This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances. This (or any of the other classes above) can be extended for creating custom stores.
 
-## Validating
-
-This mixin adds functionality for validating any objects that are saved through `put()` or `add()`. The validation relies on the Model for the objects, so any property constraints that should be applied should be defined on the model's schema. If validation fails on `put()` or `add()` than a validation `TypeError` will be thrown, with an `errors` property that lists any validation errors.
-
 ## RequestMemory
 
 This store provides client-side querying functionality, but will load its data from the server, using the provided URL. This is
