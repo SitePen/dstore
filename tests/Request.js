@@ -8,7 +8,6 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dstore/Request',
-	'dmodel/Model',
 	'dstore/SimpleQuery',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
@@ -23,11 +22,12 @@ define([
 	when,
 	whenAll,
 	Request,
-	Model,
 	SimpleQuery,
 	mockRequest,
 	treeTestRootData
 ) {
+
+	var Model = declare(null, {});
 
 	function runHeaderTest(method, args) {
 		return store[method].apply(store, args).then(function () {
@@ -123,9 +123,6 @@ define([
 				return store.filter('data/treeTestRoot').forEach(function (object) {
 					i++;
 					assert.strictEqual(object.name, 'node' + i);
-					// the intrinsic methods
-					assert.equal(typeof object.save, 'function');
-					assert.equal(typeof object.remove, 'function');
 					// the method we added
 					assert.equal(typeof object.describe, 'function');
 				});

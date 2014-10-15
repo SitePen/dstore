@@ -3,12 +3,16 @@ define([
 	'intern/chai!assert',
 	'dojo/_base/declare',
 	'./sorting',
-	'dmodel/Model',
 	'dstore/Memory',
 	'dstore/QueryMethod'
-], function (registerSuite, assert, declare, sorting, Model, Memory, QueryMethod) {
+], function (registerSuite, assert, declare, sorting, Memory, QueryMethod) {
 
 	var store;
+	var Model = declare(null, {
+		constructor: function (args) {
+			declare.safeMixin(this, args);
+		}
+	});
 
 	registerSuite({
 		name: 'dstore Memory',
@@ -214,14 +218,6 @@ define([
 			assert.isTrue(four.square);
 		},
 
-		save: function () {
-			var four = store.getSync(4);
-			four.square = true;
-			four.save();
-			four = store.getSync(4);
-			assert.isTrue(four.square);
-		},
-
 		'put new': function () {
 			store.put({
 				id: 6,
@@ -260,9 +256,9 @@ define([
 				name: 'ten'
 			});
 			assert.strictEqual(store.getSync(10), undefined);
-			newObject.save();
+			store.put(newObject);
 			assert.isObject(store.getSync(10));
-			newObject.remove();
+			store.remove(10);
 			assert.strictEqual(store.getSync(10), undefined);
 		},
 
@@ -306,7 +302,7 @@ define([
 				id: 7,
 				prime: true
 			});
-			return newObject.remove().then(function (result) {
+			return store.remove(newObject.id).then(function (result) {
 				assert.isTrue(result);
 				assert.strictEqual(store.getSync(7), undefined);
 			});
