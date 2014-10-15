@@ -3,6 +3,19 @@ define([
 	/*=====, 'dstore/Store'=====*/
 ], function (declare /*=====, Store=====*/) {
 	return declare(null, {
+		// summary:
+		//		A basic mixin for adding hierarchical support to a store,
+		//		where children contain a property referencing their parent by ID,
+		//		and parents may contain a property indicating whether they have children.
+
+		// parentProperty: String
+		//		Name of property to inspect on children for their parent's identifier
+		parentProperty: 'parent',
+
+		// hasChildrenProperty: String
+		//		Name of property to inspect on items to indicate whether they have children
+		hasChildrenProperty: 'hasChildren',
+
 		constructor: function () {
 			this.root = this;
 		},
@@ -18,7 +31,7 @@ define([
 			//		The potential parent
 			// returns: boolean
 
-			return 'hasChildren' in object ? object.hasChildren : true;
+			return this.hasChildrenProperty in object ? object[this.hasChildrenProperty] : true;
 		},
 
 		getRootCollection: function () {
@@ -35,9 +48,10 @@ define([
 			//		The parent object
 			// returns: dstore/Store.Collection
 
-			return this.root.filter({
-				parent: object ? this.getIdentity(object) : null
-			});
+			var filterObject = {};
+			filterObject[this.parentProperty] = object ? this.getIdentity(object) : null;
+
+			return this.root.filter(filterObject);
 		}
 	});
 });
