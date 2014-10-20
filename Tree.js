@@ -26,7 +26,7 @@ define([
 			//		Get the collection of objects with no parents
 			// returns: dstore/Store.Collection
 
-			return this.filter({ parent: null });
+			return this.root.filter({ parent: null });
 		},
 
 		getChildren: function (object) {
@@ -36,7 +36,7 @@ define([
 			//		The parent object
 			// returns: dstore/Store.Collection
 
-			return this.filter({ parent: this.getIdentity(object) });
+			return this.root.filter({ parent: this.getIdentity(object) });
 		}
 	});
 });
