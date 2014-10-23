@@ -28,7 +28,7 @@ define([
 			store.cachingStore = new Memory();
 		}
 
-		store.cachingStore.model = store.model;
+		store.cachingStore.Model = store.Model;
 		store.cachingStore.idProperty = store.idProperty;
 	}
 	var CachePrototype = {

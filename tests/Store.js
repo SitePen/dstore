@@ -67,7 +67,7 @@ define([
 					type: 'filter', arguments: [ filter1 ], normalizedArguments: [ {
 						type: 'eq',
 						args: { // we have to match Argument type, which is not a real array
-							0: 'prop1', 
+							0: 'prop1',
 							1: 'one'
 						}
 					} ]
@@ -136,7 +136,7 @@ define([
 				}
 			});
 			var store = new Store({
-				model: TestModel
+				Model: TestModel
 			});
 			var restoredObject = store._restore({foo: 'original'});
 			assert.strictEqual(restoredObject.foo, 'original');

@@ -23,9 +23,9 @@ define([
 	});
 	var adaptedStore = new StoreAdapter({
 		objectStore: legacyStore,
-		model: Model
+		Model: Model
 	});
-	adaptedStore.model.prototype.describe = function () {
+	adaptedStore.Model.prototype.describe = function () {
 		return 'name is ' + this.name;
 	};
 
@@ -39,9 +39,9 @@ define([
 				});
 			}
 		}),
-		model: Model
+		Model: Model
 	});
-	store.model.prototype.describe = function () {
+	store.Model.prototype.describe = function () {
 		return 'name is ' + this.name;
 	};
 

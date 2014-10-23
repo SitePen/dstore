@@ -49,13 +49,13 @@ define([
 		constructor: function (options) {
 			// perform the mixin
 			options && declare.safeMixin(this, options);
-			if (this.model) {
+			if (this.Model) {
 				// we need a distinct model for each store, so we can
 				// save the reference back to this store on it.
 				// we always create a new model to be safe.
-				this.model = declare(this.model, {});
+				this.Model = declare(this.Model, {});
 				// give a reference back to the store for saving, etc.
-				this.model.prototype._store = this;
+				this.Model.prototype._store = this;
 			}
 			// the object the store can use for holding any local data or events
 			this.storage = new Evented();
@@ -149,13 +149,13 @@ define([
 		//		function can be specified to control how objects are serialized to strings
 		stringify: null,
 
-		// model: Function
+		// Model: Function
 		//		This should be a entity (like a class/constructor) with a 'prototype' property that will be
 		//		used as the prototype for all objects returned from this store. One can set
 		//		this to the Model from dmodel/Model to return Model objects, or leave this
 		//		to null if you don't want any methods to decorate the returned
 		//		objects (this can improve performance by avoiding prototype setting),
-		model: null,
+		Model: null,
 
 		_restore: function (object, mutateAllowed) {
 			// summary:
@@ -182,13 +182,13 @@ define([
 			// returns: Object
 			//		An instance of the store model, with all the properties that were defined
 			//		on object. This may or may not be the same object that was passed in.
-			var model = this.model;
-			if (model && object) {
-				var prototype = model.prototype;
+			var Model = this.Model;
+			if (Model && object) {
+				var prototype = Model.prototype;
 				var restore = prototype._restore;
 				if (restore) {
 					// the prototype provides its own restore method
-					object = restore.call(object, model, mutateAllowed);
+					object = restore.call(object, Model, mutateAllowed);
 				} else if (hasProto && mutateAllowed) {
 					// the fast easy way
 					// http://jsperf.com/setting-the-prototype
@@ -209,7 +209,7 @@ define([
 			//		be copied onto the new instance. Note, that should only be called
 			//		when new objects are being created, not when existing objects
 			//		are being restored from storage.
-			return new this.model(properties);
+			return new this.Model(properties);
 		},
 
 		_createSubCollection: function (kwArgs) {

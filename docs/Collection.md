@@ -53,7 +53,7 @@ The following property and methods are available on dstore collections:
 
 Property | Description
 -------- | -----------
-`model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof collection.model`.
+`Model` | This constructor represents the data model class to use for the objects returned from the store. All objects returned from the store should have their prototype set to the prototype property of the model, such that objects from this store should return true from `object instanceof collection.Model`.
 
 ### Method Summary
 

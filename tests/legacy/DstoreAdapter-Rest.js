@@ -56,7 +56,7 @@ define([
 			store = new DstoreAdapter(new Rest({
 				target: '/mockRequest/',
 				headers: globalHeaders,
-				model: Model
+				Model: Model
 			}));
 		},
 		'get': function () {

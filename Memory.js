@@ -54,8 +54,8 @@ define([
 				index = storage.index,
 				data = storage.fullData;
 
-			var model = this.model;
-			if (model && !(object instanceof model)) {
+			var Model = this.Model;
+			if (Model && !(object instanceof Model)) {
 				// if it is not the correct type, restore a
 				// properly typed version of the object. Note that we do not allow
 				// mutation here
@@ -168,11 +168,11 @@ define([
 			var storage = this.storage;
 			var index = storage.index = {};
 			var data = storage.fullData;
-			var model = this.model;
+			var Model = this.Model;
 			var ObjectPrototype = Object.prototype;
 			for (var i = 0, l = data.length; i < l; i++) {
 				var object = data[i];
-				if (model && !(object instanceof model)) {
+				if (Model && !(object instanceof Model)) {
 					var restoredObject = this._restore(object,
 							// only allow mutation if it is a plain object
 							// (which is generally the expected input),

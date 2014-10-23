@@ -97,9 +97,9 @@ define([
 				store = new Store({
 					target: '/mockRequest/',
 					headers: globalHeaders,
-					model: Model
+					Model: Model
 				});
-				store.model.prototype.describe = function () {
+				store.Model.prototype.describe = function () {
 					return 'name is ' + this.name;
 				};
 				createRequestTests.store = store;

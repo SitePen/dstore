@@ -26,14 +26,14 @@ define([
 					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
 					{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
 				],
-				model: Model,
+				Model: Model,
 				filterFunction: function (object) {
 					return object.name === 'two';
 				}
 			});
 
 			// add a method to the model prototype
-			store.model.prototype.describe = function () {
+			store.Model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};
 		},
@@ -49,18 +49,18 @@ define([
 			});
 		},
 
-		'model': function () {
+		'Model': function () {
 			assert.strictEqual(store.getSync(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.getSync(3).describe(), 'three is a prime');
 			assert.strictEqual(store.filter({even: true}).fetchSync()[1].describe(), 'four is not a prime');
 		},
 
-		'no model': function() {
+		'no Model': function() {
 			var noModelStore = new Memory({
 				data: [
 					{id: 1, name: 'one', prime: false, mappedTo: 'E'}
 				],
-				model: null
+				Model: null
 			});
 			assert.strictEqual(noModelStore.getSync(1).get, undefined);
 			assert.strictEqual(noModelStore.getSync(1).save, undefined);
@@ -323,7 +323,7 @@ define([
 			// make sure we don't mess up the class of the input
 			assert.isTrue(myObject instanceof MyClass);
 			// make sure the the object in the store is the right type
-			assert.isTrue(store.getSync(10) instanceof store.model);
+			assert.isTrue(store.getSync(10) instanceof store.Model);
 		},
 
 		'filter after changes': function () {

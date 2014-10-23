@@ -8,7 +8,7 @@ define([
 	var TestStore = declare([ Memory, Tree ]);
 
 	var store = new TestStore({
-		model: null,
+		Model: null,
 		data: [
 			{ parent: null, id: '1', name: 'root1' },
 			{ parent: '1', id: '1.1', name: 'child1.1' },

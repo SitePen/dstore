@@ -22,7 +22,7 @@ define([
 			{id: 4, name: 'four', prime: false, mappedTo: null, even: true},
 			{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 		],
-		model: TestModel
+		Model: TestModel
 	});
 
 	registerSuite({

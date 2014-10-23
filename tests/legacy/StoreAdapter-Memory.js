@@ -33,9 +33,9 @@ define([
 						{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 					]
 				}),
-				model: Model
+				Model: Model
 			});
-			store.model.prototype.describe = function () {
+			store.Model.prototype.describe = function () {
 				return this.name + ' is ' + (this.prime ? '' : 'not ') + 'a prime';
 			};
 		},
@@ -47,7 +47,7 @@ define([
 			assert.strictEqual(store.getIdentity(store.get(1)), 1);
 		},
 
-		'model': function () {
+		'Model': function () {
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
 			var results = getResultsArray(store.filter({even: true}));
