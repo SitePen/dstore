@@ -5,8 +5,6 @@ The dstore package is a data infrastructure framework, providing the tools for m
 
 * [Collection](./docs/Collection.md) - This is a list of objects, which can be iterated over to access the objects in the collection, and monitored for changes. It can also be filtered, sorted, and sliced into new collections.
 * [Store](./docs/Store.md) - A Store is a Collection that may also include the ability to identify, to add, remove, and update objects.
-* [Model](./docs/DataModelling.md) - A Model is an object, a set of properties, or name value pairs.
-* [Property](./docs/DataModelling.md) - A Property is an object representing a particular property on a Model object, facilitating access to, modification of, and monitoring of the value of a property.
 
 # [Included Stores](./docs/Stores.md)
 
@@ -47,7 +45,7 @@ dstore uses [Intern](http://theintern.io/) as its test runner. A full descriptio
 of how to setup testing is [available here](./docs/Testing.md). Tests can
 either be run using the browser, or using [Sauce Labs](https://saucelabs.com/).
 More information on writing your own tests with Intern can be found in the
-[Intern wiki](https://github.com/theintern/intern/wiki). 
+[Intern wiki](https://github.com/theintern/intern/wiki).
 
 # License
 
