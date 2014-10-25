@@ -19,10 +19,6 @@ define([
 	// JS engine.
 	has.add('object-proto', !!{}.__proto__ && !({}).watch);
 	var hasProto = has('object-proto');
-	var excludePropertiesOnCopy = {
-		data: true,
-		total: true
-	};
 
 	function emitUpdateEvent(type) {
 		return function (result, args) {
@@ -216,8 +212,7 @@ define([
 			var newCollection = lang.delegate(this.constructor.prototype);
 
 			for (var i in this) {
-				if ((!(i in newCollection) || newCollection[i] !== this[i])
-					&& !excludePropertiesOnCopy.hasOwnProperty(i)) {
+				if (!(i in newCollection) || newCollection[i] !== this[i]) {
 					newCollection[i] = this[i];
 				}
 			}
