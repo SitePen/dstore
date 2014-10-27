@@ -24,7 +24,7 @@ require([
     'dstore/Memory'
 ], function(DstoreAdapter, Memory) {
     var store = new Memory({...});
-    var adaptedStore = new DstoreAdapter({store: store});
+    var adaptedStore = new DstoreAdapter(store);
 });
 ```
 If the dstore store is trackable (mixed in `dstore/Trackable`), the result sets returned from `query()` calls will be observable (have an `observe()` method).

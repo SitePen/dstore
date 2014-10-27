@@ -3,25 +3,27 @@ dstore
 
 The dstore package is a data infrastructure framework, providing the tools for modelling and interacting with data collections and objects. dstore is designed to work with a variety of data storage mediums, and provide a consistent interface for accessing data across different user interface components. There are several key entities within dstore:
 
-* [Collection](./docs/Collection.md) - This is a list of objects, which can be iterated over to access the objects in the collection, and monitored for changes. It can also be filtered, sorted, and sliced into new collections.
+* [Collection](./docs/Collection.md) - This is a list of objects, which can be iterated over, sorted, filtered, and monitored for changes.
 * [Store](./docs/Store.md) - A Store is a Collection that may also include the ability to identify, to add, remove, and update objects.
+
+
 
 # [Included Stores](./docs/Stores.md)
 
 The dstore package includes several store implementations that can be used for the needs of different applications. These include:
 
-* Memory - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
-* Rest - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
-* Request - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
-* Cache - This is an aggregate store that combines a master and caching store to provide caching functionality.
-* Trackable - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
-* SimpleQuery - This is a base store with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
+* `Memory` - This is a simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
+* `Request` - This is a simple server-based collection that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
+* `Rest` - This is a store built on `Request` that implements add, remove, and update operations using HTTP requests following REST conventions
+* `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
+* `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
+* `SimpleQuery` - This is a mixin with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 
 See the [Stores section](./docs/Stores.md) for more information these stores.
 
 ## [Collections](./docs/Collection.md)
 
-A Collection is the interface for a collection of items, which can be filtered, sorted, and sliced to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. Every method may return a promise for the specified return value if the execution of the operation is asynchronous (except for the query methods which return a collection). Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`.
+A Collection is the interface for a collection of items, which can be filtered and sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included stores implement every method. A collection's list of objects may not be immediately retrieved from the underlying data storage until the it is accessed through `forEach()`, `fetch()`, or `fetchRange()`.
 
 For more details on the Collection API and how to query, see the [Collection section](./docs/Collection.md)
 
@@ -29,9 +31,13 @@ For more details on the Collection API and how to query, see the [Collection sec
 
 A store is an extension of a collection and is an entity that not only contains a set of objects, but also provides an interface for identifying, adding, modifying, removing, and querying data. See the [Store section](./docs/Store.md) for the details on the Store interface.
 
+## Promise-based API and Synchronous Operations
+
+All CRUD methods, such as `get`, `put`, `remove`, and `fetch`, return promises. However, stores and collections may provide synchronous versions of those methods with a "Sync" suffix (e.g., `Memory#fetchSync` to fetch synchronously from a `Memory` store).
+
 # [Data Modelling](https://github.com/SitePen/dmodel)
 
-In addition to handling collections of items, dstore works with the dmodel package to provides robust data modeling capabilities for managing individual objects themselves. dmodel provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes. By setting a model on stores, all objects returned from a store (whether it be from iterating over a collection, or performing a get()) will be an instance of the store's data model.
+In addition to handling collections of items, dstore works with the dmodel package to provides robust data modeling capabilities for managing individual objects. dmodel provides a data model class that includes multiple methods on data objects, for saving, validating, and monitoring objects for changes. By setting a model on stores, all objects returned from a store, whether a single object returned from a `get()` or an array of objects returned from a `fetch()`, will be an instance of the store's data model.
 
 For more information, please see the [dmodel project](https://github.com/SitePen/dmodel).
 

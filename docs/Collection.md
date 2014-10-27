@@ -33,15 +33,16 @@ The following methods are available on the filter objects. First are the propert
 * `lte`: Property values must be less than or equal to the filter value argument.
 * `gt`: Property values must be greater than the filter value argument.
 * `gte`: Property values must be greater than or equal to the filter value argument.
-* `in`: An array should be passed in as the second argument, and Pproperty values must be equal to one of the values in the array.
+* `in`: An array should be passed in as the second argument, and property values must be equal to one of the values in the array.
 * `match`: Property values must match the provided regular expression.
+
 The following are combinatorial methods:
 * `and`: This takes two arguments that are other filter objects, that both must be true.
 * `or`: This takes two arguments that are other filter objects, where one of the two must be true.
 
 Different stores may implement filtering in different ways. The `dstore/Memory` will perform filtering in memory. The `dstore/Request`/`dstore/Rest` stores will translate the filters into URL query strings to send to the server. Simple queries will be in standard URL-encoded query format and complex queries will conform to [RQL](https://github.com/persvr/rql) syntax (which is a superset of standard query format).
 
-New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with stores that mix in `SimpleQuery` like memory stores, you can also add filter comparators by overriding the `_getFilterComparator` method, returning comparators for your additional type, and delegating to `this.inherited` for the rest.
+New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with stores that mix in `SimpleQuery` like memory stores, you can also add filter comparators by overriding the `_getFilterComparator` method, returning comparators for the additional types, and delegating to `this.inherited` for the rest.
 
 For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializations of filters to URL queries for existing or new methods by overriding the `_renderFilterParams`. This method is called with a filter object (and by default is recursively called by combinatorial operators), and should return a string serialization of the filter, that will be inserted into the query string of the URL sent to the server.
 
@@ -91,7 +92,6 @@ Type | Description
 `add` | This indicates that a new object was added to the store. The new object is available on the `target` property.
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `delete` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
-`refresh` | (Note, this is not emitted in the current stores, but may be used in the future). This indicates that the collection has changed substantially such that the user interface should iterate over the collection again to retrieve the latest list of objects. This event is issued in lieu of individual updates, and doesn't guarantee any specific change or update to any specific item.
 
 #### `track()`
 
@@ -103,18 +103,9 @@ Once we have created a new instance from this store, we can track a collection, 
 
 	var store = new TrackableMemory({data: ...});
 	var filteredSorted = store.filter({inStock: true}).sort('price');
-
-At this point, we can do a `fetch()` or `forEach()` to access the items in the filtered collection. Once we have done that, the data will be loaded, or will be loading, and we can track it. Note that if data is not fetched, it will not be available for comparisons to determine the position of modified objects.
-
 	var tracked = filteredSorted.track();
 
-Alternately, rather than retrieving results prior to tracking, we could call `track()`, and then make individual range requests from the tracked collection.
-
-	tracked.fetchRange(0, 10);
-
-Trackable will keep track of each page of data, and send out notifications based on the data it has available, along with index information, indicating the new and old position of the object that was modified.
-
-And then we could listen for notifications:
+Once we have a tracked collection, we can listen for notifications:
 
 	tracked.on('add, update, delete', function(event){
 		var newIndex = event.index;
@@ -122,7 +113,15 @@ And then we could listen for notifications:
 		var object = event.target;
 	});
 
-If you will be calling `fetchRange()`, to retrieve pages of data, that should be called on the tracked query. Tracked events, and their index position that they report will be based on the total collection tracked, and are not relative to the individual pages. Tracked events will also include a `totalLength` property indicating the total length of the collection.
+Trackable requires fetched data to determine the position of modified objects and can work with either full or partial data. We can do a `fetch()` or `forEach()` to access all the items in the filtered collection:
+
+	tracked.fetch();
+
+Or we can do a `fetchRange()` to make individual range requests for items in the collection:
+
+	tracked.fetchRange(0, 10);
+
+Trackable will keep track of each page of data, and send out notifications based on the data it has available, along with index information, indicating the new and old position of the object that was modified. Regardless of whether full or partial data is fetched, tracked events and the indices they report are relative to the entire collection, not relative to individual fetched ranges. Tracked events also include a `totalLength` property indicating the total length of the collection.
 
 ### Custom Querying
 
@@ -130,7 +129,7 @@ Custom query methods can be created using the `dstore/QueryMethod` module. We ca
 * `type` - This is a string, identifying the query method type.
 * `normalizeArguments` - This can be a function that takes the arguments passed to the method, and normalizes them for later execution.
 * `applyQuery` - This is an optional function that can be called on the resulting collection that is returned from the generated query method.
-* `querier` - This is an optional function that can be used to define the computation of the set of objects returned from a query, on client side/in-memory stores. It is called with the normalized arguments, and then returns a new function that will be called with an array, and is expected to return a new array.
+* `querierFactory` - This is an optional function that can be used to define the computation of the set of objects returned from a query, on client-side or in-memory stores. It is called with the normalized arguments, and then returns a new function that will be called with an array, and is expected to return a new array.
 
 For example, we could create a `getChildren` method that queried for children object, by simply returning the children property array from a parent:
 
@@ -138,9 +137,16 @@ For example, we could create a `getChildren` method that queried for children ob
 		getChildren: new QueryMethod({
 			type: 'children',
 			querierFactory: function (parent) {
-				return function () {
+				var parentId = this.getIdentity(parent);
+
+				return function (data) {
+					// note: in this case, the input data is ignored as this querier
+					// returns an object's array of children instead
+
 					// return the children of the parent
-					return parent.children;
+					// or an empty array if the parent no longer exists
+					var parent = this.getSync(parentId);
+					return parent ? parent.children || [];
 				};
 			}
 		})
