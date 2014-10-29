@@ -1,6 +1,6 @@
 # Collection
 
-A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required, however all the included collections implement every method. Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. These fetch methods return a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
+A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required. However, all the included collections implement every method. Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. These fetch methods return a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
 
 ## Querying
 

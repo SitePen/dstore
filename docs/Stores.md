@@ -2,12 +2,13 @@
 
 The dstore package includes several store implementations that can be used for the needs of different applications. These include:
 
-* `Memory` - This is simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
-* `Rest` - This is a server-based store that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
-* `Request` - This is a simple server-based store, like Rest, that provides read-only access to data from the server.
+* `Memory` - This is a simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
+* `Request` - This is a simple server-based collection that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
+* `Rest` - This is a store built on `Request` that implements add, remove, and update operations using HTTP requests following REST conventions.
 * `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
-* `Cache` - This is an aggregate store that combines a master and caching store to provide caching functionality.
-* `Trackable` - This a mixin store that adds track array changes and add index information to events of tracked store instances. This adds a track() method for tracking stores.
+* `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
+* `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
+* `SimpleQuery` - This is a mixin with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 * `Store` - This is a base store, with the base methods that are used by all other stores.
 
 ## Constructing Stores
@@ -16,7 +17,7 @@ All the stores can be instantiated with an options argument to the constructor, 
 
 ## Memory
 
-The Memory store is a basic client-side in-memory object store, that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor, or by calling `store.setData(data)`. The data should be an array of objects, and all the objects are considered to be existing objects and must have identities (this is not "creating" new objects, no events are fired for the objects that are provided, nor are identities assigned).
+The Memory store is a basic client-side in-memory store that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor. The data should be an array of objects, and all the objects are considered to be existing objects and must have identities (this is not "creating" new objects, no events are fired for the objects that are provided, nor are identities assigned).
 
 For example:
 
@@ -32,15 +33,15 @@ The `Memory` store provides synchronous equivalents of standard asynchronous sto
 
 ## Request
 
-This is a simple store for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property. A request for data will be sent to the server when a fetch occurs (due a call to `fetch()`, `fetchRange()`, or `forEach()`).
+This is a simple collection for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property. A request for data will be sent to the server when a fetch occurs (due a call to `fetch()`, `fetchRange()`, or `forEach()`).
 
 ## Rest
 
-This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications, trigger HTTP requests to the server, using the corresponding RESTful HTTP methods. A `get()` triggers a `GET`, `remove()` triggers a `DELETE`, and `add()` and `put()` will trigger a `PUT` if an id is available or provided, and a `POST` will be used to create new objects with server provided ids.
+This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications trigger HTTP requests to the server using the corresponding RESTful HTTP methods. A `get()` triggers a `GET`, `remove()` triggers a `DELETE`, and `add()` and `put()` will trigger a `PUT` if an id is available or provided, and a `POST` will be used to create new objects with server provided ids.
 
 For example:
 
-    myStore = new Memory({
+    myStore = new Rest({
         target: '/PathToData/'
     });
 
@@ -63,7 +64,7 @@ This is a mixin that can be used to add caching functionality to a store. This c
         cachingStore: new Memory()
     });
 
-This store has the following properties:
+This store has the following properties and methods:
 
 Name | Description
 ---- | -----------
