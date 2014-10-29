@@ -134,9 +134,9 @@ define([
 			try {
 				return this.storage.emit(type, event);
 			} finally {
-				// Return a truthy value because a listener error makes it impossible to know
-				// whether the event was canceled
-				return true;
+				// Return the initial value of event.cancelable because a listener error makes it impossible
+				// to know whether the event was actually canceled
+				return event.cancelable;
 			}
 		},
 
