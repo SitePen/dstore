@@ -191,6 +191,18 @@ define([
 			assert.deepEqual(beforeIds, [ 123, 321 ]);
 		},
 
+		'emit should catch errors thrown by listeners': function () {
+			var store = new Store(),
+				testEmit = lang.hitch(store, 'emit', 'test-event');
+
+			assert.doesNotThrow(testEmit);
+
+			store.on('test-event', function () {
+				throw new Error('listener error');
+			});
+			assert.doesNotThrow(testEmit);
+		},
+
 		forEach: function () {
 			var store = new (declare(Store, {
 				fetch: function () {

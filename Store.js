@@ -131,7 +131,13 @@ define([
 		emit: function (type, event) {
 			event = event || {};
 			event.type = type;
-			return this.storage.emit(type, event);
+			try {
+				return this.storage.emit(type, event);
+			} finally {
+				// Return a truthy value because a listener error makes it impossible to know
+				// whether the event was canceled
+				return true;
+			}
 		},
 
 		// parse: Function
