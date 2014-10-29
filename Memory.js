@@ -6,13 +6,11 @@ define([
 	'./Promised',
 	'./SimpleQuery',
 	'./QueryResults'
-	// TODO: Do we still need the api/Store dep for docs? If not, remove it and rename StoreBase to Store.
-	/*=====, './api/Store' =====*/
-], function (declare, lang, arrayUtil, StoreBase, Promised, SimpleQuery, QueryResults/*=====, Store =====*/) {
+], function (declare, lang, arrayUtil, Store, Promised, SimpleQuery, QueryResults) {
 
 	// module:
 	//		dstore/Memory
-	return declare([StoreBase, Promised, SimpleQuery ], {
+	return declare([Store, Promised, SimpleQuery ], {
 		constructor: function () {
 			// summary:
 			//		Creates a memory object store.
@@ -136,7 +134,6 @@ define([
 				var removed = data.splice(index[id], 1)[0];
 				// now we have to reindex
 				this._reindex();
-				// TODO: The id property makes it seem like an event id. Maybe targetId would be better.
 				this.emit('delete', {id: id, target: removed});
 				return true;
 			}

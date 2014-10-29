@@ -411,7 +411,5 @@ define([
 		}, function sort() {
 			return store.sort.apply(store, arguments).fetchSync();
 		})
-
-		// TODO: Add add, update, and remove event tests for Memory or develop a reusable suite
 	});
 });

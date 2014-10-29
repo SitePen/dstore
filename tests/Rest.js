@@ -176,8 +176,6 @@ define([
 				});
 			});
 		}
-
-		// TODO: Add tests for emitting add, update, and remove events
 	});
 	registerSuite(tests);
 });

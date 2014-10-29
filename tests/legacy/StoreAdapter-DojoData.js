@@ -90,8 +90,6 @@ define([
 			assert.isTrue(store.get(6).perfect);
 		}
 		// if we have the update DataStore (as of Dojo 1.10), we will use these tests as well
-
-		// TODO: Test that fetch adds .data and .total properties to the collection
 	}, DataStore.prototype.add &&
 	{
 		'put update': function () {

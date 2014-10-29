@@ -92,7 +92,6 @@ define([
 				);
 			}
 
-				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 			function makeFetch() {
 				return function () {
 					var self = this;
@@ -138,7 +137,6 @@ define([
 			var observed = declare.safeMixin(lang.delegate(this), {
 				_ranges: [],
 
-				// TODO: What should we do if there are mixed calls to `fetch` and `fetchRange`?
 				fetch: makeFetch(),
 				fetchRange: makeFetchRange(),
 

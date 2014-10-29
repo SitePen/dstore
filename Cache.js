@@ -166,7 +166,6 @@ define([
 		},
 		_createSubCollection: function () {
 			var subCollection = this.inherited(arguments);
-			// TODO: Is this going to be added to Store.js?
 			subCollection._parent = this;
 			return subCollection;
 		},

@@ -33,7 +33,6 @@ define([
 			});
 		},
 
-		// TODO: Test what put is supposed to resolve to
 		'.put': function () {
 			var updatedItem;
 			return when(store.get('node5')).then(function (item) {
@@ -48,7 +47,6 @@ define([
 			});
 		},
 
-		// TODO: Test what add is supposed to resolve to
 		'.add': function () {
 			var newItem = { 'id': 'node6', 'name':'node5', 'someProperty':'somePropertyB' };
 			return when(store.add(newItem), function () {
@@ -58,7 +56,6 @@ define([
 			});
 		},
 
-		// TODO: Test what remove is supposed to resolve to
 		'.remove': function () {
 			return when(store.get('node3')).then(function (item) {
 				assert.ok(item);
@@ -106,7 +103,6 @@ define([
 				assert.deepEqual(data.slice(), [ 'node3', 'node1' ]);
 			});
 		}
-		// TODO: Add tests for all permutations of filter, sort, range queries
 	});
 });
 

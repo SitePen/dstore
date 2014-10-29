@@ -1,5 +1,4 @@
 define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
-	// TODO: Make this API more extensible, possibly with an options
 	function forEach(callback, instance) {
 		return when(this, function(data) {
 			for (var i = 0, l = data.length; i < l; i++){

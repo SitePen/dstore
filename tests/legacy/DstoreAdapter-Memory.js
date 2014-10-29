@@ -220,7 +220,5 @@ define([
 					sort: sort
 				});
 		})
-		// TODO: Add tests with dojo/store/Trackable
-		// TODO: Add tests that verify correct adaptation of dstore queryEngine to dojo/store queryEngine
 	});
 });

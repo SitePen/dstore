@@ -242,8 +242,7 @@ define([
 				});
 			},
 
-			// TODO: Convert this to a test of all permutations of filter, sort, and range calls
-			'filter+sort+range': function () {
+			'filter+sort+fetchRange': function () {
 				var filter = { prop1: 'Prop1Value', prop2: 'Prop2Value' };
 				var collection = store.filter(filter).sort('prop1');
 				return runCollectionTest(collection, {start: 15, end: 25}, {
@@ -253,8 +252,6 @@ define([
 					})
 				});
 			},
-
-			// TODO: Add test of all permutations of filter, sort, and range calls w/ Range header enabled
 
 			'composition with client-side queriers': function () {
 				var RestWithQueryEngine = declare([ Store, SimpleQuery ], {

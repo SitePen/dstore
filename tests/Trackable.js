@@ -230,7 +230,6 @@ define([
 				assert.strictEqual(observations.length, 3);
 			},
 
-			// TODO: Consider breaking this down into smaller test cases
 			'paging with store._partialResults': function () {
 				var bigStore = createPartialDataStore(100),
 					bigFiltered = bigStore.filter({}).sort('order'),
@@ -258,7 +257,6 @@ define([
 				bigObserved.on('delete', function (event) {
 					latestObservation = event;
 				});
-				// TODO: Fix names bigXyz names. Probably use the term collection instead of store for return value of filter and sort
 
 				// An update outside of requested ranges has an indeterminate index
 				item = bigStore.getSync(0);

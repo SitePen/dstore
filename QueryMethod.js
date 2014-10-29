@@ -15,8 +15,6 @@ define([], function () {
 		//		a collection does not define its own querier factory method for this query type.
 	};
 	=====*/
-	// TODO: Add QueryMethod tests
-	// TODO: Convert to a single argument w/ queryName as the type
 	return function QueryMethod(/*__QueryMethodArgs*/ kwArgs) {
 		// summary:
 		//		The constructor for a dstore collection query method

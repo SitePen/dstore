@@ -217,7 +217,5 @@ define([
 			});
 			assert.deepEqual(results, [0, 1, 2]);
 		}
-
-		// TODO: Add map test and tests for other Store features
 	});
 });

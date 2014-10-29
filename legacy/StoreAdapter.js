@@ -12,11 +12,10 @@ define([
 	var modifyDelegate = function (name) {
 		return function () {
 			var objectStore = this.objectStore;
-			// TODO: Do we need to serialize models here?
 			return objectStore[name].apply(objectStore, arguments);
 		};
 	};
-	// TODO: Should this be named ObjectStoreAdapter?
+
 	return declare(Store, {
 
 		// objectStore:
@@ -42,7 +41,7 @@ define([
 		remove: modifyDelegate('remove'),
 
 		getIdentity: modifyDelegate('getIdentity'),
-		// TODO: Test _setIdentity
+
 		_setIdentity: function (object, identityArg) {
 			return (object[this.objectStore.idProperty] = identityArg);
 		},
@@ -97,7 +96,7 @@ define([
 
 			var queryObject = {};
 			applyFilter(getQueryArguments('filter'));
-			
+
 			function applyFilter(filtered) {
 				for (var i = 0; i < filtered.length; i++) {
 					var filter = filtered[i];
