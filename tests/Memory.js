@@ -357,16 +357,16 @@ define([
 			assert.isTrue(!!object.id);
 		},
 
-		'total property': function () {
+		'query results length properties': function () {
 			var filteredCollection = store.filter(function (o) {
 				return o.id <= 3;
 			});
 
 			var sortedCollection = store.sort('id');
 
-			var ranged = store.fetchRangeSync({start: 0, end: 3});
-			assert.strictEqual(ranged.totalLength, 5);
-			assert.strictEqual(ranged.length, 3);
+			var results = store.fetchRangeSync({start: 0, end: 3});
+			assert.strictEqual(results.totalLength, 5);
+			assert.strictEqual(results.length, 3);
 		},
 
 		'composite key': function () {
@@ -387,6 +387,21 @@ define([
 			assert.equal(store.getSync('3,2').name, '3,2');
 			store.put({x: 1, y: 1, name: 'changed'});
 			assert.equal(store.getSync('1,1').name, 'changed');
+		},
+
+		'source collection.data does not become subcollection.data': function () {
+			// Note: This is not a great test because it tests an implementation detail rather than public interface.
+			// However, it is a detail that is unlikely to change and one we've experienced regression with,
+			// so we believe it is a value to test it directly here.
+
+			var sourceCollection = store.filter({ prime: true });
+
+			sourceCollection.fetchSync();
+			assert.isDefined(sourceCollection.data);
+
+			var subCollection = sourceCollection.filter({ id: 1 });
+			subCollection.fetchSync();
+			assert.notDeepEqual(sourceCollection.data, subCollection.data);
 		},
 
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
