@@ -75,8 +75,6 @@ define([
 	}
 
 	return declare(null, {
-		currentRange: [],
-
 		track: function () {
 			var store = this.store || this;
 
