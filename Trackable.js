@@ -11,7 +11,7 @@ define([
 
 	// module:
 	//		dstore/Trackable
-	var undef, revision = 0;
+	var revision = 0;
 
 	function createRange(newStart, newEnd) {
 		return {
@@ -74,7 +74,7 @@ define([
 		}
 	}
 
-	return declare(null, {
+	var trackablePrototype = {
 		track: function () {
 			var store = this.store || this;
 
@@ -391,5 +391,14 @@ define([
 
 			return observed;
 		}
-	});
+	};
+
+	var Trackable =  declare(null, trackablePrototype);
+	Trackable.create = function (target, properties) {
+		// create a delegate of an existing store with trackability functionality mixed in
+		target = declare.safeMixin(lang.delegate(target), trackablePrototype);
+		declare.safeMixin(target, properties);
+		return target;
+	};
+	return Trackable;
 });
