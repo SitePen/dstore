@@ -182,6 +182,9 @@ define([
 				});
 			}
 
+			// Create a function that applies all queriers in the query log
+			// in order to determine whether a new or updated item belongs
+			// in the results and at what position.
 			var queryExecutor;
 			arrayUtil.forEach(this.queryLog, function (entry) {
 				var existingQuerier = queryExecutor,
