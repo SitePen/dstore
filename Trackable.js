@@ -274,8 +274,7 @@ define([
 						if (queryExecutor) {
 							// with a queryExecutor, we can determine the correct sorted index for the change
 
-							if (queryExecutor.matches ? queryExecutor.matches(target) :
-									queryExecutor([target]).length) {
+							if (queryExecutor([target]).length) {
 								var begin = 0,
 									end = ranges.length - 1,
 									sampleArray,
