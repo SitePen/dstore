@@ -1,14 +1,14 @@
 define([
+	'dojo/_base/lang',
 	'dojo/_base/declare',
-	'dojo/when',
 	'dojo/_base/array'
-], function (declare, when, array) {
+], function (lang, declare, array) {
 
 	return declare(null, {
-		constructor: function (store, value) {
+		constructor: function (collection, value) {
 			// summary:
 			//		Series adapter for dstore object stores.
-			// store: dstore/api/Store.Collection
+			// collection: dstore/api/Store.Collection
 			//		A dstore object store.
 			// value: Function|Object|String
 			//		Function, which takes an object handle, and
@@ -17,7 +17,7 @@ define([
 			//		an object and how to map them to an output. Or a string, which
 			//		is a numeric field name to use for plotting. If undefined, null
 			//		or empty string (the default), "value" field is extracted.
-			this.store = store;
+			this.collection = collection.track ? collection.track() : collection;
 
 			if (value) {
 				if (typeof value === 'function') {
@@ -50,9 +50,8 @@ define([
 		destroy: function () {
 			// summary:
 			//		Clean up before GC.
-			if (this.tracked) {
-				this.tracked.remove();
-			}
+			var tracking = this.collection.tracking;
+			tracking && tracking.remove();
 		},
 
 		setSeriesObject: function (series) {
@@ -66,31 +65,23 @@ define([
 		fetch: function () {
 			// summary:
 			//		Fetches data from the store and updates a chart.
-			var store = this.store;
-			var self = this;
-			if (this.tracked) {
-				this.tracked.remove();
-			}
-			var objects = this.objects = [];
-			when(store.forEach(function (object) {
-				objects.push(object);
-			}), function () {
-				self._update();
-			});
-			if (store.track) {
-				var tracked = this.tracked = store.track();
-				tracked.on('add, update, delete', update);
-			}
-			function update() {
-				self.objects = tracked.data;
-				self._update();
-			}
+			var collection = this.collection,
+				update = lang.hitch(this, this._update);
+
+			collection.fetch().then(lang.hitch(this, function (results) {
+				this.objects = results;
+
+				update();
+				if (collection.tracking) {
+					collection.on('add, update, delete', update);
+				}
+			}));
 		},
 
 		_update: function () {
 			var self = this;
 			this.data = array.map(this.objects, function (object) {
-				return self.value(object, self.store);
+				return self.value(object, self.collection);
 			});
 			if (this.series) {
 				this.series.chart.updateSeries(this.series.name, this, this._initialRendering);

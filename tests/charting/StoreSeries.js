@@ -143,12 +143,14 @@ define([
 			assert.include(data, 'data5');
 
 			store.put({id: 5, value: 5, data: 'mod data 55'});
+
+			data = series.data;
 			assert.lengthOf(data, 5);
 			assert.include(data, 'mod data 11');
 			assert.include(data, 'data2');
 			assert.include(data, 'data3');
 			assert.include(data, 'data4');
-			// TODO: this fails due to a bug in Trackable: assert.include(data, 'mod data 55');
+			assert.include(data, 'mod data 55');
 		},
 
 		'observable store - delete': function(){
