@@ -420,28 +420,7 @@ define([
 			//		from this result set (due to an object being deleted, or changed such that it
 			//		is not a part of the result set).
 
-		},
-
-		// total: Number|Promise?
-		//		This property should be included in if the query options included the 'count'
-		//		property limiting the result set. This property indicates the total number of objects
-		//		matching the query (as if "start" and "count" weren't present). This may be
-		//		a promise if the query is asynchronous.
-		total: 0,
-		// sorted: Collection.SortInformation[]|Function
-		//		If the collection has been sorted, this is an array of sort objects or a comparator function.
-		//		If sorted by one or more properties, `sorted` is an array of objects where each contains a property name
-		//		and an optional flag indicating whether it should be sorted descending. If sorted using a custom
-		//		comparator, `sorted` is the comparator function.
-		sorted: [],
-		// filtered: String|Object|Function|Array
-		//		If the collection has been filtered, this is an object that indicates the query that
-		//		was used to filter it.
-		filtered: {},
-		// ranged: Object
-		//		If the collection has been subsetted with range, this is an object that indicates the start
-		//		and end of the range
-		ranged: {}
+		}
 	});
 
 	Collection.SortInformation = declare(null, {
