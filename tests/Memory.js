@@ -230,11 +230,14 @@ define([
 			// Make default put index 0 so it is clear beforeId:null is working
 			store.defaultNewToStart = true;
 
-			store.put({ id: 4 }, { beforeId: 3 });
+			store.put({ id: 2 }, { beforeId: 4 });
 			store.put({ id: 0 }, { beforeId: null });
 			var results = store.fetchSync();
-			assert.strictEqual(results[2].id, 4);
-			assert.strictEqual(results[3].id, 3);
+			// Move from a lower source index to a higher destination index because Memory previously had an
+			// off-by-one bug where it removing an updated item from a lower index and inserted it one past
+			// the correct destination index
+			assert.strictEqual(results[2].id, 2);
+			assert.strictEqual(results[3].id, 4);
 			assert.strictEqual(results[results.length - 1].id, 0);
 		},
 

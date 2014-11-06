@@ -84,7 +84,17 @@ define([
 			var destination;
 			if ('beforeId' in options) {
 				var beforeId = options.beforeId;
-				destination = beforeId !== null ? index[beforeId] : data.length;
+
+				if (beforeId === null) {
+					destination = data.length;
+				} else {
+					destination = index[beforeId];
+
+					// Account for the removed item
+					if (previousIndex < destination) {
+						--destination;
+					}
+				}
 
 				if (destination !== undefined) {
 					event.beforeId = beforeId;
