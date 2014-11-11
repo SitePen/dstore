@@ -49,6 +49,17 @@ define([
 			});
 		},
 
+		'fetchSync and fetchRangeSync results.totalLength': function () {
+			var results = store.fetchSync(),
+				rangeResults = store.fetchRangeSync({ start: 0, end: 1 });
+
+			assert.isNumber(results.totalLength);
+			assert.isNumber(rangeResults.totalLength);
+
+			assert(results.totalLength, results.length);
+			assert.strictEqual(rangeResults.totalLength, results.totalLength);
+		},
+
 		'Model': function () {
 			assert.strictEqual(store.getSync(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.getSync(3).describe(), 'three is a prime');
