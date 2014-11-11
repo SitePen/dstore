@@ -407,6 +407,23 @@ define([
 			assert.notDeepEqual(sourceCollection.data, subCollection.data);
 		},
 
+		'subclasses can provide initial `data` at runtime': function () {
+			var expectedData = [ 1, 2, 3 ];
+
+			var TestStore = declare(Memory, {
+				constructor: function () {
+					this.data = expectedData;
+				},
+				setData: function (data) {
+					this.actualData = data;
+					this.inherited(arguments);
+				}
+			});
+
+			var testStore = new TestStore();
+			assert.deepEqual(testStore.actualData, expectedData);
+		},
+
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
 			return function before() {
 				store = new Memory({data: data});

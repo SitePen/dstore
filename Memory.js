@@ -20,7 +20,13 @@ define([
 
 			// Add a version property so subcollections can detect when they're using stale data
 			this.storage.version = 0;
+		},
 
+		postscript: function () {
+			this.inherited(arguments);
+
+			// Set the data in `postscript` so subclasses can override `data` in their constructors
+			// (e.g., a LocalStorage store that retrieves its data from localStorage)
 			this.setData(this.data || []);
 		},
 
