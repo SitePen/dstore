@@ -169,7 +169,6 @@ define([
 			}
 			var storage = this.storage;
 			storage.fullData = this.data = data;
-			this.total = data.length;
 			this._reindex();
 		},
 
