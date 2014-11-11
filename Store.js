@@ -55,7 +55,6 @@ define([
 			}
 			// the object the store can use for holding any local data or events
 			this.storage = new Evented();
-			this.storage.version = 0;
 			var store = this;
 			if (this.autoEmitEvents) {
 				// emit events when modification operations are called

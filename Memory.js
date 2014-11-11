@@ -18,6 +18,9 @@ define([
 			//		This provides any configuration information that will be mixed into the store.
 			//		This should generally include the data property to provide the starting set of data.
 
+			// Add a version property so subcollections can detect when they're using stale data
+			this.storage.version = 0;
+
 			this.setData(this.data || []);
 		},
 
