@@ -231,14 +231,8 @@ define([
 			});
 		},
 
-		_createSubCollection: function () {
-			var subCollection = this.inherited(arguments);
-
-			// Make sure a .data property is not carried over from this collection
-			// to corrupt the results of the new collection
-			subCollection.data = undefined;
-
-			return subCollection;
+		_includePropertyInSubCollection: function (name) {
+			return name !== 'data' && this.inherited(arguments);
 		}
 	});
 });

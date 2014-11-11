@@ -220,12 +220,16 @@ define([
 			var newCollection = lang.delegate(this.constructor.prototype);
 
 			for (var i in this) {
-				if (!(i in newCollection) || newCollection[i] !== this[i]) {
+				if (this._includePropertyInSubCollection(i, newCollection)) {
 					newCollection[i] = this[i];
 				}
 			}
 
 			return declare.safeMixin(newCollection, kwArgs);
+		},
+
+		_includePropertyInSubCollection: function (name, subCollection) {
+			return !(name in subCollection) || subCollection[name] !== this[name];
 		},
 
 		// queryLog: __QueryLogEntry[]
