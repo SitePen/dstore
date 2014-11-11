@@ -45,14 +45,17 @@ define([
 		constructor: function (options) {
 			// perform the mixin
 			options && declare.safeMixin(this, options);
-			if (this.Model) {
+
+			if (this.Model && this.Model.createSubclass) {
 				// we need a distinct model for each store, so we can
 				// save the reference back to this store on it.
 				// we always create a new model to be safe.
-				this.Model = declare(this.Model, {});
-				// give a reference back to the store for saving, etc.
-				this.Model.prototype._store = this;
+				this.Model = this.Model.createSubclass([]).extend({
+					// give a reference back to the store for saving, etc.
+					_store: this
+				});
 			}
+
 			// the object the store can use for holding any local data or events
 			this.storage = new Evented();
 			var store = this;

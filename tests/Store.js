@@ -216,6 +216,21 @@ define([
 				assert.strictEqual(instance, store);
 			});
 			assert.deepEqual(results, [0, 1, 2]);
+		},
+
+		'extends declare-based Model constructors and adds a _store reference on the prototype': function () {
+			var DeclaredTestModel = declare(null);
+
+			var store = new Store({ Model: DeclaredTestModel });
+			assert.notStrictEqual(store.Model, DeclaredTestModel);
+			assert.instanceOf(new store.Model(), DeclaredTestModel);
+		},
+
+		'does not extend Model constructors not based on declare': function () {
+			function TestModel() {}
+
+			var store = new Store({ Model: TestModel });
+			assert.strictEqual(store.Model, TestModel);
 		}
 	});
 });
