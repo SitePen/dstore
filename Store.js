@@ -404,7 +404,7 @@ define([
 			//		There are four types of events defined in this API:
 			//		- add - A new object was added
 			//		- update - An object was updated
-			//		- remove - An object was deleted
+			//		- delete - An object was deleted
 			//		- refresh - The entire collection has been changed, and the listener should reiterate over the results
 			// listener: Function
 			//		The listener function is called when objects in the query results are modified
@@ -413,7 +413,7 @@ define([
 			//
 			//		- The event object as the following properties:
 			//		- type - The event type (of the four above)
-			//		- data - This indicates the object that was create or modified.
+			//		- target - This indicates the object that was create or modified.
 			//		- id - If an object was removed, this indicates the object that was removed.
 			//		The next two properties will only be available if array tracking is employed,
 			//		which is usually provided by dstore/Trackable

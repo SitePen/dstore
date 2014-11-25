@@ -16,7 +16,7 @@ The dstore package includes several store implementations that can be used for t
 * `Request` - This is a simple server-based collection that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
 * `Rest` - This is a store built on `Request` that implements add, remove, and update operations using HTTP requests following REST conventions
 * `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
-* `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
+* `Trackable` - This a store mixin that adds index information to `add`, `update`, and `delete` events of tracked store instances. This adds a track() method for tracking stores.
 * `SimpleQuery` - This is a mixin with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 
 See the [Stores section](./docs/Stores.md) for more information these stores.
