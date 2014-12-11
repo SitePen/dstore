@@ -8,12 +8,26 @@ The dstore package includes several store implementations that can be used for t
 * `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
 * `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
 * `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
+* `Tree` - This is a store mixin that provides hierarchical querying functionality, defining a parent/child relationships for the display of data in a tree.
 * `SimpleQuery` - This is a mixin with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 * `Store` - This is a base store, with the base methods that are used by all other stores.
 
 ## Constructing Stores
 
 All the stores can be instantiated with an options argument to the constructor, to provide properties to be copied to the store. This can include methods to be added to the new store.
+
+Stores can also be constructed by combining a base store with mixins. The various store mixins are designed to be combined through dojo `declare` to create a class to instantiate a store. For example, if you wish to add tracking and tree functionality to a Memory store, we could combine these:
+
+    // create the class based on the Memory store with added functionality
+    var TrackedTreeMemoryStore = declare([Memory, Trackable, Tree]);
+    // now create an instance
+    var myStore = new TrackedTreeMemoryStore({data: [...]});
+
+The store mixins can only be used as mixins, but stores can be combined with other stores as well. For example, if we wanted to add the Rest functionality to the RequestMemory store (so the entire store data was retrieved from the server on construction, but data changes are sent to the server), we could write:
+
+    var RestMemoryStore = declare([Rest, RequestMemory]);
+    // now create an instance
+    var myStore = new RestMemoryStore({target: '/data-source/'});
 
 ## Memory
 
