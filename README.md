@@ -53,7 +53,7 @@ More information on writing your own tests with Intern can be found in the
 
 # Dependencies
 
-dstore's only required dependency is Dojo version 1.8 or higher. Running the unit tests requires the [intern-geezer](https://github.com/theintern/intern/tree/geezer) package (see the testing docs for [more information](./docs/Testing.md)). The extensions/RqlQuery module can leverage the [rql](https://github.com/persvr/rql) package, but the rql package is only need if you use this extension.
+dstore's only required dependency is Dojo version 1.8 or higher. Running the unit tests requires the [intern-geezer](https://github.com/theintern/intern/tree/geezer) package (see the testing docs for [more information](./docs/Testing.md)). The extensions/RqlQuery module can leverage the [rql](https://github.com/persvr/rql) package, but the rql package is only needed if you use this extension.
 
 # License
 
