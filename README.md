@@ -6,8 +6,6 @@ The dstore package is a data infrastructure framework, providing the tools for m
 * [Collection](./docs/Collection.md) - This is a list of objects, which can be iterated over, sorted, filtered, and monitored for changes.
 * [Store](./docs/Store.md) - A Store is a Collection that may also include the ability to identify, to add, remove, and update objects.
 
-
-
 # [Included Stores](./docs/Stores.md)
 
 The dstore package includes several store implementations that can be used for the needs of different applications. These include:
@@ -52,6 +50,10 @@ of how to setup testing is [available here](./docs/Testing.md). Tests can
 either be run using the browser, or using [Sauce Labs](https://saucelabs.com/).
 More information on writing your own tests with Intern can be found in the
 [Intern wiki](https://github.com/theintern/intern/wiki).
+
+# Dependencies
+
+dstore's only required dependency is Dojo version 1.8 or higher. Running the unit tests requires the [intern-geezer](https://github.com/theintern/intern/tree/geezer) package (see the testing docs for [more information](./docs/Testing.md)). The extensions/RqlQuery module can leverage the [rql](https://github.com/persvr/rql) package, but the rql package is only need if you use this extension.
 
 # License
 
