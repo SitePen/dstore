@@ -46,6 +46,8 @@ New filter methods can be created by subclassing `dstore/Filter` and adding new 
 
 For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializations of filters to URL queries for existing or new methods by overriding the `_renderFilterParams`. This method is called with a filter object (and by default is recursively called by combinatorial operators), and should return a string serialization of the filter, that will be inserted into the query string of the URL sent to the server.
 
+The filter objects themselves consist of tree structures. Each filter object has two properties, the operator `type`, which corresponds to whichever operator was used (like `eq` or `and`), and the `args`, which  is an array of values provided to the operator. With `and` and `or` operators, the arguments are other filter objects, forming a hierarchy. When filter operators are chained together (through sequential calls), they are combined with the `and` operator (each operator defined in a sub-filter object).
+
 ## Collection API
 
 The following property and methods are available on dstore collections:
