@@ -26,5 +26,6 @@ Method | Description
 `getChildren(parent)` | This retrieves the children of the provided parent object. This should return a new collection representing the children.
 `mayHaveChildren(parent)` | This should return true or false indicating whether or not a parent might have children. This should always return synchronously, as a way of checking if children might exist before actually retrieving all the children.
 `getRootCollection()` | This should return a collection of the top level objects in a hierarchical store.
+`emit(type, event)` | This can be used to dispatch event notifications, indicating changes to the objects in the collection. This should be called by `put`, `add`, and `remove` methods if the `autoEmit` property is `false`. This can also be used to notify stores if objects have changed from other sources (if a change has occurred on the server, from another user). There is a corresponding `on` method on collections for listening to data change events.
 
 Stores that can perform synchronous operations may provide analogous methods for `get`, `put`, `add`, and `remove` that end with `Sync` to provide synchronous support. For example `getSync(id)` will directly return an object instead of a promise. The `dstore/Memory` store provides `Sync` methods.

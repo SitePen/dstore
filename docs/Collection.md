@@ -95,6 +95,8 @@ Type | Description
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `delete` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
 
+There is also a corresponding `emit(type, event)` method (from the Store interface) that can be used to emit events when objects have changed.
+
 #### `track()`
 
 This method will create a new collection that will be tracked and updated as the parent collection changes. This will cause the events sent through the resulting collection to include an `index` and `previousIndex` property to indicate the position of the change in the collection. This is an optional method, and is usually provided by `dstore/Trackable`. For example, you can create an observable store class, by using `dstore/Trackable` as a mixin:
