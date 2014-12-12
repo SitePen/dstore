@@ -97,6 +97,10 @@ This is a mixin that provides basic support for hierarchical data. This implemen
 
 The Tree mixin may serve as an example for alternate hierarchical implementations. By implementing these methods as they are in `dstore/Tree`, one could change the property names for data that uses different parent references or indications of children. Another option would be define the children of an object as direct references from the parent object. In this case, you would define `getChildren` to associate the `parent` object with the returned collection and override `fetch` and `fetchRange` to return a promise to the array of the children of the parent.
 
+## Trackable
+
+The Trackable mixin adds functionality for tracking the index positions of objects as they are added, updated, or deleted. The `Trackable` mixin adds a `track()` method to create a new tracked collection. When events are fired (from modification operations, or other sources), the tracked can match the changes from the events to any cached data in the collection (which may be ordered by sorting, or filtered), and decorates the events with index positions. More information about tracked collections and events can be found in the collections [documentation](Collection.md#track).
+
 ## Resource Query Language
 
 [Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages serializes complex filter/queries into RQL (RQL supersets standard query parameters, and so simple queries are simply serialized as standard query parameters).

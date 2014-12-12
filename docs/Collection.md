@@ -95,7 +95,7 @@ Type | Description
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `delete` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
 
-There is also a corresponding `emit(type, event)` method (from the Store interface) that can be used to emit events when objects have changed.
+There is also a corresponding `emit(type, event)` method (from the [Store interface](Store.md#method-summary)) that can be used to emit events when objects have changed.
 
 #### `track()`
 
