@@ -1,263 +1,311 @@
-define([
-	'dojo/request',
-	'dojo/_base/lang',
-	'dojo/_base/array',
-	'dojo/json',
-	'dojo/_base/declare',
-	'./Store',
-	'./QueryResults'
-], function (request, lang, arrayUtil, JSON, declare, Store, QueryResults) {
+define(
+		[
+				'dojo/request', 'dojo/_base/lang', 'dojo/_base/array', 'dojo/json',
+				'dojo/_base/declare', './Store', './QueryResults'
+		],
+		function(request,lang,arrayUtil,JSON,declare,Store,QueryResults) {
 
-	var push = [].push;
+			var push = [].push;
 
-	return declare(Store, {
-		// summary:
-		//		This is a basic store for RESTful communicating with a server through JSON
-		//		formatted data. It extends dstore/Store.
+			return declare(
+					Store,
+					{
+						// summary:
+						// This is a basic store for RESTful communicating with a server through JSON
+						// formatted data. It extends dstore/Store.
 
-		constructor: function () {
-			// summary:
-			//		This is a basic store for RESTful communicating with a server through JSON
-			//		formatted data.
-			// options: dstore/JsonRest
-			//		This provides any configuration information that will be mixed into the store
-			this.headers || (this.headers = {});
-		},
+						constructor : function() {
+							// summary:
+							// This is a basic store for RESTful communicating with a server through JSON
+							// formatted data.
+							// options: dstore/JsonRest
+							// This provides any configuration information that will be mixed into the store
+							this.headers || ( this.headers = {} );
+						},
 
-		// headers: Object
-		//		Additional headers to pass in all requests to the server. These can be overridden
-		//		by passing additional headers to calls to the store.
-		headers: {},
+						// headers: Object
+						// Additional headers to pass in all requests to the server. These can be overridden
+						// by passing additional headers to calls to the store.
+						headers : {},
 
-		// parse: Function
-		//		This function performs the parsing of the response text from the server. This
-		//		defaults to JSON, but other formats can be parsed by providing an alternate
-		//		parsing function. If you do want to use an alternate format, you will probably
-		//		want to use an alternate stringify function for the serialization of data as well.
-		//		Also, if you want to support parsing a larger set of JavaScript objects
-		//		outside of strict JSON parsing, you can provide dojo/_base/json.fromJson as the parse function
-		parse: JSON.parse,
+						// parameters: Object
+						// A set of key/value pairs.
+						// Additional user-defined parameters to pass in all requests to the server. These can be overridden
+						// by passing additional parameters to calls to the store.
+						//
+						// Example:
+						//
+						// parameters:{
+						// myPara1:'value1',
+						// myPara2:'value2'
+						// }
 
-		// target: String
-		//		The target base URL to use for all requests to the server. This string will be
-		//		prepended to the id to generate the URL (relative or absolute) for requests
-		//		sent to the server
-		target: '',
+						parameters : {},
 
-		// sortParam: String
-		//		The query parameter to used for holding sort information. If this is omitted, than
-		//		the sort information is included in a functional query token to avoid colliding
-		//		with the set of name/value pairs.
+						// parse: Function
+						// This function performs the parsing of the response text from the server. This
+						// defaults to JSON, but other formats can be parsed by providing an alternate
+						// parsing function. If you do want to use an alternate format, you will probably
+						// want to use an alternate stringify function for the serialization of data as well.
+						// Also, if you want to support parsing a larger set of JavaScript objects
+						// outside of strict JSON parsing, you can provide dojo/_base/json.fromJson as the parse function
+						parse : JSON.parse,
 
-		// ascendingPrefix: String
-		//		The prefix to apply to sort property names that are ascending
-		ascendingPrefix: '+',
+						// target: String
+						// The target base URL to use for all requests to the server. This string will be
+						// prepended to the id to generate the URL (relative or absolute) for requests
+						// sent to the server
+						target : '',
 
-		// descendingPrefix: String
-		//		The prefix to apply to sort property names that are ascending
-		descendingPrefix: '-',
+						// sortParam: String
+						// The query parameter to used for holding sort information. If this is omitted, than
+						// the sort information is included in a functional query token to avoid colliding
+						// with the set of name/value pairs.
 
-		// accepts: String
-		//		Defines the Accept header to use on HTTP requests
-		accepts: 'application/json',
+						// ascendingPrefix: String
+						// The prefix to apply to sort property names that are ascending
+						ascendingPrefix : '+',
 
-		// useRangeHeaders: Boolean
-		//		The indicates if range limits (start and end) should be specified
-		//		a Range header, using items units. If this is set to true, a header
-		//		be included of the form:
-		//			Range: items=start-end
+						// descendingPrefix: String
+						// The prefix to apply to sort property names that are ascending
+						descendingPrefix : '-',
 
-		// rangeStartParam: String
-		//		The indicates if range limits (start and end) should be specified
-		//		in a query parameter, and what the start parameter should be.
-		//		This must be used in conjunction with the rangeCountParam
-		//		If this is not specified, the range will
-		//		included with a RQL style limit() parameter
-		// rangeCountParam: String
-		//		The indicates if range limits (start and end) should be specified
-		//		in a query parameter, and what the count parameter should be.
-		//		This must be used in conjunction with the rangeStartParam
-		//		If this is not specified, the range will
-		//		included with a RQL style limit() parameter
+						// accepts: String
+						// Defines the Accept header to use on HTTP requests
+						accepts : 'application/json',
 
-		fetch: function () {
-			var results = this._request();
-			return new QueryResults(results.data, {
-				response: results.response
-			});
-		},
+						// useRangeHeaders: Boolean
+						// The indicates if range limits (start and end) should be specified
+						// a Range header, using items units. If this is set to true, a header
+						// be included of the form:
+						// Range: items=start-end
 
-		fetchRange: function (kwArgs) {
-			var start = kwArgs.start,
-				end = kwArgs.end,
-				requestArgs = {};
-			if (this.useRangeHeaders) {
-				requestArgs.headers = this._renderRangeHeaders(start, end);
-			} else {
-				requestArgs.queryParams = this._renderRangeParams(start, end);
-			}
+						// rangeStartParam: String
+						// The indicates if range limits (start and end) should be specified
+						// in a query parameter, and what the start parameter should be.
+						// This must be used in conjunction with the rangeCountParam
+						// If this is not specified, the range will
+						// included with a RQL style limit() parameter
+						// rangeCountParam: String
+						// The indicates if range limits (start and end) should be specified
+						// in a query parameter, and what the count parameter should be.
+						// This must be used in conjunction with the rangeStartParam
+						// If this is not specified, the range will
+						// included with a RQL style limit() parameter
 
-			var results = this._request(requestArgs);
-			return new QueryResults(results.data, {
-				totalLength: results.total,
-				response: results.response
-			});
-		},
+						fetch : function() {
+							var results = this._request();
+							return new QueryResults( results.data, {
+								response : results.response
+							} );
+						},
 
-		_request: function (kwArgs) {
-			kwArgs = kwArgs || {};
+						fetchRange : function(kwArgs) {
+							var start = kwArgs.start, end = kwArgs.end, requestArgs = {};
+							if ( this.useRangeHeaders ) {
+								requestArgs.headers = this._renderRangeHeaders( start, end );
+							} else {
+								requestArgs.queryParams = this._renderRangeParams( start, end );
+							}
 
-			// perform the actual query
-			var headers = lang.delegate(this.headers, { Accept: this.accepts });
+							var results = this._request( requestArgs );
+							return new QueryResults( results.data, {
+								totalLength : results.total,
+								response : results.response
+							} );
+						},
 
-			if ('headers' in kwArgs) {
-				lang.mixin(headers, kwArgs.headers);
-			}
+						_request : function(kwArgs) {
+							kwArgs = kwArgs || {};
 
-			var queryParams = this._renderQueryParams(),
-				requestUrl = this.target;
+							// perform the actual query
+							var headers = lang.delegate( this.headers, {
+								Accept : this.accepts
+							} );
 
-			if ('queryParams' in kwArgs) {
-				push.apply(queryParams, kwArgs.queryParams);
-			}
+							if ( 'headers' in kwArgs ) {
+								lang.mixin( headers, kwArgs.headers );
+							}
 
-			if (queryParams.length > 0) {
-				requestUrl += '?' + queryParams.join('&');
-			}
+							var parameters=this.parameters;
+							if ( 'parameters' in kwArgs ) {
+								lang.mixin( parameters, kwArgs.parameters );
+							}
 
-			var response = request(requestUrl, {
-				method: 'GET',
-				headers: headers
-			});
-			var collection = this;
-			return {
-				data: response.then(function (response) {
-					var results = collection.parse(response);
-					// support items in the results
-					results = results.items || results;
-					for (var i = 0, l = results.length; i < l; i++) {
-						results[i] = collection._restore(results[i], true);
-					}
-					return results;
-				}),
-				total: response.response.then(function (response) {
-					var total = response.data.total;
-					if (total > -1) {
-						// if we have a valid positive number from the data,
-						// we can use that
-						return total;
-					}
-					var range = response.getHeader('Content-Range');
-					return range && (range = range.match(/\/(.*)/)) && +range[1];
-				}),
-				response: response.response
-			};
-		},
+							var queryParams = this._renderQueryParams(), 
+							userParams = this._renderUserParams( parameters ), requestUrl = this.target;
 
-		_renderFilterParams: function (filter) {
-			// summary:
-			//		Constructs filter-related params to be inserted into the query string
-			// returns: String
-			//		Filter-related params to be inserted in the query string
-			var type = filter.type;
-			var args = filter.args;
-			if (!type) {
-				return [''];
-			}
-			if (type === 'string') {
-				return [args[0]];
-			}
-			if (type === 'and' || type === 'or') {
-				return [arrayUtil.map(filter.args, function (arg) {
-					// render each of the arguments to and or or, then combine by the right operator
-					var renderedArg = this._renderFilterParams(arg);
-					return ((arg.type === 'and' || arg.type === 'or') && arg.type !== type) ?
-						// need to observe precedence in the case of changing combination operators
-						'(' + renderedArg + ')' : renderedArg;
-				}, this).join(type === 'and' ? '&' : '|')];
-			}
-			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(args[1])];
-		},
-		_renderSortParams: function (sort) {
-			// summary:
-			//		Constructs sort-related params to be inserted in the query string
-			// returns: String
-			//		Sort-related params to be inserted in the query string
+							if ( 'queryParams' in kwArgs ) {
+								push.apply( queryParams, kwArgs.queryParams );
+							}
 
-			var sortString = arrayUtil.map(sort, function (sortOption) {
-				var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-				return prefix + encodeURIComponent(sortOption.property);
-			}, this);
+							if ( queryParams.length > 0 || userParams.length > 0 ) {
+								requestUrl += '?' + queryParams.join( '&' ) + userParams.join( '&' );
+							}
 
-			var params = [];
-			if (sortString) {
-				params.push(this.sortParam
-					? encodeURIComponent(this.sortParam) + '=' + sortString
-					: 'sort(' + sortString + ')'
-				);
-			}
-			return params;
-		},
-		_renderRangeParams: function (start, end) {
-			// summary:
-			//		Constructs range-related params to be inserted in the query string
-			// returns: String
-			//		Range-related params to be inserted in the query string
-			var params = [];
-			if (this.rangeStartParam) {
-				params.push(
-					this.rangeStartParam + '=' + start,
-					this.rangeCountParam + '=' + (end - start)
-				);
-			} else {
-				params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
-			}
-			return params;
-		},
+							var response = request( requestUrl, {
+								method : 'GET',
+								headers : headers
+							} );
+							var collection = this;
+							return {
+								data : response.then( function(response) {
+									var results = collection.parse( response );
+									// support items in the results
+									results = results.items || results;
+									for ( var i = 0, l = results.length; i < l; i++ ) {
+										results[ i ] = collection._restore( results[ i ], true );
+									}
+									return results;
+								} ),
+								total : response.response.then( function(response) {
+									var total = response.data.total;
+									if ( total > -1 ) {
+										// if we have a valid positive number from the data,
+										// we can use that
+										return total;
+									}
+									var range = response.getHeader( 'Content-Range' );
+									return range && ( range = range.match( /\/(.*)/ ) )
+											&& +range[ 1 ];
+								} ),
+								response : response.response
+							};
+						},
 
-		_renderQueryParams: function () {
-			var queryParams = [];
+						_renderFilterParams : function(filter) {
+							// summary:
+							// Constructs filter-related params to be inserted into the query string
+							// returns: String
+							// Filter-related params to be inserted in the query string
+							var type = filter.type;
+							var args = filter.args;
+							if ( !type ) {
+								return [
+									''
+								];
+							}
+							if ( type === 'string' ) {
+								return [
+									args[ 0 ]
+								];
+							}
+							if ( type === 'and' || type === 'or' ) {
+								return [
+									arrayUtil
+											.map(
+													filter.args,
+													function(arg) {
+														// render each of the arguments to and or or, then combine by the right operator
+														var renderedArg = this
+																._renderFilterParams( arg );
+														return ( ( arg.type === 'and' || arg.type === 'or' ) && arg.type !== type ) ?
+														// need to observe precedence in the case of changing combination operators
+														'(' + renderedArg + ')'
+																: renderedArg;
+													}, this ).join( type === 'and' ? '&' : '|' )
+								];
+							}
+							return [
+								encodeURIComponent( args[ 0 ] ) + '='
+										+ ( type === 'eq' ? '' : type + '=' )
+										+ encodeURIComponent( args[ 1 ] )
+							];
+						},
+						_renderSortParams : function(sort) {
+							// summary:
+							// Constructs sort-related params to be inserted in the query string
+							// returns: String
+							// Sort-related params to be inserted in the query string
 
-			arrayUtil.forEach(this.queryLog, function (entry) {
-				var type = entry.type,
-					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
+							var sortString = arrayUtil.map( sort, function(sortOption) {
+								var prefix = sortOption.descending ? this.descendingPrefix
+										: this.ascendingPrefix;
+								return prefix + encodeURIComponent( sortOption.property );
+							}, this );
 
-				if (this[renderMethod]) {
-					push.apply(queryParams, this[renderMethod].apply(this, entry.normalizedArguments));
-				} else {
-					console.warn('Unable to render query params for "' + type + '" query', entry);
-				}
-			}, this);
+							var params = [];
+							if ( sortString ) {
+								params.push( this.sortParam ? encodeURIComponent( this.sortParam )
+										+ '=' + sortString : 'sort(' + sortString + ')' );
+							}
+							return params;
+						},
+						_renderRangeParams : function(start,end) {
+							// summary:
+							// Constructs range-related params to be inserted in the query string
+							// returns: String
+							// Range-related params to be inserted in the query string
+							var params = [];
+							if ( this.rangeStartParam ) {
+								params.push( this.rangeStartParam + '=' + start,
+										this.rangeCountParam + '=' + ( end - start ) );
+							} else {
+								params.push( 'limit(' + ( end - start )
+										+ ( start ? ( ',' + start ) : '' ) + ')' );
+							}
+							return params;
+						},
+						_renderUserParams : function(parameters) {
+							// summary:
+							// Constructs user-defined parameters to be inserted in the query string
 
-			return queryParams;
-		},
+							var params = [];
+							for ( var property in parameters ) {
+								params.push( encodeURIComponent( property ) + '='
+										+ encodeURIComponent( parameters[property] )
 
-		_renderUrl: function () {
-			// summary:
-			//		Constructs the URL used to fetch the data.
-			// returns: String
-			//		The URL of the data
+								);
+							}
+							return params;
 
-			var queryParams = this._renderQueryParams();
-			var url = this.target;
-			if (queryParams.length > 0) {
-				url += '?' + queryParams.join('&');
-			}
-			return url;
-		},
+						},
+						_renderQueryParams : function() {
+							var queryParams = [];
 
-		_renderRangeHeaders: function (start, end) {
-			// summary:
-			//		Applies a Range header if this collection incorporates a range query
-			// headers: Object
-			//		The headers to which a Range property is added
+							arrayUtil.forEach( this.queryLog, function(entry) {
+								var type = entry.type, renderMethod = '_render'
+										+ type[ 0 ].toUpperCase() + type.substr( 1 ) + 'Params';
 
-			var value = 'items=' + start + '-' + (end - 1);
-			return {
-				'Range': value,
-				'X-Range': value //set X-Range for Opera since it blocks "Range" header
-			};
-		}
-	});
+								if ( this[ renderMethod ] ) {
+									push.apply( queryParams, this[ renderMethod ].apply( this,
+											entry.normalizedArguments ) );
+								} else {
+									console.warn( 'Unable to render query params for "' + type
+											+ '" query', entry );
+								}
+							}, this );
 
-});
+							return queryParams;
+						},
+
+						_renderUrl : function() {
+							// summary:
+							//		Constructs the URL used to fetch the data.
+							// returns: String
+							//		The URL of the data
+
+							var queryParams = this._renderQueryParams();
+							var url = this.target;
+							if ( queryParams.length > 0 ) {
+								url += '?' + queryParams.join( '&' );
+							}
+							return url;
+						},
+
+						_renderRangeHeaders : function(start,end) {
+							// summary:
+							//		Applies a Range header if this collection incorporates a range query
+							// headers: Object
+							//		The headers to which a Range property is added
+
+							var value = 'items=' + start + '-' + ( end - 1 );
+							return {
+								'Range' : value,
+								'X-Range' : value
+							//set X-Range for Opera since it blocks "Range" header
+							};
+						}
+					} );
+
+		} );
