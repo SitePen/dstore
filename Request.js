@@ -130,18 +130,18 @@ define([
 			}
 
 			var parameters = this.parameters;
-			if ( 'parameters' in kwArgs ) {
+			if ('parameters' in kwArgs) {
 				lang.mixin( parameters, kwArgs.parameters );
 			}
 
 			var queryParams = this._renderQueryParams(), userParams = this
 					._renderUserParams( parameters ), requestUrl = this.target;
 
-			if ( 'queryParams' in kwArgs ) {
-				push.apply( queryParams, kwArgs.queryParams );
+			if ('queryParams' in kwArgs) {
+				push.apply(queryParams, kwArgs.queryParams );
 			}
 
-			if ( queryParams.length > 0 || userParams.length > 0 ) {
+			if (queryParams.length > 0 || userParams.length > 0) {
 				requestUrl += '?' + queryParams.join( '&' ) + userParams.join( '&' );
 			}
 
