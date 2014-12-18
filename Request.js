@@ -119,16 +119,14 @@ define([
 			});
 		},						
 
-		_request : function(kwArgs) {
+		_request: function (kwArgs) {
 			kwArgs = kwArgs || {};
 
 			// perform the actual query
-			var headers = lang.delegate( this.headers, {
-				Accept : this.accepts
-			} );
+			var headers = lang.delegate(this.headers, { Accept: this.accepts });
 
-			if ( 'headers' in kwArgs ) {
-				lang.mixin( headers, kwArgs.headers );
+			if ('headers' in kwArgs) {
+				lang.mixin(headers, kwArgs.headers);
 			}
 
 			var parameters = this.parameters;
@@ -147,108 +145,111 @@ define([
 				requestUrl += '?' + queryParams.join( '&' ) + userParams.join( '&' );
 			}
 
-			var response = request( requestUrl, {
-				method : 'GET',
-				headers : headers
-			} );
+			var response = request(requestUrl, {
+				method: 'GET',
+				headers: headers
+			});
 			var collection = this;
 			return {
-				data : response.then( function(response) {
-					var results = collection.parse( response );
+				data: response.then(function (response) {
+					var results = collection.parse(response);
 					// support items in the results
 					results = results.items || results;
-					for ( var i = 0, l = results.length; i < l; i++ ) {
-						results[ i ] = collection._restore( results[ i ], true );
+					for (var i = 0, l = results.length; i < l; i++) {
+						results[i] = collection._restore(results[i], true);
 					}
 					return results;
-				} ),
-				total : response.response.then( function(response) {
+				}),
+				total: response.response.then(function (response) {
 					var total = response.data.total;
-					if ( total > -1 ) {
+					if (total > -1) {
 						// if we have a valid positive number from the data,
 						// we can use that
 						return total;
 					}
-					var range = response.getHeader( 'Content-Range' );
-					return range && ( range = range.match( /\/(.*)/ ) )
-							&& +range[ 1 ];
-				} ),
-				response : response.response
+					var range = response.getHeader('Content-Range');
+					return range && (range = range.match(/\/(.*)/)) && +range[1];
+				}),
+				response: response.response
 			};
 		},
 
-		_renderFilterParams : function(filter) {
+		_renderFilterParams: function (filter) {
 			// summary:
-			// Constructs filter-related params to be inserted into the query string
+			//		Constructs filter-related params to be inserted into the query string
 			// returns: String
-			// Filter-related params to be inserted in the query string
+			//		Filter-related params to be inserted in the query string
 			var type = filter.type;
 			var args = filter.args;
-			if ( !type ) {
-				return [
-					''
-				];
+			if (!type) {
+				return [''];
 			}
-			if ( type === 'string' ) {
-				return [
-					args[ 0 ]
-				];
+			if (type === 'string') {
+				return [args[0]];
 			}
-			if ( type === 'and' || type === 'or' ) {
-				return [
-					arrayUtil
-							.map(
-									filter.args,
-									function(arg) {
-										// render each of the arguments to and or or, then combine by the right operator
-										var renderedArg = this
-												._renderFilterParams( arg );
-										return ( ( arg.type === 'and' || arg.type === 'or' ) && arg.type !== type ) ?
-										// need to observe precedence in the case of changing combination operators
-										'(' + renderedArg + ')'
-												: renderedArg;
-									}, this ).join( type === 'and' ? '&' : '|' )
-				];
+			if (type === 'and' || type === 'or') {
+				return [arrayUtil.map(filter.args, function (arg) {
+					// render each of the arguments to and or or, then combine by the right operator
+					var renderedArg = this._renderFilterParams(arg);
+					return ((arg.type === 'and' || arg.type === 'or') && arg.type !== type) ?
+						// need to observe precedence in the case of changing combination operators
+						'(' + renderedArg + ')' : renderedArg;
+				}, this).join(type === 'and' ? '&' : '|')];
 			}
-			return [
-				encodeURIComponent( args[ 0 ] ) + '='
-						+ ( type === 'eq' ? '' : type + '=' )
-						+ encodeURIComponent( args[ 1 ] )
-			];
+			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(args[1])];
 		},
-		_renderSortParams : function(sort) {
+		_renderSortParams: function (sort) {
 			// summary:
-			// Constructs sort-related params to be inserted in the query string
+			//		Constructs sort-related params to be inserted in the query string
 			// returns: String
-			// Sort-related params to be inserted in the query string
+			//		Sort-related params to be inserted in the query string
 
-			var sortString = arrayUtil.map( sort, function(sortOption) {
-				var prefix = sortOption.descending ? this.descendingPrefix
-						: this.ascendingPrefix;
-				return prefix + encodeURIComponent( sortOption.property );
-			}, this );
+			var sortString = arrayUtil.map(sort, function (sortOption) {
+				var prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+				return prefix + encodeURIComponent(sortOption.property);
+			}, this);
 
 			var params = [];
-			if ( sortString ) {
-				params.push( this.sortParam ? encodeURIComponent( this.sortParam )
-						+ '=' + sortString : 'sort(' + sortString + ')' );
+			if (sortString) {
+				params.push(this.sortParam
+					? encodeURIComponent(this.sortParam) + '=' + sortString
+					: 'sort(' + sortString + ')'
+				);
 			}
 			return params;
 		},
-		_renderRangeParams : function(start,end) {
+		_renderRangeParams: function (start, end) {
 			// summary:
-			// Constructs range-related params to be inserted in the query string
+			//		Constructs range-related params to be inserted in the query string
 			// returns: String
-			// Range-related params to be inserted in the query string
+			//		Range-related params to be inserted in the query string
 			var params = [];
-			if ( this.rangeStartParam ) {
-				params.push( this.rangeStartParam + '=' + start,
-						this.rangeCountParam + '=' + ( end - start ) );
+			if (this.rangeStartParam) {
+				params.push(
+					this.rangeStartParam + '=' + start,
+					this.rangeCountParam + '=' + (end - start)
+				);
 			} else {
-				params.push( 'limit(' + ( end - start )
-						+ ( start ? ( ',' + start ) : '' ) + ')' );
+				params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
 			}
 			return params;
+		},
+
+		_renderQueryParams: function () {
+			var queryParams = [];
+
+			arrayUtil.forEach(this.queryLog, function (entry) {
+				var type = entry.type,
+					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
+
+				if (this[renderMethod]) {
+					push.apply(queryParams, this[renderMethod].apply(this, entry.normalizedArguments));
+				} else {
+					console.warn('Unable to render query params for "' + type + '" query', entry);
+				}
+			}, this);
+
+			return queryParams;
 		},
 		_renderUserParams : function(parameters) {
 			// summary:
@@ -264,52 +265,34 @@ define([
 			return params;
 
 		},
-		_renderQueryParams : function() {
-			var queryParams = [];
-
-			arrayUtil.forEach( this.queryLog, function(entry) {
-				var type = entry.type, renderMethod = '_render'
-						+ type[ 0 ].toUpperCase() + type.substr( 1 ) + 'Params';
-
-				if ( this[ renderMethod ] ) {
-					push.apply( queryParams, this[ renderMethod ].apply( this,
-							entry.normalizedArguments ) );
-				} else {
-					console.warn( 'Unable to render query params for "' + type
-							+ '" query', entry );
-				}
-			}, this );
-
-			return queryParams;
-		},
-
-		_renderUrl : function() {
+		_renderUrl: function () {
 			// summary:
-			// Constructs the URL used to fetch the data.
+			//		Constructs the URL used to fetch the data.
 			// returns: String
-			// The URL of the data
+			//		The URL of the data
 
 			var queryParams = this._renderQueryParams();
 			var url = this.target;
-			if ( queryParams.length > 0 ) {
-				url += '?' + queryParams.join( '&' );
+			if (queryParams.length > 0) {
+				url += '?' + queryParams.join('&');
 			}
 			return url;
 		},
 
-		_renderRangeHeaders : function(start,end) {
+		_renderRangeHeaders: function (start, end) {
 			// summary:
-			// Applies a Range header if this collection incorporates a range query
+			//		Applies a Range header if this collection incorporates a range query
 			// headers: Object
-			// The headers to which a Range property is added
+			//		The headers to which a Range property is added
 
-			var value = 'items=' + start + '-' + ( end - 1 );
+			var value = 'items=' + start + '-' + (end - 1);
 			return {
-				'Range' : value,
-				'X-Range' : value
-			// set X-Range for Opera since it blocks "Range" header
-					};
-				}
-			} );
+				'Range': value,
+				'X-Range': value //set X-Range for Opera since it blocks "Range" header
+			};
+		}
+	});
 
-} );
+});		
+		
+		
