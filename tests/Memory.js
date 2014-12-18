@@ -435,6 +435,48 @@ define([
 			assert.deepEqual(testStore.actualData, expectedData);
 		},
 
+		'sorting with null and numbers': function () {
+			var store = new Memory({
+				data: [
+					{id: 1, value: 1},
+					{id: 2, value: 2},
+					{id: 3, value: null},
+					{id: 4, value: -1}
+				]
+			});
+			var results = store.sort('value').fetchSync();
+			assert.equal(results[0].id, 4);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 2);
+			assert.equal(results[3].id, 3);
+			var results = store.sort('value', true).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 2);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 4);
+		},
+
+		'sorting with null and strings': function () {
+			var store = new Memory({
+				data: [
+					{id: 1, value: 'a'},
+					{id: 2, value: 'b'},
+					{id: 3, value: null},
+					{id: 4, value: ''}
+				]
+			});
+			var results = store.sort('value').fetchSync();
+			assert.equal(results[0].id, 4);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 2);
+			assert.equal(results[3].id, 3);
+			var results = store.sort('value', true).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 2);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 4);
+		},
+
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {
 			return function before() {
 				store = new Memory({data: data});

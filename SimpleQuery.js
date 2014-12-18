@@ -106,9 +106,9 @@ define([
 			// returns: Function?
 
 			return comparators[type] || this.inherited(arguments);
-		},
-
+		}
 		/* jshint ignore:start */
+		,
 		_createSortQuerier: function (sorted) {
 			return function (data) {
 				data = data.slice();
@@ -128,7 +128,7 @@ define([
 
 							comparison = aValue === bValue
 								? 0
-								: (!!descending === (aValue === null || aValue > bValue) ? -1 : 1);
+								: (!!descending === (aValue === null || aValue > bValue && bValue !== null) ? -1 : 1);
 						}
 
 						if (comparison !== 0) {
