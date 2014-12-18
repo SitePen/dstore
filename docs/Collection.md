@@ -150,7 +150,7 @@ For example, we could create a `getChildren` method that queried for children ob
 					// return the children of the parent
 					// or an empty array if the parent no longer exists
 					var parent = this.getSync(parentId);
-					return parent ? parent.children || [];
+					return parent ? parent.children : [];
 				};
 			}
 		})
