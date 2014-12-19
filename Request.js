@@ -22,6 +22,8 @@ define([
 			// options: dstore/JsonRest
 			//		This provides any configuration information that will be mixed into the store
 			this.headers || (this.headers = {});
+
+			this._targetContainsQueryString = this.target.lastIndexOf('?') >= 0;
 		},
 
 		// headers: Object
@@ -43,6 +45,9 @@ define([
 		//		prepended to the id to generate the URL (relative or absolute) for requests
 		//		sent to the server
 		target: '',
+
+		// _targetContainsQueryString: Boolean
+		//		A flag indicating whether the target contains a query string
 
 		// sortParam: String
 		//		The query parameter to used for holding sort information. If this is omitted, than
@@ -122,7 +127,7 @@ define([
 			}
 
 			if (queryParams.length > 0) {
-				requestUrl += '?' + queryParams.join('&');
+				requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
 			}
 
 			var response = request(requestUrl, {
