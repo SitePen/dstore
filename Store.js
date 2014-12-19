@@ -405,7 +405,6 @@ define([
 			//		- add - A new object was added
 			//		- update - An object was updated
 			//		- delete - An object was deleted
-			//		- refresh - The entire collection has been changed, and the listener should reiterate over the results
 			// listener: Function
 			//		The listener function is called when objects in the query results are modified
 			//		to affect the query result. The listener function is called with a single event object argument:
