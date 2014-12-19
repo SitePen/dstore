@@ -462,12 +462,26 @@ define([
 				filterArgs.forEach(function (entry) {
 					var type = entry.type;
 					var args = [].slice.call(entry.args, 0);
+					var name = args[0];
+					var value = args[1];
 					if (type === 'or') {
 						or(args);
 					} else if (type === 'and') {
 						processFilter(args);
+					} else if (type === 'eq') {
+						addCondition(name, value);
+					} else if (type === 'gt' || type === 'gte') {
+						var filterProperty = filterQuery[name] || {};
+						filterProperty.from = value;
+						filterProperty.excludeFrom = type === 'gt';
+						addCondition(name, filterProperty);
+					} else if (type === 'lt' || type === 'lte') {
+						var filterProperty = filterQuery[name] || {};
+						filterProperty.to = value;
+						filterProperty.excludeTo = type === 'gt';
+						addCondition(name, filterProperty);
 					} else {
-						addCondition(args[0], args[1]);
+						throw new Error('Unsupported filter type "' + type + '"');
 					}
 				});
 			}
