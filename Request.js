@@ -29,6 +29,21 @@ define([
 		//		by passing additional headers to calls to the store.
 		headers: {},
 
+
+		// parameters: Object
+		// A set of key/value pairs.
+		// Additional user-defined parameters to pass in all requests to the server. These can be overridden
+		// by passing additional parameters to calls to the store.
+		//
+		// Example:
+		//
+		// parameters:{
+		// myPara1:'value1',
+		// myPara2:'value2'
+		// }
+
+		parameters : {},
+
 		// parse: Function
 		//		This function performs the parsing of the response text from the server. This
 		//		defaults to JSON, but other formats can be parsed by providing an alternate
@@ -102,7 +117,7 @@ define([
 				totalLength: results.total,
 				response: results.response
 			});
-		},
+		},						
 
 		_request: function (kwArgs) {
 			kwArgs = kwArgs || {};
@@ -114,15 +129,20 @@ define([
 				lang.mixin(headers, kwArgs.headers);
 			}
 
-			var queryParams = this._renderQueryParams(),
-				requestUrl = this.target;
+			var parameters = this.parameters;
+			if ('parameters' in kwArgs) {
+				lang.mixin( parameters, kwArgs.parameters);
+			}
+
+			var queryParams = this._renderQueryParams(), userParams = this
+					._renderUserParams( parameters ), requestUrl = this.target;
 
 			if ('queryParams' in kwArgs) {
 				push.apply(queryParams, kwArgs.queryParams);
 			}
 
-			if (queryParams.length > 0) {
-				requestUrl += '?' + queryParams.join('&');
+			if (queryParams.length > 0 || userParams.length > 0) {
+				requestUrl += '?' + queryParams.join( '&' ) + userParams.join( '&' );
 			}
 
 			var response = request(requestUrl, {
@@ -231,7 +251,20 @@ define([
 
 			return queryParams;
 		},
+		_renderUserParams : function(parameters) {
+			// summary:
+			// Constructs user-defined parameters to be inserted in the query string
 
+			var params = [];
+			for ( var property in parameters ) {
+				params.push( encodeURIComponent( property ) + '='
+						+ encodeURIComponent( parameters[ property ] )
+
+				);
+			}
+			return params;
+
+		},
 		_renderUrl: function () {
 			// summary:
 			//		Constructs the URL used to fetch the data.
@@ -260,4 +293,6 @@ define([
 		}
 	});
 
-});
+});		
+		
+		
