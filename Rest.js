@@ -39,10 +39,10 @@ define([
 			// returns: Object
 			//		The object in the store that matches the given id.
 			options = options || {};
-			var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
+
 			var store = this;
-			return request(this.target + id, {
-				headers: headers
+			return this.issueGetRequest(id, {
+				headers: lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options)
 			}).then(function (response) {
 				return store._restore(store.parse(response), true);
 			});
@@ -61,28 +61,28 @@ define([
 			//		property if a specific id is to be used.
 			// returns: dojo/_base/Deferred
 			options = options || {};
-			var id = ('id' in options) ? options.id : this.getIdentity(object);
-			var hasId = typeof id !== 'undefined';
+
 			var store = this;
+
+			var id = ('id' in options) ? options.id : this.getIdentity(object);
 
 			var positionHeaders = 'beforeId' in options
 				? (options.beforeId === null
 					? { 'Put-Default-Position': 'end' }
 					: { 'Put-Before': options.beforeId })
-				: (!hasId || options.overwrite === false
+				: (id === undefined || options.overwrite === false
 					? { 'Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
-			var initialResponse = request(hasId ? this.target + id : this.target, {
-				method: hasId && !options.incremental ? 'PUT' : 'POST',
-				data: this.stringify(object),
+			var initialResponse = this.issuePutRequest(object, lang.delegate(options, {
+				id: id,
 				headers: lang.mixin({
 					'Content-Type': 'application/json',
-					Accept: this.accepts,
+					'Accept': this.accepts,
 					'If-Match': options.overwrite === true ? '*' : null,
 					'If-None-Match': options.overwrite === false ? '*' : null
 				}, positionHeaders, this.headers, options.headers)
-			});
+			}));
 			return initialResponse.then(function (response) {
 				var event = {};
 
@@ -123,15 +123,76 @@ define([
 			//		HTTP headers.
 			options = options || {};
 			var store = this;
-			return request(this.target + id, {
-				method: 'DELETE',
+			return this.issueRemoveRequest(id, lang.delegate(options, {
 				headers: lang.mixin({}, this.headers, options.headers)
-			}).then(function (response) {
+			})).then(function (response) {
 				var target = response && store.parse(response);
 				store.emit('delete', {id: id, target: target});
 				return response ? target : true;
 			});
+		},
+
+		renderObjectUrl: function (id /*=====, options=====*/) {
+			// summary:
+			//		Get the URL for the object with the specified id
+			// id: String
+			//		The object id
+			// options: Object
+			//		The options for the operation using the URL
+			// returns: String
+			//		The URL for the identified object
+			return this.target + id;
+		},
+
+		renderAddUrl: function (/*=====object, options=====*/) {
+			// summary:
+			//		Get the URL for adding the specified object
+			// object: Object
+			//		The object in question
+			// options: Object
+			//		The options for the operation using the URL
+			// returns: String
+			//		The URL for adding the specified object
+			return this.target;
+		},
+
+		issueGetRequest: function (id, options) {
+			// summary:
+			//		Make an HTTP request corresponding to a store `get` operation
+			// id: String
+			//		The id of the object to get
+			// options: Object
+			//		The options for this operation
+			// returns: dojo/promise/Promise
+			return request(this.renderObjectUrl(id, options), { headers: options.headers });
+		},
+
+		issuePutRequest: function (object, options) {
+			// summary:
+			//		Make an HTTP request corresponding to a store `put` or `add` operation
+			// object: Object
+			//		The object for which the operation is performed
+			// options: __PutDirectives
+			//		The options for this operation
+			// returns: dojo/promise/Promise
+			var hasId = options.id !== undefined;
+			return request(hasId ? this.renderObjectUrl(object.id, options) : this.renderAddUrl(object, options), {
+				// TODO: document incremental
+				method: hasId && !options.incremental ? 'PUT' : 'POST',
+				data: this.stringify(object),
+				headers: options.headers
+			});
+		},
+
+		issueRemoveRequest: function (id, options) {
+			// summary:
+			//		Make an HTTP request corresponding to a store `remove`operation
+			// id: String
+			//		The id of the object to remove
+			// options: __HeaderOptions
+			//		The options for this operation
+			// returns: dojo/promise/Promise
+			return request.del(this.renderObjectUrl(id, options), { headers: options.headers });
 		}
 	});
-
 });

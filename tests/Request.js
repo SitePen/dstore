@@ -319,6 +319,14 @@ define([
 					});
 					assert.strictEqual(results.length, expectedResults.length);
 				});
+			},
+
+			'customizing fetch URL': function () {
+				// TODO
+			},
+
+			'customizing fetch HTTP request': function () {
+				// TODO
 			}
 		};
 	}

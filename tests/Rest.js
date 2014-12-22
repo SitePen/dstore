@@ -175,6 +175,36 @@ define([
 					assert.deepEqual(store.stringify(result), store.stringify(expectedObject));
 				});
 			});
+		},
+
+		'customizing request URLs': {
+			get: function () {
+				// TODO
+			},
+			put: function () {
+				// TODO
+			},
+			add: function () {
+				// TODO
+			},
+			remove: function () {
+				// TODO
+			}
+		},
+
+		'customizing HTTP requests':  {
+			get: function () {
+				// TODO
+			},
+			put: function () {
+				// TODO
+			},
+			add: function () {
+				// TODO
+			},
+			remove: function () {
+				// TODO
+			}
 		}
 	});
 	registerSuite(tests);
