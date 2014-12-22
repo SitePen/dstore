@@ -103,6 +103,10 @@ This method will create a new collection that will be tracked and updated as the
 
 	var TrackableMemory = declare([Memory, Trackable]);
 
+Trackable requires client side querying functionality. Client side querying functionality is available in `dstore/SimpleQuery` (and inherited by `dstore/Memory`). If you are using a `Request`, `Rest`, or other server side store, you will need to implement client-side query functionality (by implemented querier methods), or mixin `SimpleQuery`:
+
+	var TrackableRest = declare([Rest, SimpleQuery, Trackable]);
+
 Once we have created a new instance from this store, we can track a collection, which could be the top level store itself, or a downstream filtered or sorted collection:
 
 	var store = new TrackableMemory({data: ...});

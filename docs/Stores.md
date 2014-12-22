@@ -29,6 +29,10 @@ The store mixins can only be used as mixins, but stores can be combined with oth
     // now create an instance
     var myStore = new RestMemoryStore({target: '/data-source/'});
 
+Another common case is needing to add tracking to the `dstore/Rest` store, which requires client side querying, which be provided by `dstore/SimpleQuery`:
+
+var TrackedRestStore = declare([Rest, SimpleQuery, Trackable]);
+
 ## Memory
 
 The Memory store is a basic client-side in-memory store that can be created from a simple JavaScript array. When creating a memory store, the data (which should be an array of objects) can be provided in the `data` property to the constructor. The data should be an array of objects, and all the objects are considered to be existing objects and must have identities (this is not "creating" new objects, no events are fired for the objects that are provided, nor are identities assigned).
