@@ -25,7 +25,6 @@ define([
 	var cursorQueue = [];
 	var maxConcurrent = 1;
 	var cursorsRunning = 0;
-	var wildcardRe = /(.*)\*$/;
 	function queueCursor(cursor, priority, retry) {
 		// process the cursor queue, possibly submitting a cursor for continuation
 		if (cursorsRunning || cursorQueue.length) {
@@ -454,6 +453,7 @@ define([
 					processFilter(args, true);
 				} else if (type === 'sort') {
 					sortOption = args[0];
+					sortOption.querier = entry.querier;
 				}
 			});
 
@@ -471,15 +471,30 @@ define([
 					} else if (type === 'eq') {
 						addCondition(name, value);
 					} else if (type === 'gt' || type === 'gte') {
-						var filterProperty = filterQuery[name] || {};
+						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
 						filterProperty.from = value;
 						filterProperty.excludeFrom = type === 'gt';
 						addCondition(name, filterProperty);
 					} else if (type === 'lt' || type === 'lte') {
-						var filterProperty = filterQuery[name] || {};
+						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
 						filterProperty.to = value;
 						filterProperty.excludeTo = type === 'gt';
 						addCondition(name, filterProperty);
+					} else if (type === 'contains') {
+						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
+						filterProperty.contains = value;
+						addCondition(name, filterProperty);
+					} else if (type === 'match') {
+						value = value.source;
+						if (value[0] === '^' && !value.match(/[\{\}\(\)\[\]\.\,\$\*]/)) {
+							var filterProperty = filterQuery[name] || (filterQuery[name] = {});
+							value = value.slice(1);
+							filterProperty.from = value;
+							filterProperty.to = value + '~';
+							addCondition(name, filterProperty);
+						} else {
+							throw new Error('The match filter only supports simple prefix matching like /^starts with/');
+						}
 					} else {
 						throw new Error('Unsupported filter type "' + type + '"');
 					}
@@ -530,34 +545,16 @@ define([
 						(function(contains) {
 							var keyRange, first = contains[0];
 
-							var wildcard = first && first.match && first.match(wildcardRe);
-							if (wildcard) {
-								first = wildcard[1];
-								keyRange = IDBKeyRange.bound(first, first + '~');
-							} else {
-								keyRange = IDBKeyRange.only(first);
-							}
+							keyRange = IDBKeyRange.only(first);
 							newFilterValue = {
 								test: function (value) {
 									return contains.every(function(item) {
-										var wildcard = item && item.match && item.match(wildcardRe);
-										if (wildcard) {
-											item = wildcard[1];
-											return value && value.some(function(part) {
-												return part.slice(0, item.length) === item;
-											});
-										}
 										return value && value.indexOf(item) > -1;
 									} );
 								},
 								keyRange: keyRange
 							};
 						})(filterValue.contains);
-					} else if ((wildcard = filterValue.match && filterValue.match(wildcardRe))) {
-						// wildcard matching
-						var matchStart = wildcard[1];
-						newFilterValue = new RegExp('^' + matchStart);
-						newFilterValue.keyRange = IDBKeyRange.bound(matchStart, matchStart + '~');
 					}
 				}
 				filterQuery[key] = newFilterValue || filterValue;
@@ -633,7 +630,7 @@ define([
 			if (sortOption) {
 				// this isn't necessarily the best heuristic to determine the best index
 				var mainSort = sortOption[0];
-				if (mainSort.attribute === bestIndex || tryIndex(mainSort.attribute, 1)) {
+				if (mainSort.property === bestIndex || tryIndex(mainSort.property, 1)) {
 					descending = mainSort.descending;
 				} else {
 					// we need to sort afterwards now
@@ -662,7 +659,7 @@ define([
 				// no index, no arguments required
 				cursorRequestArgs = [];
 			}
-			// console.log("using index", bestIndex);
+
 			var cachedPosition = store.cachedPosition;
 			if (cachedPosition && cachedPosition.queryId === queryId &&
 					cachedPosition.offset < start && indexTries > 1) {
@@ -767,16 +764,18 @@ define([
 
 			if (postSorting) {
 				// we are using the index to do filtering, so we are going to have to sort the entire list
-				var sorter = this.queryEngine({}, options);
-				var sortedResults = lang.delegate(filteredResults.filter(yes).then(function(results) {
-					return sorter(results);
-				}));
-				sortedResults.total = filteredResults.total;
+				// we have to redirect the callback
+				var sortedCallback = callback;
+				callback = yes;
+				var sortedResults = when(deferred.promise, function (filteredResults) {
+					var sorted = sortOption.querier(filteredResults);
+					sorted.forEach(sortedCallback);
+					return sorted;
+				});
+				sortedResults.totalLength = filteredResults.totalLength;
 				return new QueryResults(sortedResults);
 			}
 			return deferred.promise;
-
-			return fetchOptions.rawResults ? filteredResults : queryFromFilter(filteredResults);
 		}
 	});
 

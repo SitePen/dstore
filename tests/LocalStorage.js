@@ -63,9 +63,11 @@ define([
 					if (options.range) {}
 				}
 				var forEachResults = collection.forEach(function(object){
+					console.log("id check", i, results[i], object.id);
 					assert.strictEqual(results[i++], object.id);
 				});
 				return forEachResults.then(function () {
+					console.log("results", results);
 					assert.strictEqual(results.length, i);
 					if (options && options.range) {
 						return forEachResults.totalLength.then(function(total){
@@ -102,33 +104,35 @@ define([
 			'{mappedTo: "C"}': testQuery({mappedTo: 'C'}, [3]),
 			// union
 			'[{name: "two"}, {mappedTo: "C"}, {mappedTo: "D"}]':
-				testQuery(
-					new Filter().or(
-						new Filter({name: 'two'}),
-						new Filter({mappedTo: 'C'}),
-						new Filter({mappedTo: 'D'})), [2, 3]),
+					testQuery(
+						new Filter().or(
+							new Filter({name: 'two'}),
+							new Filter({mappedTo: 'C'}),
+							new Filter({mappedTo: 'D'})), [2, 3]),
 			'{id: {from: 1, to: 3}}': testQuery(new Filter().gte('id', 1).lte('id', 3), [1, 2, 3]),
 			'{name: {from: "m", to: "three"}}': testQuery(new Filter().gte('name', 'm').lte('name', 'three'), [1, 3]),
 			'{name: {from: "one", to: "three"}}': testQuery(new Filter().gte('name', 'one').lte('name', 'three'), [1, 3]),
 			'{name: {from: "one", excludeFrom: true, to: "three"}}': 
-				testQuery(new Filter().gt('name', 'one').lte('name', 'three'), [3]),
+					testQuery(new Filter().gt('name', 'one').lte('name', 'three'), [3]),
 			'{name: {from: "one", to: "three", excludeTo: true}}':
-				testQuery(new Filter().gte('name', 'one').lt('name', 'three'), [1]),
+					testQuery(new Filter().gte('name', 'one').lt('name', 'three'), [1]),
 			'{name: {from: "one", excludeFrom: true, to: "three", excludeTo: true}}':
 					testQuery({name: {from: 'one', excludeFrom: true, to: 'three', excludeTo: true}}, []),
-			'{name: "t*"}': testQuery({name: 't*'}, {sort:[{attribute: 'name'}]}, [3, 2]),
+			'{name: "t*"}': testQuery(new Filter().match('name', /^t/), {sort:[{property: 'name'}]}, [3, 2]),
 			'{name: "not a number"}': testQuery({name: 'not a number'}, []),
-			'{words: {contains: ["orange"]}}': testQuery({words: {contains: ['orange']}}, {multi: true}, [2, 3]),
+			'{words: {contains: ["orange"]}}': testQuery(new Filter().contains('words', ['orange']), {multi: true}, [2, 3]),
 			'{words: {contains: ["or*"]}}': testQuery({words: {contains: ['or*']}}, {multi: true}, [2, 3]),
-			'{words: {contains: ["apple", "banana"]}}': testQuery({words: {contains: ['apple', 'banana']}}, {multi: true}, []),
-			'{words: {contains: ["orange", "banana"]}}': testQuery({words: {contains: ['orange', 'banana']}}, {multi: true}, [2]),
+			'{words: {contains: ["apple", "banana"]}}': testQuery(new Filter().contains('words', ['apple', 'banana']), {multi: true}, []),
+			'{words: {contains: ["orange", "banana"]}}':
+					testQuery(new Filter().contains('words', ['orange', 'banana']), {multi: true}, [2]),
 			'{id: {from: 0, to: 4}, words: {contains: ["orange", "banana"]}}':
-					testQuery({id: {from: 0, to: 4}, words: {contains: ['orange', 'banana']}}, {multi: true}, [2]),
+					testQuery(new Filter().gte('id', 0).lte('id', 4).contains('words', ['orange', 'banana']), {multi: true}, [2]),
 			// '{name: '*e'}': testQuery({name: '*e'}, [5, 1, 3]), don't know if we even support this yet
-			'{id: {from: 1, to: 3}}, sort by name +': testQuery({id: {from: 1, to: 3}}, {sort:[{attribute: 'name'}]}, [1, 3, 2]),
+			'{id: {from: 1, to: 3}}, sort by name +': testQuery(
+					new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name'}]}, [1, 3, 2]),
 			'{id: {from: 1, to: 3}}, sort by name -':
-					testQuery({id: {from: 1, to: 3}}, {sort:[{attribute: 'name', descending: true}]}, [2, 3, 1]),
-			'{id: {from: 0, to: 4}}, paged': testQuery({id: {from: 0, to: 4}}, {start: 1, count: 2}, [2, 3]),
+					testQuery(new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name', descending: true}]}, [2, 3, 1]),
+			'{id: {from: 0, to: 4}}, paged': testQuery(new Filter().gte('id', 0).lte('id', 4), {start: 1, count: 2}, [2, 3]),
 			'db interaction': function(){
 				return db.get(1).then(function(one){
 					assert.strictEqual(one.id, 1);

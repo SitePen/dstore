@@ -30,6 +30,11 @@ define([
 		},
 		match: function (value, required, object) {
 			return required.test(value, object);
+		},
+		contains: function (value, required) {
+			return arrayUtil.every(required, function (requiredValue) {
+				return arrayUtil.indexOf(value, requiredValue) > -1;
+			});
 		}
 	};
 
