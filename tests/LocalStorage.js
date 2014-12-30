@@ -2,10 +2,11 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'../db/has!indexeddb?../db/IndexedDB',
-	'../db/SQL',
+	'../db/has!sql?../db/SQL',
+	'../db/LocalStorage',
 	'dojo/promise/all',
 	'dojo/sniff'
-], function (registerSuite, assert, IndexedDB, SQL, all, has) {
+], function (registerSuite, assert, IndexedDB, SQL, LocalStorage, all, has) {
 	var data = [
 		{id: 1, name: 'one', prime: false, mappedTo: 'E', words: ['banana']},
 		{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', words: ['banana', 'orange']},
@@ -39,6 +40,7 @@ define([
 	if (window.openDatabase) {
 		registerSuite(testsForDB('dstore/db/SQL', SQL));
 	}
+	registerSuite(testsForDB('dstore/db/LocalStorage', LocalStorage));
 	function testsForDB(name, DB) {
 		// need to reset availability
 		dbConfig.available = null;
@@ -73,7 +75,7 @@ define([
 						});
 					}
 				}
-				var forEachResults = collection.forEach(function(object) {
+				var forEachResults = collection.forEach(function (object) {
 					console.log("id check", i, results[i], object.id);
 					assert.strictEqual(results[i++], object.id);
 				});
@@ -81,7 +83,7 @@ define([
 					console.log("results", results);
 					assert.strictEqual(results.length, i);
 					if (options && options.range) {
-						return forEachResults.totalLength.then(function(total) {
+						return forEachResults.totalLength.then(function (total) {
 							assert.strictEqual(results.length, total);
 						});
 					}
@@ -92,10 +94,12 @@ define([
 			name: name,
 			setup: function () {
 				var results = [];
-				return db.forEach(function(object) {
-					// clear the data
-					results.push(db.remove(object.id));
-				}).then(function() {
+				return db.fetch().then(function (data) {
+					// make a copy
+					data = data.slice(0);
+					for (var i = 0, l = data.length; i < l; i++) {
+						results.push(db.remove(data[i].id));
+					}
 					return all(results);
 				}).then(function() {
 					results = [];
@@ -158,10 +162,25 @@ define([
 							db.add({id: 6, name: 'six', prime: false, words: ['pineapple', 'orange juice']})
 						]).then(function() {
 						return all([
-							testQuery(new Filter().gte('name', 's').lte('name', 'u'), [6, 3])(),
+							testQuery(new Filter().gte('name', 's').lte('name', 'u'), {sort:[{property: 'id'}]}, [3, 6])(),
 							testQuery(new Filter().contains('words', [new Filter().match('words', /^orange/)]), {multi: true}, [3, 6])()
 						]);
 					});
+				});
+			},
+			'reload db': function () {
+				// reload the DB store and make sure the data is still there
+				dbConfig.openRequest = null;
+				db = new DB({dbConfig: dbConfig, storeName: 'test'});
+				return db.get(1).then(function(one) {
+					assert.strictEqual(one.id, 1);
+					assert.strictEqual(one.name, 'one');
+					assert.strictEqual(one.prime, false);
+					assert.strictEqual(one.mappedTo, 'E');
+					return all([
+						testQuery(new Filter().gte('name', 's').lte('name', 'u'), {sort:[{property: 'id'}]}, [3, 6])(),
+						testQuery(new Filter().contains('words', [new Filter().match('words', /^orange/)]), {multi: true}, [3, 6])()
+					]);
 				});
 			}
 

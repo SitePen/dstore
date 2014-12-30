@@ -1,4 +1,4 @@
-define(['./db/has!indexeddb?./db/IndexedDB:./db/SQL'],
+define(['./db/has!indexeddb?./db/IndexedDB:sql?./db/SQL:./db/LocalStorage'],
 	function(LocalDB){
 	//	module:
 	//		./store/LocalDB

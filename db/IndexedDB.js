@@ -447,12 +447,14 @@ define([
 			var filter;
 			var union;
 			var filterQuery = {};
+			var filterOperator;
 			var sortOption;
 			// iterate through the query log, applying each querier
 			this.queryLog.forEach(function (entry) {
 				var type = entry.type;
 				var args = entry.normalizedArguments;
 				if (type === 'filter') {
+					filterOperator = args;
 					var oldFilter = filter;
 					filter = oldFilter ? function (data) {
 						return entry.querier(oldFilter(data));
@@ -583,6 +585,7 @@ define([
 			return {
 				filter: union || filterQuery,
 				filterFunction: filter,
+				filterOperator: filterOperator || null,
 				sort: sortOption
 			};
 		},
@@ -646,7 +649,7 @@ define([
 				var value = filterQuery[key];
 				tryIndex(key, null, value && (value.from || value.to) ? 0.1 : 1);
 			}
-			var queryId = JSON.stringify(filterQuery) + '-' + JSON.stringify(sortOption);
+			var queryId = JSON.stringify(query.filterOperator) + '-' + JSON.stringify(sortOption);
 
 			var descending;
 			if (sortOption) {

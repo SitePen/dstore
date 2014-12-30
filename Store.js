@@ -121,8 +121,8 @@ define([
 		forEach: function (callback, thisObject) {
 			var collection = this;
 			return when(this.fetch(), function (data) {
-				for (var i = 0, l = data.length; i < l; i++) {
-					callback.call(thisObject, data[i], i, collection);
+				for (var i = 0, item; (item = data[i]) !== undefined; i++) {
+					callback.call(thisObject, item, i, collection);
 				}
 				return data;
 			});
