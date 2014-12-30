@@ -6,6 +6,7 @@ The dstore package includes several store implementations that can be used for t
 * `Request` - This is a simple server-based collection that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
 * `Rest` - This is a store built on `Request` that implements add, remove, and update operations using HTTP requests following REST conventions.
 * `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
+* `LocalDB` - This a store based on the browser's local database/storage capabilities. Data stored in this store will be persisted in the local browser.
 * `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
 * `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
 * `Tree` - This is a store mixin that provides hierarchical querying functionality, defining a parent/child relationships for the display of data in a tree.
@@ -73,6 +74,58 @@ This is the base class used for all stores, providing basic functionality for tr
 
 This store provides client-side querying functionality, but will load its data from the server, using the provided URL. This is
 an asynchronous store since queries and data retrieval may be made before the data has been retrieved from the server.
+
+## LocalDB
+
+This a store based on the browser's local database/storage capabilities. Data stored in this store will be persisted in the local browser. The LocalDB will automatically load the best storage implementation based on browser's capabilities. These storage implementation follow the same interface. `LocalDB` will attempt to load one of these stores (highest priority first, and these can also be used directly if you do not want automatic selection):
+
+* `dstore/db/IndexedDB` - This uses the IndexedDB API. This is available on the latest version of all major browsers (introduced in IE 10 and Safari 7.1/8, but with some serious bugs).
+* `dstore/db/SQL` - This uses the WebSQL API. This is available on Safari and Chrome.
+* `dstore/db/LocalStorage` - This uses the localStorage API. This is available on all major browsers, going back to IE8. The localStorage API does not provide any indexed querying, so this loads the entire database in memory. This can be very expensive for large datasets, so this store is generally avoided, except to provide functionality on old versions of IE.
+* `dstore/db/has` - This is not a store, but provides feature `has` tests for `indexeddb` and `sql`.
+
+The `LocalDB` stores requires a few extra parameters, not needed by other stores. First, it needs a database configuration object. A database configuration object defines all the stores or tables that are used by the stores, and which properties to index. There should be a single database configuration object for the entire application, and it should be passed to all the store instances. The configuration object should include a version (which should be incremented whenever the configuration is changed), and a set of stores in the `stores` object. Within the stores object, each property that will be used should be defined. Each property value should have a property configuration object with the following optional properties:
+
+* preference - This defines the priority of using this property for index-based querying. This should be a larger number for more unique properties. A boolean property would generally have a `preference` of 1, and a completely unique property should be 100.
+* indexed - This is a boolean indicating if a property should be indexed. This defaults to true.
+* multiEntry - This indicates the property will have an array of values, and should be indexed correspondingly.
+* autoIncrement - This indicates if a property should automatically increment.
+
+Alternately a number can be provided as a property configuration, and will be used as the `preference`.
+
+An example database configuration object is:
+
+    var dbConfig = {
+        version: 5,
+        stores: {
+            posts: {
+                name: 10,
+                id: {
+                    autoIncrement: true,
+                    preference: 100
+                },
+                tags: {
+                    multiEntry: true,
+                    preference: 5
+                },
+                content: {
+                    indexed: false
+                }
+            },
+            commments: {
+                author: {},
+                content: {
+                    indexed: false
+                }
+            }
+        }
+    };
+
+In addition, each store should define a `storeName` property to identify which database store corresponds to the store instance. For example:
+
+    var postsStore = new LocalDB({dbConfig: dbConfig, storeName: 'posts'});
+    var commentsStore = new LocalDB({dbConfig: dbConfig, storeName: 'comments'});
+
 
 ## Cache
 

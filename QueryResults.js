@@ -2,7 +2,7 @@ define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
 	function forEach(callback, instance) {
 		return when(this, function(data) {
 			for (var i = 0, l = data.length; i < l; i++){
-				callback.call(instance, data[i], data);
+				callback.call(instance, data[i], i, data);
 			}
 		});
 	}
@@ -18,7 +18,9 @@ define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
 						data.totalLength || data.length;
 				// make it available on the resolved data
 				data.totalLength = totalLength;
-				return totalLength;
+				// don't return the totalLength promise unless we need to, to avoid
+				// triggering a lazy promise
+				return !hasTotalLength && totalLength;
 			});
 			// make the totalLength available on the promise (whether through the options or the enventual
 			// access to the resolved data)

@@ -51,6 +51,7 @@ define(['dojo/_base/declare'], function (declare) {
 		lte: filterCreator('lte'),
 		gt: filterCreator('gt'),
 		gte: filterCreator('gte'),
+		contains: filterCreator('contains'),
 		'in': filterCreator('in'),
 		match: filterCreator('match')
 	});
