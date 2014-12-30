@@ -39,18 +39,18 @@ define([
 	if (window.openDatabase) {
 		registerSuite(testsForDB('dstore/db/SQL', SQL));
 	}
-	function testsForDB(name, DB){
+	function testsForDB(name, DB) {
 		// need to reset availability
 		dbConfig.available = null;
 		var db = new DB({dbConfig: dbConfig, storeName: 'test'});
 		var Filter = db.Filter;
-		function testQuery(filter, options, results){
-			if(!results){
+		function testQuery(filter, options, results) {
+			if (!results) {
 				results = options;
 				options = undefined;
 			}
-			return function(){
-				if(options && options.multi && has('trident')){
+			return function () {
+				if (options && options.multi && has('trident')) {
 					// sadly, IE doesn't support multiEntry yet
 					return;
 				}
@@ -60,9 +60,20 @@ define([
 					if (options.sort) {
 						collection = collection.sort(options.sort);
 					}
-					if (options.range) {}
+					if (options.range) {
+						var fetchedRange = collection.fetchRange(options.range);
+						return fetchedRange.then(function (fetched) {
+							fetched.forEach(function (object, i) {
+								assert.strictEqual(results[i], object.id);
+							});
+							assert.strictEqual(results.length, fetched.length);
+							return fetchedRange.totalLength.then(function (totalLength) {
+								assert.strictEqual(totalLength, options.range.count);
+							});							
+						});
+					}
 				}
-				var forEachResults = collection.forEach(function(object){
+				var forEachResults = collection.forEach(function(object) {
 					console.log("id check", i, results[i], object.id);
 					assert.strictEqual(results[i++], object.id);
 				});
@@ -70,7 +81,7 @@ define([
 					console.log("results", results);
 					assert.strictEqual(results.length, i);
 					if (options && options.range) {
-						return forEachResults.totalLength.then(function(total){
+						return forEachResults.totalLength.then(function(total) {
 							assert.strictEqual(results.length, total);
 						});
 					}
@@ -79,14 +90,14 @@ define([
 		}
 		return {
 			name: name,
-			setup: function(){
+			setup: function () {
 				var results = [];
-				return db.forEach(function(object){
+				return db.forEach(function(object) {
 					// clear the data
 					results.push(db.remove(object.id));
-				}).then(function(){
+				}).then(function() {
 					return all(results);
-				}).then(function(){
+				}).then(function() {
 					results = [];
 					// load new data
 					for (var i = 0; i < data.length; i++) {
@@ -117,11 +128,12 @@ define([
 			'{name: {from: "one", to: "three", excludeTo: true}}':
 					testQuery(new Filter().gte('name', 'one').lt('name', 'three'), [1]),
 			'{name: {from: "one", excludeFrom: true, to: "three", excludeTo: true}}':
-					testQuery({name: {from: 'one', excludeFrom: true, to: 'three', excludeTo: true}}, []),
+					testQuery(new Filter().gt('name', 'one').lt('name', 'three'), []),
 			'{name: "t*"}': testQuery(new Filter().match('name', /^t/), {sort:[{property: 'name'}]}, [3, 2]),
 			'{name: "not a number"}': testQuery({name: 'not a number'}, []),
 			'{words: {contains: ["orange"]}}': testQuery(new Filter().contains('words', ['orange']), {multi: true}, [2, 3]),
-			'{words: {contains: ["or*"]}}': testQuery({words: {contains: ['or*']}}, {multi: true}, [2, 3]),
+			'{words: {contains: ["or*"]}}': testQuery(new Filter().contains('words', [
+					new Filter().match('words', /^or/)]), {multi: true}, [2, 3]),
 			'{words: {contains: ["apple", "banana"]}}': testQuery(new Filter().contains('words', ['apple', 'banana']), {multi: true}, []),
 			'{words: {contains: ["orange", "banana"]}}':
 					testQuery(new Filter().contains('words', ['orange', 'banana']), {multi: true}, [2]),
@@ -132,9 +144,10 @@ define([
 					new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name'}]}, [1, 3, 2]),
 			'{id: {from: 1, to: 3}}, sort by name -':
 					testQuery(new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name', descending: true}]}, [2, 3, 1]),
-			'{id: {from: 0, to: 4}}, paged': testQuery(new Filter().gte('id', 0).lte('id', 4), {start: 1, count: 2}, [2, 3]),
-			'db interaction': function(){
-				return db.get(1).then(function(one){
+			'{id: {from: 0, to: 4}}, paged': testQuery(new Filter().gte('id', 0).lte('id', 4),
+					{range: {start: 1, end: 3, count: 4}}, [2, 3]),
+			'db interaction': function () {
+				return db.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1);
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
@@ -143,10 +156,10 @@ define([
 							db.remove(2),
 							db.remove(4),
 							db.add({id: 6, name: 'six', prime: false, words: ['pineapple', 'orange juice']})
-						]).then(function(){
+						]).then(function() {
 						return all([
-							testQuery({name: {from: 's', to: 'u'}}, [6, 3])(),
-							testQuery({words: {contains: ['orange*']}}, {multi: true}, [3, 6])()
+							testQuery(new Filter().gte('name', 's').lte('name', 'u'), [6, 3])(),
+							testQuery(new Filter().contains('words', [new Filter().match('words', /^orange/)]), {multi: true}, [3, 6])()
 						]);
 					});
 				});

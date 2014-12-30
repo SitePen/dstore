@@ -329,15 +329,23 @@ define([
 		},
 
 		fetch: function () {
-			return this._fetch(function () {
-				return true;
-			});
-		},
-		forEach: function (callback) {
-			return this._fetch(callback);
+			return this._fetch(yes);
 		},
 
-		_union: function (query, callback, start, count) {
+		fetchRange: function (range) {
+			return this._fetch(yes, range);
+		},
+
+		forEach: function (callback, thisObject) {
+			return this._fetch(function (object, index) {
+				callback.call(thisObject, object, index);
+			});
+		},
+
+		_union: function (query, callback, fetchOptions) {
+			fetchOptions = fetchOptions || {};
+			var start = fetchOptions.start || 0;
+			var end = fetchOptions.end || Infinity;
 			var sortOption = query.sort;
 			var parts = query.filter;
 			var deferred = new Deferred();
@@ -387,7 +395,7 @@ define([
 								return nextInQueues.push(next);
 							}
 						})) {
-						if (index >= start + count || toMerge.length === 0) {
+						if (index >= end || toMerge.length === 0) {
 							done = true;
 							return; // exit filter loop
 						}
@@ -411,7 +419,7 @@ define([
 					filterFunction: query.filterFunction,
 					filter: part,
 					sort: sortOption
-				}, function(object) {
+				}, function (object) {
 					if (done) {
 						return;
 					}
@@ -435,7 +443,7 @@ define([
 				return results;
 			});
 		},
-		_normalizeQuery: function (){
+		_normalizeQuery: function () {
 			var filter;
 			var union;
 			var filterQuery = {};
@@ -446,7 +454,7 @@ define([
 				var args = entry.normalizedArguments;
 				if (type === 'filter') {
 					var oldFilter = filter;
-					filter = oldFilter ? function(data){
+					filter = oldFilter ? function (data) {
 						return entry.querier(oldFilter(data));
 					} : entry.querier;
 
@@ -482,7 +490,7 @@ define([
 						addCondition(name, filterProperty);
 					} else if (type === 'contains') {
 						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
-						filterProperty.contains = value;
+						filterProperty.contains = value instanceof Array ? value : [value];
 						addCondition(name, filterProperty);
 					} else if (type === 'match') {
 						value = value.source;
@@ -544,11 +552,24 @@ define([
 						// this expects a multiEntry: true index
 						(function(contains) {
 							var keyRange, first = contains[0];
-
-							keyRange = IDBKeyRange.only(first);
+							if (typeof first === 'object' && first.type === 'match') {
+								if (first.args[1].source[0] === '^') {
+									var value = first.args[1].source.slice(1);
+									keyRange = IDBKeyRange.bound(value, value + '~');
+								}
+							} else {
+								keyRange = IDBKeyRange.only(first);
+							}
 							newFilterValue = {
 								test: function (value) {
 									return contains.every(function(item) {
+										if (typeof item === 'object' && item.type === 'match') {
+											// regular expression
+											var regex = item.args[1];
+											return value.some(function (value) {
+												return !!regex.test(value);
+											});
+										}
 										return value && value.indexOf(item) > -1;
 									} );
 								},
@@ -565,7 +586,7 @@ define([
 				sort: sortOption
 			};
 		},
-		_fetch: function(callback){
+		_fetch: function (callback, fetchOptions) {
 			var query = this._normalizeQuery();
 			var filterQuery = query.filter;
 			if (filterQuery instanceof Array) {
@@ -573,15 +594,15 @@ define([
 					callback(object);
 					// keep going
 					return true;
-				}, 0, Infinity);
+				}, fetchOptions);
 			}
 			return this._query(query, function (object) {
 				callback(object);
 				// keep going
 				return true;
-			});
+			}, fetchOptions);
 		},
-		_query: function (query, callback, thisObj, fetchOptions) {
+		_query: function (query, callback, fetchOptions) {
 			// summary:
 			//		Queries the store for objects.
 			// query: Object
@@ -594,7 +615,7 @@ define([
 			fetchOptions = fetchOptions || {};
 			var store = this;
 			var start = fetchOptions.start || 0;
-			var count = fetchOptions.count || Infinity;
+			var end = fetchOptions.end || Infinity;
 			var keyRange;
 			var alreadySearchedProperty;
 			var advance;
@@ -602,6 +623,7 @@ define([
 			var indexTries = 0;
 			var filterValue;
 			var deferred = new Deferred();
+			var resultsPromise = deferred.promise;
 			var query = this._normalizeQuery();
 			var filter = query.filterFunction;
 			var filterQuery = query.filter;
@@ -620,7 +642,7 @@ define([
 				}
 				indexTries++;
 			}
-			for(var key in filterQuery){
+			for (var key in filterQuery) {
 				var value = filterQuery[key];
 				tryIndex(key, null, value && (value.from || value.to) ? 0.1 : 1);
 			}
@@ -637,7 +659,7 @@ define([
 					var postSorting = true;
 					// we have to retrieve everything in this case
 					start = 0;
-					count = Infinity;
+					end = Infinity;
 				}
 			}
 			var cursorRequestArgs;
@@ -679,22 +701,20 @@ define([
 				}
 			}
 			// this is adjusted so we can compute the total more accurately
-			var filteredResults = {
-				totalLength: {
-					then: function (callback) {
-						// make this a lazy promise, only executing if we need to
-						var cachedCount = store.cachedCount[queryId];
-						if (cachedCount) {
-							return callback(adjustTotal(cachedCount));
-						} else {
-							var countPromise = (keyRange ? store._callOnStore('count', [keyRange], bestIndex) : store._callOnStore('count'));
-							return (this.then = countPromise.then(adjustTotal)).then.apply(this, arguments);
-						}
-						function adjustTotal(total) {
-							// we estimate the total count base on the matching rate
-							store.cachedCount[queryId] = total;
-							return Math.round((cachedPosition.offset + 1.01) / (cachedPosition.preFilterOffset + 1.01) * total);
-						}
+			var totalLength = {
+				then: function (callback, errback) {
+					// make this a lazy promise, only executing if we need to
+					var cachedCount = store.cachedCount[queryId];
+					if (cachedCount) {
+						return callback(adjustTotal(cachedCount));
+					} else {
+						var countPromise = (keyRange ? store._callOnStore('count', [keyRange], bestIndex) : store._callOnStore('count'));
+						return countPromise.then(adjustTotal).then(callback, errback);
+					}
+					function adjustTotal(total) {
+						// we estimate the total count base on the matching rate
+						store.cachedCount[queryId] = total;
+						return Math.round((cachedPosition.offset + 1.01) / (cachedPosition.preFilterOffset + 1.01) * total);
 					}
 				}
 			};
@@ -727,7 +747,8 @@ define([
 										cachedPosition.offset++;
 										if (cachedPosition.offset >= start) { // make sure we are after the start
 											all.push(item);
-											if (!callback.call(thisObj, item) || cachedPosition.offset >= start + count - 1) {
+											if (!callback(item, cachedPosition.offset - start) ||
+													cachedPosition.offset >= end - 1) {
 												// finished
 												cursorRequest.lastCursor = cursor;
 												deferred.resolve(all);
@@ -738,7 +759,8 @@ define([
 									}
 									// submit our cursor to the priority queue for continuation, now or when our turn comes up
 									return queueCursor(cursor, fetchOptions.priority, function () {
-										// retry function, that we provide to the queue to use if the cursor can't be continued due to interruption
+										// retry function, that we provide to the queue to use
+										// if the cursor can't be continued due to interruption
 										// if called, open the cursor again, and continue from our current position
 										advance = cachedPosition.preFilterOffset;
 										openCursor();
@@ -767,15 +789,14 @@ define([
 				// we have to redirect the callback
 				var sortedCallback = callback;
 				callback = yes;
-				var sortedResults = when(deferred.promise, function (filteredResults) {
-					var sorted = sortOption.querier(filteredResults);
+				var sortedResults = when(resultsPromise, function (filteredResults) {
+					var sorted = sortOption.querier(filteredResults).slice(start, end);
 					sorted.forEach(sortedCallback);
 					return sorted;
 				});
-				sortedResults.totalLength = filteredResults.totalLength;
-				return new QueryResults(sortedResults);
+				return new QueryResults(sortedResults, {totalLength: totalLength});
 			}
-			return deferred.promise;
+			return new QueryResults(resultsPromise, {totalLength: totalLength});
 		}
 	});
 
