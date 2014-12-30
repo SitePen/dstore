@@ -126,6 +126,7 @@ In addition, each store should define a `storeName` property to identify which d
     var postsStore = new LocalDB({dbConfig: dbConfig, storeName: 'posts'});
     var commentsStore = new LocalDB({dbConfig: dbConfig, storeName: 'comments'});
 
+Once created, these stores can be used like any other store.
 
 ## Cache
 

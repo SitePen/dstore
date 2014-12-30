@@ -35,6 +35,7 @@ The following methods are available on the filter objects. First are the propert
 * `gte`: Property values must be greater than or equal to the filter value argument.
 * `in`: An array should be passed in as the second argument, and property values must be equal to one of the values in the array.
 * `match`: Property values must match the provided regular expression.
+* `contains`: Filters for objects where the specified property's value is an array and the array contains any value that equals the provided value or satisfies the provided expression.
 
 The following are combinatorial methods:
 * `and`: This takes two arguments that are other filter objects, that both must be true.
