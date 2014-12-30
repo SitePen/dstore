@@ -63,58 +63,6 @@ define([
 		return true;
 	}
 
-	// a query results API based on a source with a filter method that is expected to be called only once.  All iterative methods are
-	// implemented in terms of forEach that will call the filter only once and subsequently use the promised results.
-	// will also copy the `total` property as well.
-	function queryFromFilter(source) {
-		var promisedResults, started, callbacks = [];
-		// this is the main iterative function that will ensure we will only do a low level iteratation of the result set once.
-		function forEach(callback, thisObj) {
-			if (started) {
-				// we have already iterated the query results, just hook into the existing promised results
-				callback && promisedResults.then(function(results) {
-					results.forEach(callback, thisObj);
-				});
-			} else {
-				// first call, start the filter iterator, getting the results as a promise, so we can connect to that each subsequent time
-				callback && callbacks.push(callback);
-				if (!promisedResults) {
-					promisedResults = source.filter(function(value) {
-						started = true;
-						for (var i = 0, l = callbacks.length; i < l; i++) {
-							callbacks[i].call(thisObj, value);
-						}
-						return true;
-					});
-				}
-			}
-			return promisedResults;
-		}
-
-		return {
-			total: source.total,
-			filter: function (callback, thisObj) {
-				var done;
-				return forEach(function(value) {
-					if (!done) {
-						done = !callback.call(thisObj, value);
-					}
-				});
-			},
-			forEach: forEach,
-			map: function (callback, thisObj) {
-				var mapped = [];
-				return forEach(function(value) {
-					mapped.push(callback.call(thisObj, value));
-				}).then(function() {
-					return mapped;
-				});
-			},
-			then: function (callback, errback) {
-				return forEach().then(callback, errback);
-			}
-		};
-	}
 
 	var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 	return declare([Store, SimpleQuery], {
@@ -343,6 +291,7 @@ define([
 		},
 
 		_union: function (query, callback, fetchOptions) {
+			// perform a union query
 			fetchOptions = fetchOptions || {};
 			var start = fetchOptions.start || 0;
 			var end = fetchOptions.end || Infinity;
@@ -444,6 +393,7 @@ define([
 			});
 		},
 		_normalizeQuery: function () {
+			// normalize the operators to a single query object
 			var filter;
 			var union;
 			var filterQuery = {};
@@ -525,7 +475,7 @@ define([
 			function addCondition(key, filterValue) {
 				// test all the filters as possible indices to drive the query
 				var range = false;
-				var wildcard, newFilterValue = null;
+				var newFilterValue = null;
 
 				if (typeof filterValue === 'boolean') {
 					// can't use booleans as filter keys
@@ -610,10 +560,6 @@ define([
 			//		Queries the store for objects.
 			// query: Object
 			//		The query to use for retrieving objects from the store.
-			// options: __QueryOptions?
-			//		The optional arguments to apply to the resultset.
-			// returns: dojo/store/api/Store.QueryResults
-			//		The results of the query, extended with iterative methods.
 
 			fetchOptions = fetchOptions || {};
 			var store = this;

@@ -7,10 +7,8 @@ define([
 	'dojo/_base/lang',
 	'dojo/promise/all'
 ], function (declare, Deferred, when, QueryResults, Store, lang, all) {
-	//	module:
-	//		./store/db/SQL
 	//	summary:
-	//		This module implements the Dojo object store API using the WebSQL database
+	//		This module implements the dstore API using the WebSQL database
 	function safeSqlName(name) {
 		if (name.match(/[^\w_]/)) {
 			throw new URIError('Illegal column name ' + name);
@@ -201,7 +199,8 @@ define([
 							this.executeSql('DELETE FROM ' + this.table + '_repeating_' + i + ' WHERE id=?', [id]);
 							var array = object[i];
 							for (var j = 0; j < array.length; j++) {
-								this.executeSql('INSERT INTO ' + this.table + '_repeating_' + i + ' (value, id) VALUES (?, ?)', [array[j], id]);
+								this.executeSql('INSERT INTO ' + this.table + '_repeating_' + i + ' (value, id) VALUES (?, ?)',
+									[array[j], id]);
 							}
 						}else{
 							cols.push(i + '=?');
@@ -218,7 +217,7 @@ define([
 			sql += cols.join(',') + ' WHERE ' + this.idProperty + '=?';
 			params.push(object[this.idProperty]);
 
-			return when(this.executeSql(sql, params), function (result) {
+			return when(this.executeSql(sql, params), function () {
 				return id;
 			});
 		},
@@ -236,7 +235,7 @@ define([
 			var params = [];
 			this.queryLog.forEach(function (query) {
 				if (query.type === 'filter') {
-					condition = (condition ? ' AND ' : '') + convertFilter(query.normalizedArguments[0]).join('');;
+					condition = (condition ? ' AND ' : '') + convertFilter(query.normalizedArguments[0]).join('');
 				} else if (query.type === 'sort') {
 					order = ' ORDER BY ' + query.normalizedArguments[0].map(function(sort) {
 						return table + '.' + sort.property + ' ' + (sort.descending ? 'desc' : 'asc');
@@ -261,7 +260,7 @@ define([
 								}).join(',') + ')'];
 							}
 						}
-						// else fall through
+						/* fall through */
 					case 'ne': case 'lt': case 'lte': case 'gt': case 'gte':
 						safeSqlName(column);
 						params.push(args[1]);
@@ -274,7 +273,7 @@ define([
 						return ['(', parts.join(sqlOperators[filter.type]), ')'];
 					case 'contains':
 						var repeatingTable = table + '_repeating_' + column;
-						return ['(', args[1].map(function(value, index) {
+						return ['(', args[1].map(function(value) {
 							var condition;
 							if (value && value.type) {
 								condition = 'value ' + convertFilter(value).slice(1).join('');
@@ -288,10 +287,13 @@ define([
 					case 'match':
 						var value = args[1].source;
 						if (value[0] === '^' && !value.match(/[\{\}\(\)\[\]\.\,\$\*]/)) {
+							/* jshint quotmark: false */
 							return [table + '.' + column, ' LIKE \'' + value.slice(1).replace(/'/g,"''") + '%\''];
 						} else {
 							throw new Error('The match filter only supports simple prefix matching like /^starts with/');
 						}
+						// js hint can't seem to tell that both branches break
+						/* fall through */
 					default:
 						throw new URIError('Invalid query syntax, ' + filter.type + ' not implemented');
 				}
@@ -330,7 +332,6 @@ define([
 		},
 
 		executeSql: function (sql, parameters) {
-			console.log("sql", sql);
 			// send it off to the DB
 			var deferred = new Deferred();
 			var result, error;
