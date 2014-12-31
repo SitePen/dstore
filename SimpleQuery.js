@@ -31,13 +31,13 @@ define([
 		match: function (value, required, object) {
 			return required.test(value, object);
 		},
-		contains: function (value, required) {
+		contains: function (value, required, object, key) {
 			var collection = this;
 			return arrayUtil.every(required, function (requiredValue) {
 				if (typeof requiredValue === 'object' && requiredValue.type) {
 					var comparator = collection._getFilterComparator(requiredValue.type);
 					return arrayUtil.some(value, function (item) {
-						return comparator(item, requiredValue.args[1]);
+						return comparator.call(collection, item, requiredValue.args[1], object, key);
 					});
 				}
 				return arrayUtil.indexOf(value, requiredValue) > -1;
@@ -65,7 +65,8 @@ define([
 					var secondArg = args[1];
 					return function (object) {
 						// get the value for the property and compare to expected value
-						return comparator.call(collection, queryAccessors && object.get ? object.get(firstArg) : object[firstArg], secondArg, object);
+						return comparator.call(collection,
+							queryAccessors && object.get ? object.get(firstArg) : object[firstArg], secondArg, object, firstArg);
 					};
 				}
 				switch (type) {
