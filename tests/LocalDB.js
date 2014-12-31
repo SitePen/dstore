@@ -47,9 +47,9 @@ define([
 		dbConfig.available = null;
 		var db = new DB({dbConfig: dbConfig, storeName: 'test'});
 		var Filter = db.Filter;
-		function testQuery(filter, options, results) {
-			if (!results) {
-				results = options;
+		function testQuery(filter, options, expectedResults) {
+			if (!expectedResults) {
+				expectedResults = options;
 				options = undefined;
 			}
 			return function () {
@@ -63,29 +63,30 @@ define([
 					if (options.sort) {
 						collection = collection.sort(options.sort);
 					}
-					if (options.range) {
-						var fetchedRange = collection.fetchRange(options.range);
-						return fetchedRange.then(function (fetched) {
-							fetched.forEach(function (object, i) {
-								assert.strictEqual(results[i], object.id);
-							});
-							assert.strictEqual(results.length, fetched.length);
-							return fetchedRange.totalLength.then(function (totalLength) {
-								assert.strictEqual(totalLength, options.range.count);
-							});							
-						});
-					}
 				}
 				var forEachResults = collection.forEach(function (object) {
-					console.log("id check", i, results[i], object.id);
-					assert.strictEqual(results[i++], object.id);
+					assert.strictEqual(expectedResults[i++], object.id);
 				});
 				return forEachResults.then(function () {
-					console.log("results", results);
-					assert.strictEqual(results.length, i);
-					if (options && options.range) {
-						return forEachResults.totalLength.then(function (total) {
-							assert.strictEqual(results.length, total);
+					assert.strictEqual(expectedResults.length, i);
+					var range = options && options.range || {start: 1, end: 3};
+					var expectedCount = expectedResults.length;
+					if (range) {
+						expectedResults = expectedResults.slice(range.start, range.end);
+						var fetchedRange = collection.fetchRange(range);
+						return fetchedRange.then(function (fetched) {
+							fetched.forEach(function (object, i) {
+								assert.strictEqual(expectedResults[i], object.id);
+							});
+							assert.strictEqual(expectedResults.length, fetched.length);
+							return fetchedRange.totalLength.then(function (totalLength) {
+								if (expectedCount > expectedResults.length) {
+									// IndexedDB will just estimate the count in this case
+									assert.isTrue(totalLength > expectedResults.length);
+								} else {
+									assert.strictEqual(totalLength, expectedCount);
+								}
+							});
 						});
 					}
 				});
@@ -112,9 +113,9 @@ define([
 				});
 			},
 			'{id: 2}': testQuery({id: 2}, [2]),
-			'{name: "four"}': testQuery({name: 'four'}, [4]),
+			'{name: "four"}': testQuery({name: 'four'}, {range: {start: 0, end: 1}}, [4]),
 			'{name: "two"}': testQuery({name: 'two'}, [2]),
-			'{even: true}': testQuery({even: true}, [2, 4]),
+			'{even: true}': testQuery({even: true}, {range: {start: 0, end: 1}}, [2, 4]),
 			'{even: true, name: "two"}': testQuery({even: true, name: 'two'}, [2]),
 			// test non-indexed values
 			'{mappedTo: "C"}': testQuery({mappedTo: 'C'}, [3]),
@@ -125,21 +126,22 @@ define([
 							new Filter({name: 'two'}),
 							new Filter({mappedTo: 'C'}),
 							new Filter({mappedTo: 'D'})), [2, 3]),
-			'{id: {from: 1, to: 3}}': testQuery(new Filter().gte('id', 1).lte('id', 3), [1, 2, 3]),
+			'{id: {from: 1, to: 3}}': testQuery(new Filter().gte('id', 1).lte('id', 3), {range: {start: 0, end: 1}}, [1, 2, 3]),
 			'{name: {from: "m", to: "three"}}': testQuery(new Filter().gte('name', 'm').lte('name', 'three'), [1, 3]),
 			'{name: {from: "one", to: "three"}}': testQuery(new Filter().gte('name', 'one').lte('name', 'three'), [1, 3]),
 			'{name: {from: "one", excludeFrom: true, to: "three"}}': 
-					testQuery(new Filter().gt('name', 'one').lte('name', 'three'), [3]),
+					testQuery(new Filter().gt('name', 'one').lte('name', 'three'), {range: {start: 0, end: 2}}, [3]),
 			'{name: {from: "one", to: "three", excludeTo: true}}':
 					testQuery(new Filter().gte('name', 'one').lt('name', 'three'), [1]),
 			'{name: {from: "one", excludeFrom: true, to: "three", excludeTo: true}}':
 					testQuery(new Filter().gt('name', 'one').lt('name', 'three'), []),
 			'{name: "t*"}': testQuery(new Filter().match('name', /^t/), {sort:[{property: 'name'}]}, [3, 2]),
-			'{name: "not a number"}': testQuery({name: 'not a number'}, []),
+			'{name: "not a number"}': testQuery({name: 'not a number'}, {range: {start: 0, end: 1}}, []),
 			'{words: {contains: ["orange"]}}': testQuery(new Filter().contains('words', ['orange']), {multi: true}, [2, 3]),
 			'{words: {contains: ["or*"]}}': testQuery(new Filter().contains('words', [
-					new Filter().match('words', /^or/)]), {multi: true}, [2, 3]),
-			'{words: {contains: ["apple", "banana"]}}': testQuery(new Filter().contains('words', ['apple', 'banana']), {multi: true}, []),
+					new Filter().match('words', /^or/)]), {multi: true, range: {start: 0, end: 1}}, [2, 3]),
+			'{words: {contains: ["apple", "banana"]}}': testQuery(new Filter().contains('words', ['apple', 'banana']),
+					{multi: true, range: {start: 0, end: 2}}, []),
 			'{words: {contains: ["orange", "banana"]}}':
 					testQuery(new Filter().contains('words', ['orange', 'banana']), {multi: true}, [2]),
 			'{id: {from: 0, to: 4}, words: {contains: ["orange", "banana"]}}':
@@ -148,9 +150,12 @@ define([
 			'{id: {from: 1, to: 3}}, sort by name +': testQuery(
 					new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name'}]}, [1, 3, 2]),
 			'{id: {from: 1, to: 3}}, sort by name -':
-					testQuery(new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name', descending: true}]}, [2, 3, 1]),
+					testQuery(new Filter().gte('id', 1).lte('id', 3), {
+						sort:[{property: 'name', descending: true}],
+						range: {start: 0, end: 1}
+					}, [2, 3, 1]),
 			'{id: {from: 0, to: 4}}, paged': testQuery(new Filter().gte('id', 0).lte('id', 4),
-					{range: {start: 1, end: 3, count: 4}}, [2, 3]),
+					{range: {start: 1, end: 3}}, [1, 2, 3, 4]),
 			'db interaction': function () {
 				return db.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1);

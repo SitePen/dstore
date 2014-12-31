@@ -297,7 +297,6 @@ define([
 			var end = fetchOptions.end || Infinity;
 			var sortOption = query.sort;
 			var parts = query.filter;
-			var deferred = new Deferred();
 			var sorter, sortOptions;
 			if (sortOption) {
 				sortOptions = {sort: sortOption};
@@ -311,16 +310,6 @@ define([
 			var totals = [];
 			var collectedCount = 0;
 			var inCount = 0;
-			deferred.totalLength = {
-				then: function () {
-					// do it lazily again
-					return all(totals).then(function(totals) {
-						return totals.reduce(function(a, b) {
-							return a + b;
-						}) * collectedCount / (inCount || 1);
-					}).then.apply(this, arguments);
-				}
-			};
 			var index = 0;
 			var queues = [];
 			var done;
@@ -328,8 +317,9 @@ define([
 			var results = [];
 			var store = this;
 			// wait for all the union segments to complete
-			return all(parts.map(function(part, i) {
+			return new QueryResults(all(parts.map(function(part, i) {
 				var queue = queues[i] = [];
+
 				function addToQueue(object) {
 					// to the queue that is kept for each individual query for merge sorting
 					queue.push(object);
@@ -388,8 +378,18 @@ define([
 					return results;
 				});
 			})).then(function() {
-				deferred.resolve(results);
 				return results;
+			}), {
+				totalLength: {
+					then: function () {
+						// do it lazily again
+						return all(totals).then(function(totals) {
+							return totals.reduce(function(a, b) {
+								return a + b;
+							}) * collectedCount / (inCount || 1);
+						}).then.apply(this, arguments);
+					}
+				}
 			});
 		},
 		_normalizeQuery: function () {
@@ -438,7 +438,7 @@ define([
 					} else if (type === 'lt' || type === 'lte') {
 						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
 						filterProperty.to = value;
-						filterProperty.excludeTo = type === 'gt';
+						filterProperty.excludeTo = type === 'lt';
 						addCondition(name, filterProperty);
 					} else if (type === 'contains') {
 						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
@@ -475,7 +475,6 @@ define([
 			function addCondition(key, filterValue) {
 				// test all the filters as possible indices to drive the query
 				var range = false;
-				var newFilterValue = null;
 
 				if (typeof filterValue === 'boolean') {
 					// can't use booleans as filter keys
@@ -487,17 +486,15 @@ define([
 						range = true;
 						(function(from, to) {
 							// convert a to/from object to a testable object with a keyrange
-							newFilterValue = {
-								test: function (value) {
-									return !from || from <= value &&
-											(!to || to >= value);
-								},
-								keyRange: from ?
+							filterValue.test = function (value) {
+								return !from || from <= value &&
+										(!to || to >= value);
+							};
+							filterValue.keyRange = from ?
 										  to ?
 										  IDBKeyRange.bound(from, to, filterValue.excludeFrom, filterValue.excludeTo) :
 										  IDBKeyRange.lowerBound(from, filterValue.excludeFrom) :
-										  IDBKeyRange.upperBound(to, filterValue.excludeTo)
-							};
+										  IDBKeyRange.upperBound(to, filterValue.excludeTo);
 						})(filterValue.from, filterValue.to);
 					} else if (typeof filterValue === 'object' && filterValue.contains) {
 						// contains is for matching any value in a given array to any value in the target indices array
@@ -512,25 +509,23 @@ define([
 							} else {
 								keyRange = IDBKeyRange.only(first);
 							}
-							newFilterValue = {
-								test: function (value) {
-									return contains.every(function(item) {
-										if (typeof item === 'object' && item.type === 'match') {
-											// regular expression
-											var regex = item.args[1];
-											return value.some(function (value) {
-												return !!regex.test(value);
-											});
-										}
-										return value && value.indexOf(item) > -1;
-									} );
-								},
-								keyRange: keyRange
+							filterValue.test = function (value) {
+								return contains.every(function(item) {
+									if (typeof item === 'object' && item.type === 'match') {
+										// regular expression
+										var regex = item.args[1];
+										return value.some(function (value) {
+											return !!regex.test(value);
+										});
+									}
+									return value && value.indexOf(item) > -1;
+								} );
 							};
+							filterValue.keyRange = keyRange;
 						})(filterValue.contains);
 					}
 				}
-				filterQuery[key] = newFilterValue || filterValue;
+				filterQuery[key] = filterValue;
 			}
 			return {
 				filter: union || filterQuery,
@@ -657,6 +652,12 @@ define([
 					if (cachedCount) {
 						return callback(adjustTotal(cachedCount));
 					} else {
+						if (cachedPosition.finished) {
+							// we have aleady finished traversing the results, can provide the exact count immediately
+							var deferred = new Deferred();
+							deferred.resolve(cachedPosition.offset + 1);
+							return deferred.then(callback);
+						}
 						var countPromise = (keyRange ? store._callOnStore('count', [keyRange], bestIndex) : store._callOnStore('count'));
 						return countPromise.then(adjustTotal).then(callback, errback);
 					}
@@ -719,6 +720,9 @@ define([
 								deferred.reject(e);
 							}
 						} else {
+							if (!start || cachedPosition.offset >= start) {
+								cachedPosition.finished = true;
+							}
 							deferred.resolve(all);
 						}
 						// let any other cursors start executing now
@@ -739,6 +743,9 @@ define([
 				var sortedCallback = callback;
 				callback = yes;
 				var sortedResults = when(resultsPromise, function (filteredResults) {
+					// now apply the sort and reapply the range
+					var start = fetchOptions.start || 0;
+					var end = fetchOptions.end || Infinity;
 					var sorted = sortOption.querier(filteredResults).slice(start, end);
 					sorted.forEach(sortedCallback);
 					return sorted;
