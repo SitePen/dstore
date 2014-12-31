@@ -6,8 +6,9 @@ define([
 	'../db/LocalStorage',
 	'../LocalDB',
 	'dojo/promise/all',
+	'dojo/_base/array',
 	'dojo/sniff'
-], function (registerSuite, assert, IndexedDB, SQL, LocalStorage, LocalDB, all, has) {
+], function (registerSuite, assert, IndexedDB, SQL, LocalStorage, LocalDB, all, arrayUtil, has) {
 	var data = [
 		{id: 1, name: 'one', prime: false, mappedTo: 'E', words: ['banana']},
 		{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', words: ['banana', 'orange']},
@@ -59,15 +60,23 @@ define([
 				}
 				var i = 0;
 				var collection = db.filter(filter, options);
-				if (options) {
-					if (options.sort) {
-						collection = collection.sort(options.sort);
+				return collection.fetch().then(function (fetched) {
+					// check to make sure each one is in there
+					arrayUtil.forEach(fetched, function (object) {
+						assert.isTrue(arrayUtil.indexOf(expectedResults, object.id) > -1);
+					});
+					assert.strictEqual(expectedResults.length, fetched.length);
+				}).then(function () {
+					// now apply the sort
+					if (options) {
+						if (options.sort) {
+							collection = collection.sort(options.sort);
+						}
 					}
-				}
-				var forEachResults = collection.forEach(function (object) {
-					assert.strictEqual(expectedResults[i++], object.id);
-				});
-				return forEachResults.then(function () {
+					return collection.forEach(function (object) {
+						assert.strictEqual(expectedResults[i++], object.id);
+					});
+				}).then(function () {
 					assert.strictEqual(expectedResults.length, i);
 					var range = options && options.range || {start: 1, end: 3};
 					var expectedCount = expectedResults.length;
@@ -126,39 +135,44 @@ define([
 							new Filter({name: 'two'}),
 							new Filter({mappedTo: 'C'}),
 							new Filter({mappedTo: 'D'})), [2, 3]),
-			'{id: {from: 1, to: 3}}': testQuery(new Filter().gte('id', 1).lte('id', 3), {range: {start: 0, end: 1}}, [1, 2, 3]),
-			'{name: {from: "m", to: "three"}}': testQuery(new Filter().gte('name', 'm').lte('name', 'three'), [1, 3]),
-			'{name: {from: "one", to: "three"}}': testQuery(new Filter().gte('name', 'one').lte('name', 'three'), [1, 3]),
-			'{name: {from: "one", excludeFrom: true, to: "three"}}': 
-					testQuery(new Filter().gt('name', 'one').lte('name', 'three'), {range: {start: 0, end: 2}}, [3]),
-			'{name: {from: "one", to: "three", excludeTo: true}}':
-					testQuery(new Filter().gte('name', 'one').lt('name', 'three'), [1]),
-			'{name: {from: "one", excludeFrom: true, to: "three", excludeTo: true}}':
-					testQuery(new Filter().gt('name', 'one').lt('name', 'three'), []),
-			'{name: "t*"}': testQuery(new Filter().match('name', /^t/), {sort:[{property: 'name'}]}, [3, 2]),
+			// jshint quotmark: false
+			"gte('id', 1).lte('id', 3)": testQuery(new Filter().gte('id', 1).lte('id', 3), {range: {start: 0, end: 1}}, [1, 2, 3]),
+			"gte('name', 'm').lte('name', 'three')": testQuery(new Filter().gte('name', 'm').lte('name', 'three'),
+				{sort:[{property: 'id'}]}, [1, 3]),
+			"gte('name', 'one').lte('name', 'three')": testQuery(new Filter().gte('name', 'one').lte('name', 'three'), 
+				{sort:[{property: 'id'}]}, [1, 3]),
+			"gt('name', 'one').lte('name', 'three')":
+					testQuery(new Filter().gt('name', 'one').lte('name', 'three'),
+						{range: {start: 0, end: 2}, sort:[{property: 'mappedTo'}]}, [3]),
+			"gte('name', 'one').lt('name', 'three')":
+					testQuery(new Filter().gte('name', 'one').lt('name', 'three'),
+						{sort:[{property: 'name', descending: true}]}, [1]),
+			"gt('name', 'one').lt('name', 'three')":
+					testQuery(new Filter().gt('name', 'one').lt('name', 'three'), {sort:[{property: 'id'}]}, []),
+			"match('name', /^t/)": testQuery(new Filter().match('name', /^t/), {sort:[{property: 'name'}]}, [3, 2]),
 			'{name: "not a number"}': testQuery({name: 'not a number'}, {range: {start: 0, end: 1}}, []),
-			'{words: {contains: ["orange"]}}': testQuery(new Filter().contains('words', ['orange']), {multi: true}, [2, 3]),
-			'{words: {contains: ["or*"]}}': testQuery(new Filter().contains('words', [
-					new Filter().match('words', /^or/)]), {multi: true, range: {start: 0, end: 1}}, [2, 3]),
-			'{words: {contains: ["apple", "banana"]}}': testQuery(new Filter().contains('words', ['apple', 'banana']),
+			"contains('words', ['orange'])": testQuery(new Filter().contains('words', ['orange']), {multi: true}, [2, 3]),
+			"contains('words', [new Filter().match('words', /^or/)])": testQuery(new Filter().contains('words', [
+					new Filter().match('words', /^or/)]), {multi: true, sort:[{property: 'id'}], range: {start: 0, end: 1}}, [2, 3]),
+			"contains('words', ['apple', 'banana'])": testQuery(new Filter().contains('words', ['apple', 'banana']),
 					{multi: true, range: {start: 0, end: 2}}, []),
-			'{words: {contains: ["orange", "banana"]}}':
-					testQuery(new Filter().contains('words', ['orange', 'banana']), {multi: true}, [2]),
-			'{id: {from: 0, to: 4}, words: {contains: ["orange", "banana"]}}':
+			"contains('words', ['orange', 'banana']":
+					testQuery(new Filter().contains('words', ['orange', 'banana']), {multi: true, sort:[{property: 'mappedTo'}]}, [2]),
+			"contains('words', ['orange', 'banana'])":
 					testQuery(new Filter().gte('id', 0).lte('id', 4).contains('words', ['orange', 'banana']), {multi: true}, [2]),
 			// '{name: '*e'}': testQuery({name: '*e'}, [5, 1, 3]), don't know if we even support this yet
-			'{id: {from: 1, to: 3}}, sort by name +': testQuery(
+			"gte('id', 1).lte('id', 3), sort by name +": testQuery(
 					new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name'}]}, [1, 3, 2]),
-			'{id: {from: 1, to: 3}}, sort by name -':
+			"gte('id', 1).lte('id', 3), sort by name -":
 					testQuery(new Filter().gte('id', 1).lte('id', 3), {
 						sort:[{property: 'name', descending: true}],
 						range: {start: 0, end: 1}
 					}, [2, 3, 1]),
-			'{id: {from: 0, to: 4}}, paged': testQuery(new Filter().gte('id', 0).lte('id', 4),
-					{range: {start: 1, end: 3}}, [1, 2, 3, 4]),
+			"gte('id', 0).lte('id', 4)": testQuery(new Filter().gte('id', 0).lte('id', 4),
+					{sort:[{property: 'id'}], range: {start: 1, end: 3}}, [1, 2, 3, 4]),
 			'db interaction': function () {
 				return db.get(1).then(function(one) {
-					assert.strictEqual(one.id, 1);
+					assert.strictEqual(one.id, 1); 
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
 					assert.strictEqual(one.mappedTo, 'E');
