@@ -4,9 +4,10 @@ define([
 	'dojo/when',
 	'dstore/QueryResults',
 	'dstore/Store',
+	'dstore/SimpleQuery',
 	'dojo/_base/lang',
 	'dojo/promise/all'
-], function (declare, Deferred, when, QueryResults, Store, lang, all) {
+], function (declare, Deferred, when, QueryResults, Store, SimpleQuery, lang, all) {
 	//	summary:
 	//		This module implements the dstore API using the WebSQL database
 	function safeSqlName(name) {
@@ -28,9 +29,9 @@ define([
 	};
 	function convertExtra(object) {
 		// converts the 'extra' data on sql rows that can contain expando properties outside of the defined column
-		return object && lang.mixin(object, JSON.parse(object.__extra));
+		return object && object.__extra ? lang.mixin(object, JSON.parse(object.__extra)) : object;
 	}
-	return declare([Store], {
+	return declare([Store, SimpleQuery], {
 		constructor: function (config) {
 			var dbConfig = config.dbConfig;
 			// open the database and get it configured
@@ -156,8 +157,13 @@ define([
 			}
 			var sql = 'INSERT INTO ' + this.table + ' (' + cols.join(',') + ') VALUES (' + vals.join(',') + ')';
 			return when(this.executeSql(sql, params), function (results) {
-				var id = results.insertId;
-				object[idColumn] = id;
+				var idDefinition = store.indices[idColumn];
+				if (idDefinition && idDefinition.autoIncrement) {
+					var id = results.insertId;
+					object[idColumn] = id;
+				} else {
+					id = object[idColumn];
+				}
 				// got the id now, perform the insertions for the repeating data
 				return all(actionsWithId.map(function(func) {
 					return func(id);
@@ -224,12 +230,12 @@ define([
 		fetchRange: function (options) {
 			return this.fetch(options);
 		},
-
-		fetch: function (options) {
-			options = options || {};
+		generateSql: function () {
 			var from = 'FROM ' + this.table;
 			var condition = '';
 			var order = '';
+			var select = '*';
+			var selectEntry;
 			var store = this;
 			var table = this.table;
 			var params = [];
@@ -240,40 +246,64 @@ define([
 					order = ' ORDER BY ' + query.normalizedArguments[0].map(function(sort) {
 						return table + '.' + sort.property + ' ' + (sort.descending ? 'desc' : 'asc');
 					}).join(',');
+				} else if (query.type === 'select') {
+					var selectArgument = query.normalizedArguments[0];
+
+					if (selectArgument instanceof Array) {
+						for (var i = 0; i < selectArgument.length; i++){
+							if (!(selectArgument[i] in store.indices)) {
+								// can't use SQL SELECT to do the select since extra properties may be involved
+								selectEntry = query;
+								return;
+							}
+						}
+						select = selectArgument.map(sqlColumn).join(', ');
+					} else {
+						if (selectArgument in store.indices) {
+							select = sqlColumn(selectArgument);
+						}
+						// must always apply the select function to map to a single value per item
+						selectEntry = query;
+					}
+
 				}
 			});
+			function sqlColumn(column) {
+				safeSqlName(column);
+				return table + '.' + column;	
+			}
 			function convertFilter(filter) {
 				var args = filter.args;
 				var column = args[0];
+				var value = args[1];
 				switch(filter.type) {
-					case 'eq':
-						if (args[1] instanceof Array) {
-							if (args[1].length === 0) {
-								// an empty IN clause is considered invalid SQL
-								return '0=1';
-							}
-							else{
-								safeSqlName(column);
-								return [table + '.' + column, ' IN (' + args[1].map(function(value) {
-									params.push(value);
-									return '?';
-								}).join(',') + ')'];
-							}
-						}
-						/* fall through */
-					case 'ne': case 'lt': case 'lte': case 'gt': case 'gte':
-						safeSqlName(column);
-						params.push(args[1]);
-						return [table + '.' + column, sqlOperators[filter.type] + '?'];
+					case 'eq': case 'ne': case 'lt': case 'lte': case 'gt': case 'gte':
+						params.push(value);
+						return [sqlColumn(column), sqlOperators[filter.type] + '?'];
 					case 'and': case 'or':
 						var parts = [];
 						for (var index = 0; index < args.length; index++) {
 							parts.push(convertFilter(args[index]).join(''));
 						}
 						return ['(', parts.join(sqlOperators[filter.type]), ')'];
+					case 'in':
+						if (value.length === 0) {
+							// an empty IN clause is considered invalid SQL
+							return '0=1';
+						} else if (value.generateSql) {
+							var query = value.generateSql();
+							params.push.apply(params, query.params);
+							return [sqlColumn(column), ' IN (' + query.select + query.from + ')'];
+						} else {
+							return [sqlColumn(column), ' IN (' + args[1].map(function(value) {
+								params.push(value);
+								return '?';
+							}).join(',') + ')'];
+						}
+						break;
 					case 'contains':
 						var repeatingTable = table + '_repeating_' + column;
-						return ['(', args[1].map(function(value) {
+						return ['(', value.map(function(value) {
 							var condition;
 							if (value && value.type) {
 								condition = 'value ' + convertFilter(value).slice(1).join('');
@@ -281,11 +311,11 @@ define([
 								params.push(value);
 								condition = 'value=?';
 							}
-							return table + '.' + store.idProperty + ' IN (SELECT id FROM ' + repeatingTable + ' WHERE ' + condition + ')';
+							return sqlColumn(store.idProperty) + ' IN (SELECT id FROM ' + repeatingTable + ' WHERE ' + condition + ')';
 						}).join(' AND '), ')'];
 
 					case 'match':
-						var value = args[1].source;
+						value = value.source;
 						if (value[0] === '^' && !value.match(/[\{\}\(\)\[\]\.\,\$\*]/)) {
 							/* jshint quotmark: false */
 							return [table + '.' + column, ' LIKE \'' + value.slice(1).replace(/'/g,"''") + '%\''];
@@ -302,19 +332,36 @@ define([
 				condition = ' WHERE ' + condition;
 			}
 
-			condition = condition + order;
-			var limitedCondition = condition;
+			return {
+				select: 'SELECT ' + select + ' ',
+				from: from + condition + order,
+				params: params,
+				querier: selectEntry && selectEntry.querier
+			};
+		},
+		fetch: function (options) {
+			options = options || {};
+			var query = this.generateSql();
+			var select = query.select;
+			var from = query.from;
+			var params = query.params;
+			var querier = query.querier;
+
+			var limitedCondition = select + ' ' + from;
 			if (options.end) {
 				limitedCondition += ' LIMIT ' + (options.end - (options.start || 0));
 			}
 			if (options.start) {
 				limitedCondition += ' OFFSET ' + options.start;
 			}
-			var results = lang.delegate(this.executeSql('SELECT * ' + from + limitedCondition, params).then(function(sqlResults) {
+			var results = lang.delegate(this.executeSql(limitedCondition, params).then(function(sqlResults) {
 				// get the results back and do any conversions on it
 				var results = [];
 				for (var i = 0; i < sqlResults.rows.length; i++) {
 					results.push(convertExtra(sqlResults.rows.item(i)));
+				}
+				if (querier) {
+					results = querier(results);
 				}
 				return results;
 			}));
@@ -323,7 +370,7 @@ define([
 				totalLength: {
 					then: function (callback,errback) {
 						// lazily do a total, using the same query except with a COUNT(*) and without the limits
-						return store.executeSql('SELECT COUNT(*) ' + from + condition, params).then(function(sqlResults) {
+						return store.executeSql('SELECT COUNT(*) ' + from, params).then(function(sqlResults) {
 							return sqlResults.rows.item(0)['COUNT(*)'];
 						}).then(callback,errback);
 					}

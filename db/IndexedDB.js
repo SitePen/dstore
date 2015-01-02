@@ -117,9 +117,9 @@ define([
 							}
 						}
 					};
-					dbConfig.available = makePromise(openRequest);
+					dbConfig.db = makePromise(openRequest);
 				}
-				this.available = dbConfig.available.then(function(db) {
+				this.db = dbConfig.db.then(function(db) {
 					return (store.db = db);
 				});
 			}
@@ -163,6 +163,9 @@ define([
 
 		_getTransaction: function () {
 			if (!this._currentTransaction) {
+				if (!this.db) {
+					console.error('The database has not been initialized yet');
+				}
 				this._currentTransaction = this.db.transaction([this.storeName], 'readwrite');
 				var store = this;
 				this._currentTransaction.oncomplete = function () {
@@ -179,7 +182,11 @@ define([
 		_callOnStore: function (method, args, index, returnRequest) {
 			// calls a method on the IndexedDB store
 			var store = this;
-			return when(this.available, function callOnStore() {
+			return when(this.db, function callOnStore(db) {
+				if (store.db.then) {
+					// replace the promise with the database itself
+					store.db = db;
+				}
 				var currentTransaction = store._currentTransaction;
 				if (currentTransaction) {
 					var allowRetry = true;
@@ -296,6 +303,7 @@ define([
 			var start = fetchOptions.start || 0;
 			var end = fetchOptions.end || Infinity;
 			var sortOption = query.sort;
+			var select = query.select;
 			var parts = query.filter;
 			var sorter, sortOptions;
 			if (sortOption) {
@@ -317,67 +325,74 @@ define([
 			var results = [];
 			var store = this;
 			// wait for all the union segments to complete
-			return new QueryResults(all(parts.map(function(part, i) {
-				var queue = queues[i] = [];
+			return new QueryResults(when(parts).then(
+				function(parts){
+					return all(parts.map(function(part, i) {
+						var queue = queues[i] = [];
 
-				function addToQueue(object) {
-					// to the queue that is kept for each individual query for merge sorting
-					queue.push(object);
-					var nextInQueues = []; // so we can index of the selected choice
-					var toMerge = [];
-					while (queues.every(function(queue) {
-							if (queue.length > 0) {
-								var next = queue[0];
-								if (next) {
-									toMerge.push(next);
+						function addToQueue(object) {
+							// to the queue that is kept for each individual query for merge sorting
+							queue.push(object);
+							var nextInQueues = []; // so we can index of the selected choice
+							var toMerge = [];
+							while (queues.every(function(queue) {
+									if (queue.length > 0) {
+										var next = queue[0];
+										if (next) {
+											toMerge.push(next);
+										}
+										return nextInQueues.push(next);
+									}
+								})) {
+								if (index >= end || toMerge.length === 0) {
+									done = true;
+									return; // exit filter loop
 								}
-								return nextInQueues.push(next);
+								var nextSelected = sorter(toMerge)[0];
+								// shift it off the selected queue
+								queues[nextInQueues.indexOf(nextSelected)].shift();
+								if (index++ >= start) {
+									results.push(nextSelected);
+									if (!callback(nextSelected)) {
+										done = true;
+										return;
+									}
+								}
+								nextInQueues = [];// reset
+								toMerge = [];
 							}
-						})) {
-						if (index >= end || toMerge.length === 0) {
-							done = true;
-							return; // exit filter loop
+							return true;
+
 						}
-						var nextSelected = sorter(toMerge)[0];
-						// shift it off the selected queue
-						queues[nextInQueues.indexOf(nextSelected)].shift();
-						if (index++ >= start) {
-							results.push(nextSelected);
-							if (!callback(nextSelected)) {
-								done = true;
+						var queryResults = store._query({
+							filterFunction: query.filterFunction,
+							filter: part,
+							sort: sortOption
+						}, function (object) {
+							if (done) {
 								return;
 							}
-						}
-						nextInQueues = [];// reset
-						toMerge = [];
-					}
-					return true;
-
+							var id = store.getIdentity(object);
+							inCount++;
+							if (id in collected) {
+								return true;
+							}
+							collectedCount++;
+							collected[id] = true;
+							return addToQueue(object);
+						});
+						totals[i] = queryResults.totalLength;
+						return queryResults.then(function(results) {
+							// null signifies the end of this particular query result
+							addToQueue(null);
+							return results;
+						});
+					}));
 				}
-				var queryResults = store._query({
-					filterFunction: query.filterFunction,
-					filter: part,
-					sort: sortOption
-				}, function (object) {
-					if (done) {
-						return;
-					}
-					var id = store.getIdentity(object);
-					inCount++;
-					if (id in collected) {
-						return true;
-					}
-					collectedCount++;
-					collected[id] = true;
-					return addToQueue(object);
-				});
-				totals[i] = queryResults.totalLength;
-				return queryResults.then(function(results) {
-					// null signifies the end of this particular query result
-					addToQueue(null);
-					return results;
-				});
-			})).then(function() {
+			).then(function() {
+				if (select) {
+					return select.querier(results);
+				}
 				return results;
 			}), {
 				totalLength: {
@@ -399,6 +414,8 @@ define([
 			var filterQuery = {};
 			var filterOperator;
 			var sortOption;
+			var select;
+			var filterPromises = [];
 			// iterate through the query log, applying each querier
 			this.queryLog.forEach(function (entry) {
 				var type = entry.type;
@@ -414,16 +431,31 @@ define([
 				} else if (type === 'sort') {
 					sortOption = args[0];
 					sortOption.querier = entry.querier;
+				} else if (type === 'select') {
+					select = entry;
 				}
 			});
 
 			function processFilter(filterArgs) {
 				// iterate through the query log, applying each querier
-				filterArgs.forEach(function (entry) {
+				filterArgs.forEach(function processFilterArg(entry) {
+					if (union) {
+						throw new Error('Can not process conditions after a union, rearrange the query with the union last');
+					}
 					var type = entry.type;
 					var args = [].slice.call(entry.args, 0);
 					var name = args[0];
 					var value = args[1];
+					if (value && value.fetch && !value.data) {
+						// the value is a collection, we will fetch it
+						filterPromises.push(value.fetch().then(function (fetched) {
+							value.data = fetched;
+							processFilterArg(entry);
+						}, function (error) {
+							console.error('Failed to retrieved nested collection', error);
+						}));
+						return;
+					}
 					if (type === 'or') {
 						or(args);
 					} else if (type === 'and') {
@@ -440,9 +472,17 @@ define([
 						filterProperty.to = value;
 						filterProperty.excludeTo = type === 'lt';
 						addCondition(name, filterProperty);
+					} else if (type === 'in') {
+						// split this into a union of equals
+						or((value.data || value).map(function (item) {
+							return {
+								type: 'eq',
+								args: [name, item]
+							};
+						}));
 					} else if (type === 'contains') {
 						var filterProperty = filterQuery[name] || (filterQuery[name] = {});
-						filterProperty.contains = value instanceof Array ? value : [value];
+						filterProperty.contains = value.data ? value.data : value instanceof Array ? value : [value];
 						addCondition(name, filterProperty);
 					} else if (type === 'match') {
 						value = value.source;
@@ -528,16 +568,19 @@ define([
 				filterQuery[key] = filterValue;
 			}
 			return {
-				filter: union || filterQuery,
+				filter: filterPromises.length > 0 ? all(filterPromises).then(function () {
+					return union;
+				}) : (union || filterQuery),
 				filterFunction: filter,
 				filterOperator: filterOperator || null,
-				sort: sortOption
+				sort: sortOption,
+				select: select
 			};
 		},
 		_fetch: function (callback, fetchOptions) {
 			var query = this._normalizeQuery();
 			var filterQuery = query.filter;
-			if (filterQuery instanceof Array) {
+			if (filterQuery instanceof Array || filterQuery.then) {
 				return this._union(query, function (object) {
 					callback(object);
 					// keep going
@@ -568,10 +611,10 @@ define([
 			var filterValue;
 			var deferred = new Deferred();
 			var resultsPromise = deferred.promise;
-			var query = this._normalizeQuery();
 			var filter = query.filterFunction;
 			var filterQuery = query.filter;
 			var sortOption = query.sort;
+			var select = query.select;
 
 			function tryIndex(indexName, quality, factor) {
 				indexTries++;
@@ -728,12 +771,13 @@ define([
 						// let any other cursors start executing now
 						queueCursor();
 					};
-					cursorRequest.onerror = function (error) {
-						cursorsRunning--;
-						deferred.reject(error);
-						queueCursor();
-					};
-				});
+					cursorRequest.onerror = onCursorError;
+				}, onCursorError);
+				function onCursorError(error) {
+					cursorsRunning--;
+					deferred.reject(error);
+					queueCursor();
+				}
 			}
 			openCursor();
 
@@ -742,7 +786,7 @@ define([
 				// we have to redirect the callback
 				var sortedCallback = callback;
 				callback = yes;
-				var sortedResults = when(resultsPromise, function (filteredResults) {
+				var resultsPromise = resultsPromise.then(function (filteredResults) {
 					// now apply the sort and reapply the range
 					var start = fetchOptions.start || 0;
 					var end = fetchOptions.end || Infinity;
@@ -750,7 +794,11 @@ define([
 					sorted.forEach(sortedCallback);
 					return sorted;
 				});
-				return new QueryResults(sortedResults, {totalLength: totalLength});
+			}
+			if (select) {
+				resultsPromise = resultsPromise.then(function(results) {
+					return select.querier(results);
+				});
 			}
 			return new QueryResults(resultsPromise, {totalLength: totalLength});
 		}

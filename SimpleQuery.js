@@ -11,7 +11,8 @@ define([
 			return value === required;
 		},
 		'in': function(value, required) {
-			return arrayUtil.indexOf(required, value) > -1;
+			// allow for a collection of data
+			return arrayUtil.indexOf(required.data || required, value) > -1;
 		},
 		ne: function (value, required) {
 			return value !== required;
@@ -33,7 +34,7 @@ define([
 		},
 		contains: function (value, required, object, key) {
 			var collection = this;
-			return arrayUtil.every(required, function (requiredValue) {
+			return arrayUtil.every(required.data || required, function (requiredValue) {
 				if (typeof requiredValue === 'object' && requiredValue.type) {
 					var comparator = collection._getFilterComparator(requiredValue.type);
 					return arrayUtil.some(value, function (item) {
@@ -63,6 +64,10 @@ define([
 					// it is a comparator
 					var firstArg = args[0];
 					var secondArg = args[1];
+					if (secondArg && secondArg.fetchSync) {
+						// if it is a collection, fetch the contents (for `in` and `contains` operators)
+						secondArg = secondArg.fetchSync();
+					}
 					return function (object) {
 						// get the value for the property and compare to expected value
 						return comparator.call(collection,
@@ -119,7 +124,28 @@ define([
 			// returns: Function?
 
 			return comparators[type] || this.inherited(arguments);
+		},
+
+		_createSelectQuerier: function (properties) {
+			return function (data) {
+				var l = properties.length;
+				return arrayUtil.map(data, properties instanceof Array ?
+					// array of properties
+					function (object) {
+						var selectedObject = {};
+						for (var i = 0; i < l; i++) {
+							var property = properties[i];
+							selectedObject[property] = object[property];
+						}
+						return selectedObject;
+					} :
+					// single property
+					function (object) {
+						return object[properties];
+					});
+			};
 		}
+
 		/* jshint ignore:start */
 		,
 		_createSortQuerier: function (sorted) {

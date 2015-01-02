@@ -9,22 +9,43 @@ define([
 	'dojo/_base/array',
 	'dojo/sniff'
 ], function (registerSuite, assert, IndexedDB, SQL, LocalStorage, LocalDB, all, arrayUtil, has) {
-	var data = [
+	var numbers = [
 		{id: 1, name: 'one', prime: false, mappedTo: 'E', words: ['banana']},
 		{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', words: ['banana', 'orange']},
 		{id: 3, name: 'three', prime: true, mappedTo: 'C', words: ['apple', 'orange']},
 		{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
 		{id: 5, name: 'five', prime: true, mappedTo: 'A'}
 	];
+
+	var letters = [
+		{id: 'A', lower: 'a', vowel: true},
+		{id: 'B', lower: 'b', vowel: false},
+		{id: 'C', lower: 'c', vowel: false},
+		{id: 'D', lower: 'd', vowel: false},
+		{id: 'E', lower: 'e', vowel: true},
+		{id: 'F', lower: 'f', vowel: false},
+		{id: 'G', lower: 'g', vowel: false},
+		{id: 'H', lower: 'h', vowel: false},
+		{id: 'I', lower: 'i', vowel: true},
+		{id: 'J', lower: 'j', vowel: false},
+		{id: 'K', lower: 'k', vowel: false},
+		{id: 'L', lower: 'l', vowel: false},
+		{id: 'M', lower: 'm', vowel: false},
+		{id: 'N', lower: 'n', vowel: false},
+		{id: 'O', lower: 'o', vowel: true},
+		{id: 'P', lower: 'p', vowel: false},
+		{id: 'Q', lower: 'q', vowel: false}
+	];
+
 	var dbConfig = {
-		version: 5,
+		version: 6,
 		stores: {
 			test: {
 				name: 10,
 				even: {},
 				id: {
 					autoIncrement: true,
-					preference: 20
+					preference: 100
 				},
 				words: {
 					multiEntry: true,
@@ -33,6 +54,15 @@ define([
 				mappedTo: {
 					indexed: false
 				}
+			},
+			test2: {
+				id: {
+					preference: 100
+				},
+				lower: {
+					preference: 50
+				},
+				vowel: {}
 			}
 		}
 	};
@@ -46,8 +76,9 @@ define([
 	function testsForDB(name, DB) {
 		// need to reset availability
 		dbConfig.available = null;
-		var db = new DB({dbConfig: dbConfig, storeName: 'test'});
-		var Filter = db.Filter;
+		var numberStore = new DB({dbConfig: dbConfig, storeName: 'test'});
+		var letterStore = new DB({dbConfig: dbConfig, storeName: 'test2'});
+		var Filter = numberStore.Filter;
 		function testQuery(filter, options, expectedResults) {
 			if (!expectedResults) {
 				expectedResults = options;
@@ -59,7 +90,7 @@ define([
 					return;
 				}
 				var i = 0;
-				var collection = db.filter(filter, options);
+				var collection = numberStore.filter(filter, options);
 				return collection.fetch().then(function (fetched) {
 					// check to make sure each one is in there
 					arrayUtil.forEach(fetched, function (object) {
@@ -76,6 +107,11 @@ define([
 					return collection.forEach(function (object) {
 						assert.strictEqual(expectedResults[i++], object.id);
 					});
+				}).then(function () {
+					return collection.select('id').fetch();
+				}).then(function (fetched) {
+					// the selected values
+					assert.deepEqual(expectedResults, fetched.slice(0));
 				}).then(function () {
 					assert.strictEqual(expectedResults.length, i);
 					var range = options && options.range || {start: 1, end: 3};
@@ -105,21 +141,39 @@ define([
 			name: name,
 			setup: function () {
 				var results = [];
-				return db.fetch().then(function (data) {
+				return numberStore.fetch().then(function (data) {
 					// make a copy
 					data = data.slice(0);
 					for (var i = 0, l = data.length; i < l; i++) {
-						results.push(db.remove(data[i].id));
+						results.push(numberStore.remove(data[i].id));
+					}
+					return all(results);
+				}).then(function () {
+					results = [];
+					// load new data
+					for (var i = 0; i < numbers.length; i++) {
+						results.push(numberStore.put(numbers[i]));
+					}
+					return all(results);
+				}).then(function () {
+					return letterStore.fetch();
+				}).then(function (data) {
+					results = [];
+					// make a copy
+					data = data.slice(0);
+					for (var i = 0, l = data.length; i < l; i++) {
+						results.push(letterStore.remove(data[i].id));
 					}
 					return all(results);
 				}).then(function() {
 					results = [];
 					// load new data
-					for (var i = 0; i < data.length; i++) {
-						results.push(db.put(data[i]));
+					for (var i = 0; i < letters.length; i++) {
+						results.push(letterStore.put(letters[i]));
 					}
 					return all(results);
 				});
+
 			},
 			'{id: 2}': testQuery({id: 2}, [2]),
 			'{name: "four"}': testQuery({name: 'four'}, {range: {start: 0, end: 1}}, [4]),
@@ -170,16 +224,31 @@ define([
 					}, [2, 3, 1]),
 			"gte('id', 0).lte('id', 4)": testQuery(new Filter().gte('id', 0).lte('id', 4),
 					{sort:[{property: 'id'}], range: {start: 1, end: 3}}, [1, 2, 3, 4]),
+			"in('id', [2, 4, 5])": testQuery(new Filter().in('id', [2, 4, 5]),
+					{sort:[{property: 'id'}], range: {start: 1, end: 3}}, [2, 4, 5]),
+			"in('id', [2, 4, 5]).select('name')": function () {
+				var selected = numberStore.filter(new Filter().in('id', [2, 4, 5])).select(['id', 'name']);
+				return selected.fetch().then(function (data) {
+					assert.deepEqual(data.slice(0), [
+						{id: 2, name: 'two'},
+						{id: 4, name: 'four'},
+						{id: 5, name: 'five'}
+					]);
+				});
+			},
+			"in('mappedTo', letterStore.filter({vowel: true}).select('id'))":
+				testQuery(new Filter().in('mappedTo', letterStore.filter({vowel: true}).select('id')),
+					{sort:[{property: 'name'}], range: {start: 1, end: 3}}, [5, 1]),
 			'db interaction': function () {
-				return db.get(1).then(function(one) {
+				return numberStore.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1); 
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
 					assert.strictEqual(one.mappedTo, 'E');
 					return all([
-							db.remove(2),
-							db.remove(4),
-							db.add({id: 6, name: 'six', prime: false, words: ['pineapple', 'orange juice']})
+							numberStore.remove(2),
+							numberStore.remove(4),
+							numberStore.add({id: 6, name: 'six', prime: false, words: ['pineapple', 'orange juice']})
 						]).then(function() {
 						return all([
 							testQuery(new Filter().gte('name', 's').lte('name', 'u'), {sort:[{property: 'id'}]}, [3, 6])(),
@@ -191,8 +260,8 @@ define([
 			'reload db': function () {
 				// reload the DB store and make sure the data is still there
 				dbConfig.openRequest = null;
-				db = new DB({dbConfig: dbConfig, storeName: 'test'});
-				return db.get(1).then(function(one) {
+				numberStore = new DB({dbConfig: dbConfig, storeName: 'test'});
+				return numberStore.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1);
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
@@ -204,6 +273,7 @@ define([
 				});
 			},
 			'find a LocalDB': function () {
+				// make sure we resolved to at least one of them
 				assert.isTrue(LocalDB === IndexedDB || LocalDB === LocalStorage || LocalDB === SQL, 'resolved a store');
 			}
 		};
