@@ -1,4 +1,4 @@
-# Collection
+# <module>Collection</module>
 
 A Collection is the interface for a collection of items, which can be filtered or sorted to create new collections. When implementing this interface, every method and property is optional, and is only needed if the functionality it provides is required. However, all the included collections implement every method. Note that the objects in the collection might not be immediately retrieved from the underlying data storage until they are actually accessed through `forEach()`, `fetch()`, or `fetchRange()`. These fetch methods return a snapshot of the data, and if the data has changed, these methods can later be used to retrieve the latest data.
 
@@ -26,8 +26,10 @@ This filter object can then be passed as the argument to the `filter()` method o
 
 	var highPriorityFiveStarCollection = store.filter(highPriorityFiveStarFilter);
 
+### <interface>Filter</interface>
+
 The following methods are available on the filter objects. First are the property filtering methods, which each take a property name as the first argument, and a property value to compare for the second argument:
-* `eq`: Property values must equal the filter value argument.
+* <method>`eq(name: string, value: any): Filter`</method>: Property values must equal the filter value argument.
 * `ne`: Property values must not equal the filter value argument.
 * `lt`: Property values must be less than the filter value argument.
 * `lte`: Property values must be less than or equal to the filter value argument.
@@ -49,7 +51,7 @@ For the `dstore/Request`/`dstore/Rest` stores, you can define alternate serializ
 
 The filter objects themselves consist of tree structures. Each filter object has two properties, the operator `type`, which corresponds to whichever operator was used (like `eq` or `and`), and the `args`, which  is an array of values provided to the operator. With `and` and `or` operators, the arguments are other filter objects, forming a hierarchy. When filter operators are chained together (through sequential calls), they are combined with the `and` operator (each operator defined in a sub-filter object).
 
-## Collection API
+## <interface>Collection</interface> API
 
 The following property and methods are available on dstore collections:
 
@@ -61,11 +63,11 @@ Property | Description
 
 ### Method Summary
 
-#### `filter(query)`
+#### `filter(filter: Filter): Collection`
 
-This filters the collection, returning a new subset collection. The query can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (like `dstore/Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
+This filters the collection, returning a new subset collection. The filter can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (like `dstore/Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
 
-#### `sort(property, [descending])`
+#### `sort(property: string, [descending])`
 
 This sorts the collection, returning a new ordered collection. Note that if sort is called multiple times, previous sort calls may be ignored by the store (it is up to store implementation how to handle that). If a multiple sort order is desired, use the array of sort orders defined by below.
 

@@ -1,0 +1,2 @@
+interface Filter{
+interface Collection{
