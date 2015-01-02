@@ -41,6 +41,16 @@ The following are combinatorial methods:
 * `and`: This takes two arguments that are other filter objects, that both must be true.
 * `or`: This takes two arguments that are other filter objects, where one of the two must be true.
 
+### Nesting
+
+A few of the filters can also be built upon with other collections (potentially from other stores). In particular, you can provide a collection as the argument for the `in` or `contains` filter. This provides functionality similar to nested queries or joins. This generally will need to be combined with a `select` to return the correct values for matching. For example, if we wanted to find all the tasks in high priority projects, where the `task` store has a `projectId` property/column that is a foreign key, referencing objects in a `project` store. We can perform our nested query:
+
+	var tasksOfHighPriorityProjects = taskStore.filter(
+			new Filter().in('projectId',
+				projectStore.filter({priority: 'high'}).select('id')));
+
+### Implementations
+
 Different stores may implement filtering in different ways. The `dstore/Memory` will perform filtering in memory. The `dstore/Request`/`dstore/Rest` stores will translate the filters into URL query strings to send to the server. Simple queries will be in standard URL-encoded query format and complex queries will conform to [RQL](https://github.com/persvr/rql) syntax (which is a superset of standard query format).
 
 New filter methods can be created by subclassing `dstore/Filter` and adding new methods. New methods can be created by calling `Filter.filterCreator` and by providing the name of the new method. If you will be using new methods with stores that mix in `SimpleQuery` like memory stores, you can also add filter comparators by overriding the `_getFilterComparator` method, returning comparators for the additional types, and delegating to `this.inherited` for the rest.
@@ -72,6 +82,16 @@ This sorts the collection, returning a new ordered collection. Note that if sort
 #### `sort([highestSortOrder, nextSortOrder...])`
 
 This also sorts the collection, but can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a new collection sorted by lastName, with firstName used to sort identical lastName values.
+
+#### select([property, ...])
+
+This selects specific properties that should be included in the returned objects.
+
+#### select(property)
+
+This will indicate that the return results will consist of the values of the given property of the queried objects. For example, this would return a collection of name values, pulled from the original collection of objects:
+
+	collection.select('name');
 
 #### `forEach(callback, thisObject)`
 
