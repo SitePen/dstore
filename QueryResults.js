@@ -2,7 +2,7 @@ define(['dojo/_base/lang', 'dojo/when'], function (lang, when) {
 	function forEach(callback, instance) {
 		return when(this, function(data) {
 			for (var i = 0, l = data.length; i < l; i++){
-				callback.call(instance, data[i], data);
+				callback.call(instance, data[i], i, data);
 			}
 		});
 	}
