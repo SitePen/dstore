@@ -35,6 +35,10 @@ define([
 
 		'.put': function () {
 			var updatedItem;
+			var updateEventFired;
+			store.on('update', function () {
+				updateEventFired = true;
+			});
 			return when(store.get('node5')).then(function (item) {
 				item.changed = true;
 				updatedItem = item;
@@ -44,14 +48,20 @@ define([
 				return store.get('node5');
 			}).then(function (item) {
 				assert.strictEqual(JSON.stringify(item), JSON.stringify(updatedItem));
+				assert.isTrue(updateEventFired);
 			});
 		},
 
 		'.add': function () {
 			var newItem = { 'id': 'node6', 'name':'node5', 'someProperty':'somePropertyB' };
+			var addEventFired;
+			store.on('add', function () {
+				addEventFired = true;
+			});
 			return when(store.add(newItem), function () {
 				return when(store.get('node6'), function (item) {
 					assert.strictEqual(JSON.stringify(item), JSON.stringify(newItem));
+					assert.isTrue(addEventFired);
 				});
 			});
 		},
