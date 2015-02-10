@@ -141,9 +141,12 @@ This store has the following properties and methods:
 Name | Description
 ---- | -----------
 `cachingStore` | This can be used to define the store to be used for caching the data. By default a Memory store will be used.
-`isValidFetchCache` | This is a flag that indicates if the data fetched for a collection/store can be cached to fulfill subsequent fetches. This is false by default, and the value will be inherited by downstream collections.
+`isValidFetchCache` | This is a flag that indicates if the data fetched for a collection/store can be cached to fulfill subsequent fetches. This is false by default, and the value will be inherited by downstream collections. It is important to note that only full `fetch()` requests will fill the cache for subsequent `fetch()` requests. `fetchRange()` requests will not fulfill a collection, and subsequent `fetchRange()` requests will not go to the cache unless the collection has been fully loaded through a `fetch()` request.
+`allLoaded` | This is a flag indicating that the given collection/store has its data loaded. This can be useful if you want to provide a caching store prepopulated with data for a given collection. If you are setting this to true, make sure you set `isValidFetchCache` to true as well to indicate that the data is available for fetching.
 `canCacheQuery(method, args)' | This can be a boolean or a method that will indicate if a collection can be cached (if it should have `isValidFetchCache` set to true), based on the query method and arguments used to derive the collection.
 `isLoaded(object)` | This can be defined to indicate if a given object in a query can be cached (by default, objects are cached).
+
+
 
 ## Tree
 
