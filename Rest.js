@@ -41,7 +41,7 @@ define([
 			options = options || {};
 			var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
 			var store = this;
-			return request(this.target + id, {
+			return request(this.target + (this.target.lastIndexOf('?') < 0 ? '?' : '&') + id, {
 				headers: headers
 			}).then(function (response) {
 				return store._restore(store.parse(response), true);
@@ -73,7 +73,7 @@ define([
 					? { 'Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
-			var initialResponse = request(hasId ? this.target + id : this.target, {
+			var initialResponse = request(this.target + (hasId ? (this.target.lastIndexOf('?') < 0 ? '?' : '&') + id : ''), {
 				method: hasId && !options.incremental ? 'PUT' : 'POST',
 				data: this.stringify(object),
 				headers: lang.mixin({
@@ -123,7 +123,7 @@ define([
 			//		HTTP headers.
 			options = options || {};
 			var store = this;
-			return request(this.target + id, {
+			return request(this.target + (this.target.lastIndexOf('?') < 0 ? '?' : '&') + id, {
 				method: 'DELETE',
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
