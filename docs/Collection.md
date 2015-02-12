@@ -81,7 +81,11 @@ This sorts the collection, returning a new ordered collection. Note that if sort
 
 #### `sort([highestSortOrder, nextSortOrder...])`
 
-This also sorts the collection, but can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set), to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a new collection sorted by lastName, with firstName used to sort identical lastName values.
+This also sorts the collection, but can be called to define multiple sort orders by priority. Each argument is an object with a `property` property and an optional `descending` property (defaults to ascending, if not set) and a `nullPosition` property, to define the order. For example: `collection.sort([{property:'lastName'}, {property: 'firstName'}])` would result in a new collection sorted by lastName, with firstName used to sort identical lastName values. The `nullPosition` property can specify the position of null values in the order, and can have one of the following values:
+* `"highest"` (default) - null values are treated as the highest value
+* `"lowest"` (default) - null values are treated as the lowest value
+* `"first"` (default) - null values are treated as the first value
+* `"last"` (default) - null values are treated as the last value
 
 #### select([property, ...])
 

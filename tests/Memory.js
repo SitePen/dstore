@@ -470,11 +470,92 @@ define([
 			assert.equal(results[1].id, 1);
 			assert.equal(results[2].id, 2);
 			assert.equal(results[3].id, 3);
+
 			var results = store.sort('value', true).fetchSync();
 			assert.equal(results[0].id, 3);
 			assert.equal(results[1].id, 2);
 			assert.equal(results[2].id, 1);
 			assert.equal(results[3].id, 4);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: true,
+				nullPosition: 'highest'
+			}).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 2);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 4);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: true,
+				nullPosition: 'lowest'
+			}).fetchSync();
+			assert.equal(results[0].id, 2);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 4);
+			assert.equal(results[3].id, 3);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: true,
+				nullPosition: 'last'
+			}).fetchSync();
+			assert.equal(results[0].id, 2);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 4);
+			assert.equal(results[3].id, 3);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: true,
+				nullPosition: 'first'
+			}).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 2);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 4);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: false,
+				nullPosition: 'highest'
+			}).fetchSync();
+			assert.equal(results[0].id, 4);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 2);
+			assert.equal(results[3].id, 3);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: false,
+				nullPosition: 'lowest'
+			}).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 4);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 2);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: false,
+				nullPosition: 'last'
+			}).fetchSync();
+			assert.equal(results[0].id, 4);
+			assert.equal(results[1].id, 1);
+			assert.equal(results[2].id, 2);
+			assert.equal(results[3].id, 3);
+
+			var results = store.sort({
+				property: 'value', 
+				descending: false,
+				nullPosition: 'first'
+			}).fetchSync();
+			assert.equal(results[0].id, 3);
+			assert.equal(results[1].id, 4);
+			assert.equal(results[2].id, 1);
+			assert.equal(results[3].id, 2);
 		},
 
 		nestedSuite: sorting('dstore Memory sorting', function before(data) {

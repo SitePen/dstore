@@ -159,6 +159,7 @@ define([
 						} else {
 							var property = sorted[i].property;
 							var descending = sorted[i].descending;
+							var nullPosition = sorted[i].nullPosition;
 							var aValue = a.get ? a.get(property) : a[property];
 							var bValue = b.get ? b.get(property) : b[property];
 
@@ -167,7 +168,12 @@ define([
 
 							comparison = aValue === bValue
 								? 0
-								: (!!descending === (aValue === null || aValue > bValue && bValue !== null) ? -1 : 1);
+								: 
+									aValue === null ? (nullPosition === 'first' ? -1 :
+										nullPosition === 'last' ? 1 : !descending === (nullPosition === 'lowest') ? -1 : 1) :
+									bValue === null ? (nullPosition === 'first' ? 1 :
+										nullPosition === 'last' ? -1 : !descending === (nullPosition === 'lowest') ? 1 : -1) :
+								(!!descending === (aValue > bValue) ? -1 : 1);
 						}
 
 						if (comparison !== 0) {
