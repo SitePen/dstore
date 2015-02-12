@@ -25,7 +25,18 @@ define([
 		//		want to use an alternate parse function for the parsing of data as well.
 		stringify: JSON.stringify,
 
-
+		_getTarget: function(id){
+			// summary:
+			//		If the target has no trailing '/', then append it.
+			// id:
+			//		The identity of the requested target
+			var target = this.target;
+			if(target.slice(-1) == '/'){
+				return target + id;
+			}else{
+				return target + '/' + id;
+			}
+		},
 
 		get: function (id, options) {
 			// summary:
@@ -41,7 +52,7 @@ define([
 			options = options || {};
 			var headers = lang.mixin({ Accept: this.accepts }, this.headers, options.headers || options);
 			var store = this;
-			return request(this.target + id, {
+			return request(this._getTarget(id), {
 				headers: headers
 			}).then(function (response) {
 				return store._restore(store.parse(response), true);
@@ -73,7 +84,7 @@ define([
 					? { 'Put-Default-Position': (this.defaultNewToStart ? 'start' : 'end') }
 					: null);
 
-			var initialResponse = request(hasId ? this.target + id : this.target, {
+			var initialResponse = request(hasId ? this._getTarget(id) : this.target, {
 				method: hasId && !options.incremental ? 'PUT' : 'POST',
 				data: this.stringify(object),
 				headers: lang.mixin({
@@ -123,7 +134,7 @@ define([
 			//		HTTP headers.
 			options = options || {};
 			var store = this;
-			return request(this.target + id, {
+			return request(this._getTarget(id), {
 				method: 'DELETE',
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
