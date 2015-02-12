@@ -85,8 +85,8 @@ define([
 		//		If this is not specified, the range will
 		//		included with a RQL style limit() parameter
 
-		fetch: function () {
-			var results = this._request();
+		fetch: function (kwArgs) {
+			var results = this._request(kwArgs);
 			return new QueryResults(results.data, {
 				response: results.response
 			});
@@ -97,9 +97,12 @@ define([
 				end = kwArgs.end,
 				requestArgs = {};
 			if (this.useRangeHeaders) {
-				requestArgs.headers = this._renderRangeHeaders(start, end);
+				requestArgs.headers = lang.mixin(this._renderRangeHeaders(start, end), kwArgs.headers);
 			} else {
 				requestArgs.queryParams = this._renderRangeParams(start, end);
+				if (kwArgs.headers) {
+					requestArgs.headers = kwArgs.headers;
+				}
 			}
 
 			var results = this._request(requestArgs);
