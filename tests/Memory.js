@@ -20,11 +20,11 @@ define([
 		beforeEach: function () {
 			store = new Memory({
 				data: [
-					{ id: 1, name: 'one', prime: false, mappedTo: 'E' },
-					{ id: 2, name: 'two', even: true, prime: true, mappedTo: 'D' },
-					{ id: 3, name: 'three', prime: true, mappedTo: 'C' },
-					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null },
-					{ id: 5, name: 'five', prime: true, mappedTo: 'A' }
+					{ id: 1, name: 'one', prime: false, mappedTo: 'E', nested: {a: 5} },
+					{ id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', nested: {a: 4} },
+					{ id: 3, name: 'three', prime: true, mappedTo: 'C', nested: {a: 3} },
+					{ id: 4, name: 'four', even: true, prime: false, mappedTo: null , nested: {a: 2}},
+					{ id: 5, name: 'five', prime: true, mappedTo: 'A', nested: {a: 1} }
 				],
 				Model: Model,
 				filterFunction: function (object) {
@@ -126,6 +126,18 @@ define([
 			assert.strictEqual(store.filter(TwoToFour).fetchSync().length, 4);
 		},
 
+		'filter with nested gt and lt': function () {
+			var filter = new store.Filter();
+			var betweenTwoAndFour = filter.gt('nested.a', 2).lt('nested.a', 5);
+			assert.strictEqual(store.filter(betweenTwoAndFour).fetchSync().length, 2);
+			var overTwo = {
+				'nested.a': filter.gt(2)
+			};
+			assert.strictEqual(store.filter(overTwo).fetchSync().length, 3);
+			var TwoToFour = filter.gte('nested.a', 2).lte('nested.a', 5);
+			assert.strictEqual(store.filter(TwoToFour).fetchSync().length, 4);
+		},
+
 		'filter with test function': function () {
 			assert.strictEqual(store.filter({id: {test: function (id) {
 				return id < 4;
@@ -143,6 +155,13 @@ define([
 			}).fetchSync()[1].name, 'two');
 			assert.strictEqual(store.filter(null).sort('mappedTo').fetchSync()[4].name, 'four');
 		},
+
+		'filter with nested sort': function () {
+			assert.strictEqual(store.filter({prime: true}).sort('nested.a').fetchSync().length, 3);
+			assert.strictEqual(store.filter({even: true}).sort('nested.a').fetchSync()[1].name, 'two');
+			assert.strictEqual(store.filter({'nested.a': 2}).sort('mappedTo').fetchSync()[0].name, 'four');
+		},
+
 
 		'filter with paging': function () {
 			assert.strictEqual(store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).length, 1);

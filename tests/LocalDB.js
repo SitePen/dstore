@@ -13,8 +13,8 @@ define([
 		{id: 1, name: 'one', prime: false, mappedTo: 'E', words: ['banana']},
 		{id: 2, name: 'two', even: true, prime: true, mappedTo: 'D', words: ['banana', 'orange']},
 		{id: 3, name: 'three', prime: true, mappedTo: 'C', words: ['apple', 'orange']},
-		{id: 4, name: 'four', even: true, prime: false, mappedTo: null},
-		{id: 5, name: 'five', prime: true, mappedTo: 'A'}
+		{id: 4, name: 'four', even: true, prime: false, mappedTo: null, nested: {a: 1}},
+		{id: 5, name: 'five', prime: true, mappedTo: 'A', nested: {a: 2}}
 	];
 
 	var letters = [
@@ -38,7 +38,7 @@ define([
 	];
 
 	var dbConfig = {
-		version: 6,
+		version: 8,
 		stores: {
 			test: {
 				name: 10,
@@ -53,6 +53,9 @@ define([
 				},
 				mappedTo: {
 					indexed: false
+				},
+				'nested.a': {
+					preference: 3
 				}
 			},
 			test2: {
@@ -217,6 +220,10 @@ define([
 			// '{name: '*e'}': testQuery({name: '*e'}, [5, 1, 3]), don't know if we even support this yet
 			"gte('id', 1).lte('id', 3), sort by name +": testQuery(
 					new Filter().gte('id', 1).lte('id', 3), {sort:[{property: 'name'}]}, [1, 3, 2]),
+			"gte('nested.a', 1).lte('nested.a', 2), sort by name +": testQuery(
+					new Filter().gte('nested.a', 1).lte('nested.a', 2), {sort:[{property: 'nested.a'}]}, [4, 5]),
+			"eq('nested.a', 1)": testQuery(
+					new Filter().eq('nested.a', 1), {}, [4]),
 			"gte('id', 1).lte('id', 3), sort by name -":
 					testQuery(new Filter().gte('id', 1).lte('id', 3), {
 						sort:[{property: 'name', descending: true}],

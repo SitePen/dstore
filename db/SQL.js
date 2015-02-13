@@ -11,10 +11,23 @@ define([
 	//	summary:
 	//		This module implements the dstore API using the WebSQL database
 	function safeSqlName(name) {
-		if (name.match(/[^\w_]/)) {
+		if (name.match(/[^\w_\.]/)) {
 			throw new URIError('Illegal column name ' + name);
 		}
 		return name;
+	}
+
+	function getProperty(object, property) {
+		var propertyPath = property.split('.');
+		var pathLength = propertyPath.length;
+		for (var i = 0; i < pathLength; i++) {
+			object = object && object[propertyPath[i]];
+		}
+		return object;
+	}
+
+	function escapeDot(column) {
+		return column.replace(/\./g, '_dot_');
 	}
 
 	var sqlOperators = {
@@ -62,7 +75,7 @@ define([
 					var repeatingIndices = [this.idProperty];
 					for (var index in storeConfig) {
 						if (index != this.idProperty) {
-							indices.push(index);
+							indices.push(escapeDot(index));
 						}
 					}
 					promises.push(this.executeSql('CREATE TABLE IF NOT EXISTS ' + table+ ' ('
@@ -75,7 +88,7 @@ define([
 								// and we want to index each item in the array
 								// we will search on it using a nested select
 								repeatingIndices.push(index);
-								var repeatingTable = table+ '_repeating_' + index;
+								var repeatingTable = table+ '_repeating_' + escapeDot(index);
 								promises.push(this.executeSql('CREATE TABLE IF NOT EXISTS ' +
 									repeatingTable + ' (id,value)'));
 								promises.push(this.executeSql('CREATE INDEX IF NOT EXISTS idx_' +
@@ -83,13 +96,14 @@ define([
 								promises.push(this.executeSql('CREATE INDEX IF NOT EXISTS idx_' +
 									repeatingTable + '_value ON ' + repeatingTable + '(value)'));
 							}else{
-								promises.push(this.executeSql('ALTER TABLE ' + table + ' ADD ' + index).then(null, function () {
+								promises.push(this.executeSql('ALTER TABLE ' + table + ' ADD ' + escapeDot(index))
+									.then(null, function () {
 									/* suppress failed alter table statements*/
 								}));
 								// otherwise, a basic index will do
 								if (storeConfig[index].indexed !== false) {
 									promises.push(this.executeSql('CREATE INDEX IF NOT EXISTS ' + indexPrefix +
-										table + '_' + index + ' ON ' + table + '(' + index + ')'));
+										table + '_' + escapeDot(index) + ' ON ' + table + '(' + escapeDot(index) + ')'));
 								}
 							}
 						}
@@ -122,28 +136,37 @@ define([
 			var extra = {};
 			var actionsWithId = [];
 			var store = this;
+			function addColumn(column, value, originalColumn) {
+				if (store.repeatingIndices[originalColumn || column]) {
+					// we will need to add to the repeating table for the given field/column,
+					// but it must take place after the insert, so we know the id
+					actionsWithId.push(function(id) {
+						return all(value.map(function(value) {
+							return store.executeSql('INSERT INTO ' + store.table + '_repeating_' +
+								column + ' (value, id) VALUES (?, ?)', [value, id]);
+						}));
+					});
+				}else{
+					// add to the columns and values for SQL statement
+					cols.push(column);
+					vals.push('?');
+					params.push(value);
+				}
+			}
+
 			for (var i in object) {
 				if (object.hasOwnProperty(i)) {
 					if (i in this.indices || i == this.idProperty) {
-						if (this.repeatingIndices[i]) {
-							// we will need to add to the repeating table for the given field/column,
-							// but it must take place after the insert, so we know the id
-							actionsWithId.push(function(id) {
-								var array = object[i];
-								return all(array.map(function(value) {
-									return store.executeSql('INSERT INTO ' + store.table + '_repeating_' +
-										i + ' (value, id) VALUES (?, ?)', [value, id]);
-								}));
-							});
-						}else{
-							// add to the columns and values for SQL statement
-							cols.push(i);
-							vals.push('?');
-							params.push(object[i]);
-						}
+						addColumn(i, object[i]);
 					}else{
 						extra[i] = object[i];
 					}
+				}
+			}
+			// now handle nested property values, so they can be indexed
+			for (var i in this.indices) {
+				if (i.indexOf('.') > -1) {
+					addColumn(escapeDot(i), getProperty(object, i), i);
 				}
 			}
 			// add the 'extra' expando data as well
@@ -197,24 +220,35 @@ define([
 			var params = [];
 			var cols = [];
 			var extra = {};
+			var store = this;
+
+			function addColumn(column, value, originalColumn) {
+				if (store.repeatingIndices[originalColumn || column]) {
+					// update the repeating value tables
+					store.executeSql('DELETE FROM ' + store.table + '_repeating_' + column + ' WHERE id=?', [id]);
+					for (var j = 0; j < value.length; j++) {
+						store.executeSql('INSERT INTO ' + store.table + '_repeating_' + column + ' (value, id) VALUES (?, ?)',
+							[value[j], id]);
+					}
+				}else{
+					cols.push(column + '=?');
+					params.push(value);
+				}
+			}
+
 			for (var i in object) {
 				if (object.hasOwnProperty(i)) {
 					if (i in this.indices || i == this.idProperty) {
-						if (this.repeatingIndices[i]) {
-							// update the repeating value tables
-							this.executeSql('DELETE FROM ' + this.table + '_repeating_' + i + ' WHERE id=?', [id]);
-							var array = object[i];
-							for (var j = 0; j < array.length; j++) {
-								this.executeSql('INSERT INTO ' + this.table + '_repeating_' + i + ' (value, id) VALUES (?, ?)',
-									[array[j], id]);
-							}
-						}else{
-							cols.push(i + '=?');
-							params.push(object[i]);
-						}
+						addColumn(i, object[i]);
 					}else{
 						extra[i] = object[i];
 					}
+				}
+			}
+			// now handle nested property values, so they can be indexed
+			for (var i in this.indices) {
+				if (i.indexOf('.') > -1) {
+					addColumn(escapeDot(i), getProperty(object, i), i);
 				}
 			}
 			cols.push('__extra=?');
@@ -244,7 +278,7 @@ define([
 					condition = (condition ? ' AND ' : '') + convertFilter(query.normalizedArguments[0]).join('');
 				} else if (query.type === 'sort') {
 					order = ' ORDER BY ' + query.normalizedArguments[0].map(function(sort) {
-						return table + '.' + sort.property + ' ' + (sort.descending ? 'desc' : 'asc');
+						return sqlColumn(sort.property) + ' ' + (sort.descending ? 'desc' : 'asc');
 					}).join(',');
 				} else if (query.type === 'select') {
 					var selectArgument = query.normalizedArguments[0];
@@ -270,7 +304,7 @@ define([
 			});
 			function sqlColumn(column) {
 				safeSqlName(column);
-				return table + '.' + column;	
+				return table + '.' + escapeDot(column);	
 			}
 			function convertFilter(filter) {
 				var args = filter.args;

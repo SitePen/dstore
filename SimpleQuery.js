@@ -6,6 +6,23 @@ define([
 	// module:
 	//		dstore/SimpleQuery
 
+	function makeGetter(property, queryAccessors) {
+		if (property.indexOf('.') > -1) {
+			var propertyPath = property.split('.');
+			var pathLength = propertyPath.length;
+			return function (object) {
+				for (var i = 0; i < pathLength; i++) {
+					object = object && (queryAccessors && object.get ? object.get(propertyPath[i]) : object[propertyPath[i]]);
+				}
+				return object;
+			};
+		}
+		// else
+		return function (object) {
+			return object.get ? object.get(property) : object[property];
+		};
+	}
+
 	var comparators = {
 		eq: function (value, required) {
 			return value === required;
@@ -63,6 +80,7 @@ define([
 				if (comparator) {
 					// it is a comparator
 					var firstArg = args[0];
+					var getProperty = makeGetter(firstArg, queryAccessors);
 					var secondArg = args[1];
 					if (secondArg && secondArg.fetchSync) {
 						// if it is a collection, fetch the contents (for `in` and `contains` operators)
@@ -70,8 +88,7 @@ define([
 					}
 					return function (object) {
 						// get the value for the property and compare to expected value
-						return comparator.call(collection,
-							queryAccessors && object.get ? object.get(firstArg) : object[firstArg], secondArg, object, firstArg);
+						return comparator.call(collection, getProperty(object), secondArg, object, firstArg);
 					};
 				}
 				switch (type) {
@@ -149,18 +166,20 @@ define([
 		/* jshint ignore:start */
 		,
 		_createSortQuerier: function (sorted) {
+			var queryAccessors = this.queryAccessors;
 			return function (data) {
 				data = data.slice();
 				data.sort(typeof sorted == 'function' ? sorted : function (a, b) {
 					for (var i = 0; i < sorted.length; i++) {
 						var comparison;
-						if (typeof sorted[i] == 'function') {
-							comparison = sorted[i](a, b);
+						var sorter = sorted[i];
+						if (typeof sorter == 'function') {
+							comparison = sorter(a, b);
 						} else {
-							var property = sorted[i].property;
-							var descending = sorted[i].descending;
-							var aValue = a.get ? a.get(property) : a[property];
-							var bValue = b.get ? b.get(property) : b[property];
+							var getProperty = sorter.get || (sorter.get = makeGetter(sorter.property, queryAccessors));
+							var descending = sorter.descending;
+							var aValue = getProperty(a);
+							var bValue = getProperty(b);
 
 							aValue != null && (aValue = aValue.valueOf());
 							bValue != null && (bValue = bValue.valueOf());
