@@ -596,6 +596,22 @@ define([
 				lastEvent = null;
 				store.put({ id: 12, name: 'item-12', order: 12 });
 				assert.isNull(lastEvent);
+			},
+
+			'fetch preserves totalLength API': function () {
+				var store = createStore({ data: [] }, Memory);
+				var trackedCollection = store.track();
+				var results = trackedCollection.fetch();
+
+				assert.isDefined(results.totalLength, 'totalLength should be defined on fetch results');
+			},
+
+			'fetchRange preserves totalLength API': function () {
+				var store = createStore({ data: [] }, Memory);
+				var trackedCollection = store.track();
+				var results = trackedCollection.fetchRange({ start: 0, end: 10 });
+
+				assert.isDefined(results.totalLength, 'totalLength should be defined on fetch results');
 			}
 		};
 	}
