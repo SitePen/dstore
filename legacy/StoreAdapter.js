@@ -119,7 +119,7 @@ define([
 			if (results) {
 				// apply the object restoration
 				return new QueryResults(results.map(this._restore, this), {
-					totalLength: results.total
+					totalLength: when(results.total)
 				});
 			}
 			return results;
