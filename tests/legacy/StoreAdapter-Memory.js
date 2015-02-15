@@ -55,6 +55,13 @@ define([
 			assert.strictEqual(results[1].describe(), 'four is not a prime');
 		},
 
+		fetch: function () {
+			var totalLength = store.fetch().totalLength;
+			assert.isDefined(totalLength, 'totalLength should be defined on fetch results');
+			assert.strictEqual(typeof totalLength.then, 'function',
+				'totalLength should be a promise');
+		},
+
 		'filter': function () {
 			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
 			assert.strictEqual(getResultsArray(store.filter({even: true}))[1].name, 'four');
