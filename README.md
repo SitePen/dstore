@@ -16,7 +16,7 @@ The dstore package includes several store implementations that can be used for t
 * `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
 * `LocalDB` - This a store based on the browser's local database/storage capabilities. Data stored in this store will be persisted in the local browser.
 * `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
-* `Tree` - This is a store mixin that provides hierarchical querying functionality, defining a parent/child relationships for the display of data in a tree.
+* `Tree` - This is a store mixin that provides hierarchical querying functionality, defining parent/child relationships for the display of data in a tree.
 * `Trackable` - This a store mixin that adds index information to `add`, `update`, and `delete` events of tracked store instances. This adds a track() method for tracking stores.
 * `SimpleQuery` - This is a mixin with basic querying functionality, which is extended by the Memory store, and can be used to add client side querying functionality to the Request/Rest store.
 
