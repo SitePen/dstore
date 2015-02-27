@@ -5,7 +5,7 @@ The dstore package includes several store implementations that can be used for t
 * `Memory` - This is a simple memory-based store that takes an array and provides access to the objects in the array through the store interface.
 * `Request` - This is a simple server-based collection that sends HTTP requests following REST conventions to access and modify data requested through the store interface.
 * `Rest` - This is a store built on `Request` that implements add, remove, and update operations using HTTP requests following REST conventions.
-* `RequestMemory` - This is a Memory based store that will retrieve its contents from a server/URL.
+* `RequestMemory` - This is a Memory-based store that will retrieve its contents from a server/URL.
 * `LocalDB` - This a store based on the browser's local database/storage capabilities. Data stored in this store will be persisted in the local browser.
 * `Cache` - This is a store mixin that combines a master and caching store to provide caching functionality.
 * `Trackable` - This a store mixin that adds index information to `add`, `update`, and `remove` events of tracked store instances. This adds a track() method for tracking stores.
@@ -72,8 +72,13 @@ This is the base class used for all stores, providing basic functionality for tr
 
 ## RequestMemory
 
-This store provides client-side querying functionality, but will load its data from the server, using the provided URL. This is
-an asynchronous store since queries and data retrieval may be made before the data has been retrieved from the server.
+This store provides client-side querying functionality, but will load its data from the server up-front, using the
+provided URL. This is an asynchronous store since queries and data retrieval may be made before the data has been
+retrieved from the server.
+
+`RequestMemory` accepts the same `target` option for its URL as `Request` and `Rest`. Additionally, it
+supports a `refresh` method which can be called (and optionally passed a new target URL) to reload data from
+the server endpoint.
 
 ## LocalDB
 

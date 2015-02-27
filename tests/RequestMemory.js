@@ -2,12 +2,13 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'require',
+	'dojo/request',
 	'dojo/when',
 	'dojo/_base/array',
 	'dojo/_base/declare',
 	'../RequestMemory',
 	'../Trackable'
-], function (registerSuite, assert, require, when, arrayUtil, declare, RequestMemory, Trackable) {
+], function (registerSuite, assert, require, request, when, arrayUtil, declare, RequestMemory, Trackable) {
 
 	var store;
 	function mapResultIds(results) {
@@ -112,7 +113,45 @@ define([
 			return when(results, function (data) {
 				assert.deepEqual(data.slice(), [ 'node3', 'node1' ]);
 			});
-		}
+		},
+
+		'.refresh': (function () {
+			var itemsUrl = require.toUrl('./data/items.json');
+			var items;
+
+			return {
+				setup: function () {
+					// Request the same data directly as used in the tests for comparisons
+					return request.get(itemsUrl, { handleAs: 'json' }).then(function (data) {
+						items = data;
+					});
+				},
+
+				'subsequent get calls immediately reflect new data': function () {
+					store.refresh(itemsUrl);
+					return store.get(1).then(function (item) {
+						assert.isDefined(item, 'Item should exist in new data');
+						assert.deepEqual(item, items[0], 'Item should have expected new data');
+					});
+				},
+
+				'subsequent fetchRange calls immediately reflect new data': function () {
+					store.refresh(itemsUrl);
+					return store.fetchRange({ start: 0, end: 2 }).then(function (results) {
+						// Call results.slice for an Array (not QueryResults) to compare
+						assert.deepEqual(results.slice(), items.slice(0, 2),
+							'fetchRange should return the expected items from the new data');
+					});
+				},
+
+				'refresh returns fetch promise': function () {
+					return store.refresh(itemsUrl).then(function (results) {
+						// Call results.slice for an Array (not QueryResults) to compare
+						assert.deepEqual(results.slice(), items,
+							'refresh should return promise from .fetch()');
+					});
+				}
+			};
+		}())
 	});
 });
-
