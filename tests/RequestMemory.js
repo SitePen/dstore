@@ -2,12 +2,11 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'require',
-	'dojo/when',
 	'dojo/_base/array',
 	'dojo/_base/declare',
 	'../RequestMemory',
 	'../Trackable'
-], function (registerSuite, assert, require, when, arrayUtil, declare, RequestMemory, Trackable) {
+], function (registerSuite, assert, require, arrayUtil, declare, RequestMemory, Trackable) {
 
 	var store;
 	function mapResultIds(results) {
@@ -25,7 +24,7 @@ define([
 		},
 
 		'.get': function () {
-			return when(store.get('node2'), function (item) {
+			return store.get('node2').then(function (item) {
 				assert.strictEqual(
 					JSON.stringify(item),
 					JSON.stringify({ 'id': 'node2', 'name':'node2', 'someProperty':'somePropertyB' })
@@ -39,11 +38,13 @@ define([
 			store.on('update', function () {
 				updateEventFired = true;
 			});
-			return when(store.get('node5')).then(function (item) {
+			return store.get('node5').then(function (item) {
 				item.changed = true;
 				updatedItem = item;
 
-				return store.put(updatedItem);
+				var putResult = store.put(updatedItem);
+				assert.isDefined(putResult && putResult.then, 'put should return a promise');
+				return putResult;
 			}).then(function () {
 				return store.get('node5');
 			}).then(function (item) {
@@ -58,18 +59,22 @@ define([
 			store.on('add', function () {
 				addEventFired = true;
 			});
-			return when(store.add(newItem), function () {
-				return when(store.get('node6'), function (item) {
-					assert.strictEqual(JSON.stringify(item), JSON.stringify(newItem));
-					assert.isTrue(addEventFired);
-				});
+			var addResult = store.add(newItem);
+			assert.isDefined(addResult && addResult.then, 'add should return a promise');
+			return addResult.then(function () {
+				return store.get('node6');
+			}).then(function (item) {
+				assert.strictEqual(JSON.stringify(item), JSON.stringify(newItem));
+				assert.isTrue(addEventFired);
 			});
 		},
 
 		'.remove': function () {
-			return when(store.get('node3')).then(function (item) {
+			return store.get('node3').then(function (item) {
 				assert.ok(item);
-				return store.remove('node3');
+				var removeResult = store.remove('node3');
+				assert.isDefined(removeResult && removeResult.then, 'remove should return a promise');
+				return removeResult;
 			}).then(function () {
 				return store.get('node3');
 			}).then(function (item) {
@@ -80,7 +85,7 @@ define([
 
 		'filter': function () {
 			var results = store.filter({ someProperty: 'somePropertyB' }).fetch().then(mapResultIds);
-			return when(results, function (data) {
+			return results.then(function (data) {
 				assert.deepEqual(data.slice(), [ 'node2', 'node5' ]);
 			});
 		},
@@ -90,14 +95,14 @@ define([
 					{ property: 'someProperty', descending: true },
 					{ property: 'name', descending: false }
 				]).fetch().then(mapResultIds);
-			return when(results, function (data) {
+			return results.then(function (data) {
 				assert.deepEqual(data.slice(), [ 'node3', 'node2', 'node5', 'node1', 'node4' ]);
 			});
 		},
 
 		'.fetchRange': function () {
 			var results = store.fetchRange({start: 1, end: 4}).then(mapResultIds);
-			return when(results, function (data) {
+			return results.then(function (data) {
 				assert.deepEqual(data.slice(), [ 'node2', 'node3', 'node4' ]);
 			});
 		},
@@ -109,10 +114,9 @@ define([
 				})
 				.sort('name', true)
 				.fetchRange({start: 1, end: 3}).then(mapResultIds);
-			return when(results, function (data) {
+			return results.then(function (data) {
 				assert.deepEqual(data.slice(), [ 'node3', 'node1' ]);
 			});
 		}
 	});
 });
-
