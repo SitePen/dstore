@@ -66,6 +66,13 @@ define([
 		//		Defines the Accept header to use on HTTP requests
 		accepts: 'application/json',
 
+		// data: Object
+		//		JSON data to POST to the server. If this object is present the HTTP request method will become a POST
+		//		instead of a GET. This allows you to issue requests to the server that contain payloads that aren't
+		//		good candidates for being placed in request parameters. This method will also set the Content-Type
+		//		request header to "application/json; charset=UTF-8".
+		data: null,
+
 		// useRangeHeaders: Boolean
 		//		The indicates if range limits (start and end) should be specified
 		//		a Range header, using items units. If this is set to true, a header
@@ -115,11 +122,19 @@ define([
 		_request: function (kwArgs) {
 			kwArgs = kwArgs || {};
 
+			var requestOptions = {};
+			var method = 'GET';
 			// perform the actual query
 			var headers = lang.delegate(this.headers, { Accept: this.accepts });
 
 			if ('headers' in kwArgs) {
 				lang.mixin(headers, kwArgs.headers);
+			}
+
+			if (this.data) {
+				method = 'POST';
+				headers['Content-Type'] = 'application/json; charset=UTF-8';
+				requestOptions.data = JSON.stringify(this.data);
 			}
 
 			var queryParams = this._renderQueryParams(),
@@ -133,10 +148,12 @@ define([
 				requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
 			}
 
-			var response = request(requestUrl, {
-				method: 'GET',
+			lang.mixin(requestOptions, {
+				method: method,
 				headers: headers
 			});
+
+			var response = request(requestUrl, requestOptions);
 			var collection = this;
 			return {
 				data: response.then(function (response) {
