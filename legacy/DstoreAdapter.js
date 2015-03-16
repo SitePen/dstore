@@ -94,6 +94,8 @@ define([
 
 			var results = this.store.filter(query);
 			var queryResults;
+			var tracked;
+			var total;
 
 			// Apply sorting
 			var sort = options.sort;
@@ -108,7 +110,6 @@ define([
 				}
 			}
 
- 			var tracked;
 			if (results.track && !results.tracking) {
 				// if it is trackable, always track, so that observe can
 				// work properly.
@@ -123,9 +124,11 @@ define([
 					start: start,
 					end: options.count ? (start + options.count) : Infinity
 				});
-				queryResults.total = queryResults.totalLength;
 			}
-			queryResults = queryResults || new QueryResults(results[results.fetchSync ? 'fetchSync' : 'fetch']());
+			queryResults = queryResults || results[results.fetchSync ? 'fetchSync' : 'fetch']();
+			total = queryResults.totalLength;
+			queryResults = new QueryResults(queryResults);
+			queryResults.total = total;
 			queryResults.observe = function (callback, includeObjectUpdates) {
 				// translate observe to event listeners
 				function convertUndefined(value) {
