@@ -111,6 +111,16 @@ define([
 				i++;
 				assert.strictEqual(object.name, 'node' + i);
 			});
+		},
+		'query iterative with options': function () {
+			mockRequest.setResponseText(treeTestRootData);
+
+			var i = 0;
+			return store.query('data/treeTestRoot', { start: 0 }).map(function (object) {
+				i++;
+				assert.strictEqual(object.name, 'node' + i);
+				return object;
+			});
 		}
 	});
 });
