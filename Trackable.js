@@ -95,14 +95,14 @@ define([
 			function makeFetch() {
 				return function () {
 					var self = this;
-					return when(this.inherited(arguments), function (results) {
+					var fetchResults = this.inherited(arguments);
+					when(fetchResults, function (results) {
 						results = self._results = results.slice();
 
 						self._ranges = [];
 						registerRange(self._ranges, 0, results.length);
-
-						return results;
 					});
+					return fetchResults;
 				};
 			}
 			function makeFetchRange() {

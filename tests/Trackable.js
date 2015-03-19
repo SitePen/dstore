@@ -218,7 +218,8 @@ define([
 				bigObserved.fetchRange({ start: 50, end: 75 });
 				bigObserved.fetchRange({ start: 75, end: 100 });
 
-				var results = bigObserved.fetchSync();
+				bigObserved.fetchSync();
+				var results = bigObserved._results;
 				bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 				assert.strictEqual(results.length, 101);
 				assert.strictEqual(observations.length, 1);
@@ -516,8 +517,9 @@ define([
 
 			'new item - with options.beforeId and queryExecutor': function () {
 				var store = createPrimeNumberStore(),
-					evenCollection = store.filter({ even: true }).track(),
-					data = evenCollection.fetchSync();
+					evenCollection = store.filter({ even: true }).track();
+				evenCollection.fetchSync();
+				var data = evenCollection._results;
 
 				store.defaultNewToStart = true;
 				store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
@@ -530,8 +532,9 @@ define([
 
 			'new item - with options.beforeId and no queryExecutor': function () {
 				var store = createPrimeNumberStore(),
-					collection = store.track(),
-					data = collection.fetchSync();
+					collection = store.track();	
+				collection.fetchSync();
+				var data = collection._results;
 
 				store.defaultNewToStart = true;
 				store.add({ id: 6, name: 'six', even: true }, { beforeId: 2 });
@@ -544,8 +547,9 @@ define([
 
 			'updated item - with options.beforeId and queryExecutor': function () {
 				var store = createPrimeNumberStore(),
-					evenCollection = store.filter({ even: true }).track(),
-					data = evenCollection.fetchSync();
+					evenCollection = store.filter({ even: true }).track();
+				evenCollection.fetchSync();
+				var data = evenCollection._results;
 
 				store.defaultNewToStart = true;
 				store.put(store.getSync(4), { beforeId: 2 });
@@ -558,8 +562,9 @@ define([
 
 			'updated item - with options.beforeId and no queryExecutor': function () {
 				var store = createPrimeNumberStore(),
-					collection = store.track(),
-					data = collection.fetchSync();
+					collection = store.track();
+				collection.fetchSync();
+				var data = collection._results;
 
 				store.defaultNewToStart = true;
 				store.put(store.getSync(4), { beforeId: 2 });
