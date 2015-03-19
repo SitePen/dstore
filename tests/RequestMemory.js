@@ -35,7 +35,8 @@ define([
 		'.put': function () {
 			var updatedItem;
 			var updateEventFired;
-			store.on('update', function () {
+			store.on('update', function (event) {
+				assert.isObject(event.target);
 				updateEventFired = true;
 			});
 			return store.get('node5').then(function (item) {
@@ -53,8 +54,29 @@ define([
 			});
 		},
 
+		'.put downstream': function () {
+			var updatedItem;
+			var updateEventFired;
+			var node4View = store.filter({name: 'node4'});
+			node4View.on('update', function (event) {
+				assert.isObject(event.target);
+				updateEventFired = true;
+			});
+			return node4View.get('node4').then(function (item) {
+				item.changed = true;
+				updatedItem = item;
+
+				return store.put(updatedItem);
+			}).then(function () {
+				return store.get('node4');
+			}).then(function (item) {
+				assert.strictEqual(JSON.stringify(item), JSON.stringify(updatedItem));
+				assert.isTrue(updateEventFired);
+			});
+		},
+
 		'.add': function () {
-			var newItem = { 'id': 'node6', 'name':'node5', 'someProperty':'somePropertyB' };
+			var newItem = { 'id': 'node6', 'name':'node6', 'someProperty':'somePropertyB' };
 			var addEventFired;
 			store.on('add', function () {
 				addEventFired = true;
@@ -65,6 +87,19 @@ define([
 				return store.get('node6');
 			}).then(function (item) {
 				assert.strictEqual(JSON.stringify(item), JSON.stringify(newItem));
+				assert.isTrue(addEventFired);
+			});
+		},
+
+		'.add downstream': function () {
+			var newItem = { 'id': 'node7', 'name':'node7', 'someProperty':'somePropertyB' };
+			var addEventFired;
+			var node7View = store.filter({name: 'node7'});
+			node7View.on('add', function () {
+				addEventFired = true;
+			});
+			var addResult = store.add(newItem);
+			return addResult.then(function () {
 				assert.isTrue(addEventFired);
 			});
 		},
