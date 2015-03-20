@@ -200,7 +200,10 @@ define([
 					bigFiltered = bigStore.filter({}).sort('order');
 
 				var observations = [];
+				// temporarily hide this so we don't load everything
+				bigFiltered.fetchSync = null;
 				var bigObserved = bigFiltered.track();
+				delete bigFiltered.fetchSync;
 				bigObserved.on('update', function (event) {
 					observations.push(event);
 					console.log(' observed: ', event);
@@ -218,8 +221,7 @@ define([
 				bigObserved.fetchRange({ start: 50, end: 75 });
 				bigObserved.fetchRange({ start: 75, end: 100 });
 
-				bigObserved.fetchSync();
-				var results = bigObserved._results;
+				var results = bigObserved._partialResults;
 				bigStore.add({id: 101, name: 'one oh one', order: 2.5});
 				assert.strictEqual(results.length, 101);
 				assert.strictEqual(observations.length, 1);
@@ -235,9 +237,14 @@ define([
 				var bigStore = createPartialDataStore(100),
 					bigFiltered = bigStore.filter({}).sort('order'),
 					latestObservation,
-					bigObserved = bigFiltered.track(),
 					item,
-					assertObservationIs = function (expectedObservation) {
+					bigObserved;
+				// temporarily hide this so we don't load everything
+				bigFiltered.fetchSync = null;
+ 				bigObserved = bigFiltered.track();
+ 				delete bigFiltered.fetchSync;
+
+				var assertObservationIs = function (expectedObservation) {
 						expectedObservation = lang.delegate(expectedObservation);
 						if (expectedObservation.type in { add: 1, update: 1 }
 							&& !('index' in expectedObservation)) {
@@ -379,8 +386,13 @@ define([
 					headTrimmingRange = { start: 50, end: 60 },
 					tailTrimmingRange = { start: 90, end: 100 };
 
-				var trackedStore = store.track(),
-					assertRangeDefined = function (start, end) {
+				// temporarily hide this so we don't load everything
+				store.fetchSync = null;
+ 				var trackedStore = store.track();
+ 				// restore
+ 				delete store.fetchSync;
+
+				var assertRangeDefined = function (start, end) {
 						for(var i = start; i < end; ++i) {
 							assert.notEqual(trackedStore._partialResults[i], undefined);
 						}
@@ -421,8 +433,12 @@ define([
 			},
 
 			'new item with default index': function () {
-				var store = createPartialDataStore(100),
-					trackedStore = store.track();
+				var store = createPartialDataStore(100);
+				// temporarily hide this so we don't load everything
+				store.fetchSync = null;
+ 				var trackedStore = store.track();
+ 				// restore
+ 				delete store.fetchSync;
 
 				return trackedStore.fetchRange({ start: 0, end: 25 }).then(function () {
 					var addEvent = null;
@@ -467,9 +483,6 @@ define([
 				var store = createStore({ data: [] }, Memory),
 					collection = store.filter({ type: 'test-item' }).track();
 
-				// Fetch so tracking has data to work with
-				collection.fetch();
-
 				var actualEvent;
 				collection.on('add', function (event) {
 					actualEvent = event;
@@ -493,9 +506,6 @@ define([
 				var store = createStore({ data: [] }, Memory),
 					collection = store.track();
 
-				// Fetch so tracking has data to work with
-				collection.fetch();
-
 				var actualEvent;
 				collection.on('add', function (event) {
 					actualEvent = event;
@@ -518,7 +528,6 @@ define([
 			'new item - with options.beforeId and queryExecutor': function () {
 				var store = createPrimeNumberStore(),
 					evenCollection = store.filter({ even: true }).track();
-				evenCollection.fetchSync();
 				var data = evenCollection._results;
 
 				store.defaultNewToStart = true;
@@ -548,7 +557,6 @@ define([
 			'updated item - with options.beforeId and queryExecutor': function () {
 				var store = createPrimeNumberStore(),
 					evenCollection = store.filter({ even: true }).track();
-				evenCollection.fetchSync();
 				var data = evenCollection._results;
 
 				store.defaultNewToStart = true;
@@ -563,7 +571,6 @@ define([
 			'updated item - with options.beforeId and no queryExecutor': function () {
 				var store = createPrimeNumberStore(),
 					collection = store.track();
-				collection.fetchSync();
 				var data = collection._results;
 
 				store.defaultNewToStart = true;

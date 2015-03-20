@@ -98,7 +98,10 @@ define([
 					var fetchResults = this.inherited(arguments);
 					when(fetchResults, function (results) {
 						results = self._results = results.slice();
-
+						if (self._partialResults) {
+							// clean this up, as we don't need this anymore
+							self._partialResults = null;
+						}
 						self._ranges = [];
 						registerRange(self._ranges, 0, results.length);
 					});
@@ -111,21 +114,24 @@ define([
 						start = kwArgs.start,
 						end = kwArgs.end,
 						fetchResults = this.inherited(arguments);
-					when(fetchResults, function (results) {
-						return when(results.totalLength, function (totalLength) {
-							var partialResults = self._partialResults || (self._partialResults = []);
-							end = Math.min(end, start + results.length);
+					// only use this if we don't have all the data
+					if (!this._results) {
+						when(fetchResults, function (results) {
+							return when(results.totalLength, function (totalLength) {
+								var partialResults = self._partialResults || (self._partialResults = []);
+								end = Math.min(end, start + results.length);
 
-							partialResults.length = totalLength;
+								partialResults.length = totalLength;
 
-							// copy the new ranged data into the parent partial data set
-							var spliceArgs = [ start, end - start ].concat(results);
-							partialResults.splice.apply(partialResults, spliceArgs);
-							registerRange(self._ranges, start, end);
+								// copy the new ranged data into the parent partial data set
+								var spliceArgs = [ start, end - start ].concat(results);
+								partialResults.splice.apply(partialResults, spliceArgs);
+								registerRange(self._ranges, start, end);
 
-							return results;
+								return results;
+							});
 						});
-					});
+					}
 					return fetchResults;
 				};
 			}
@@ -178,6 +184,11 @@ define([
 					fetchSync: makeFetch(),
 					fetchRangeSync: makeFetchRange()
 				});
+
+				// we take the presence of fetchSync to indicate that the results can be
+				// retrieved cheaply, and then we can just automatically fetch and start
+				// tracking results
+				observed.fetchSync();
 			}
 
 			// Create a function that applies all queriers in the query log
@@ -214,8 +225,9 @@ define([
 				revision++;
 				var target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
+
 				when(observed._results || observed._partialResults, function (resultsArray) {
-					/* jshint maxcomplexity: 30 */
+					/* jshint maxcomplexity: 32 */
 
 					function emitEvent() {
 						// TODO: Eventually we will want to aggregate all the listener events
