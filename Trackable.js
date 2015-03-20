@@ -5,9 +5,10 @@ define([
 	'dojo/when',
 	'dojo/promise/all',
 	'dojo/_base/array',
-	'dojo/on'
+	'dojo/on',
+	'./QueryResults'
 	/*=====, './api/Store' =====*/
-], function (lang, declare, aspect, when, whenAll, arrayUtil, on /*=====, Store =====*/) {
+], function (lang, declare, aspect, when, whenAll, arrayUtil, on, QueryResults /*=====, Store =====*/) {
 
 	// module:
 	//		dstore/Trackable
@@ -95,13 +96,16 @@ define([
 			function makeFetch() {
 				return function () {
 					var self = this;
-					return when(this.inherited(arguments), function (results) {
+					var fetchResults = this.inherited(arguments);
+					return new QueryResults(when(fetchResults, function (results) {
 						results = self._results = results.slice();
 
 						self._ranges = [];
 						registerRange(self._ranges, 0, results.length);
 
 						return results;
+					}), {
+						totalLength: fetchResults.totalLength
 					});
 				};
 			}
