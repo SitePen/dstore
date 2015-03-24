@@ -133,22 +133,26 @@ define([
 				requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
 			}
 
+			var collection = this;
 			var response = request(requestUrl, {
 				method: 'GET',
 				headers: headers
+			}).response.then(function (response) {
+				// response is immutable
+				response = lang.mixin({}, response);
+				response.data = collection.parse(response.data);
+				return response;
 			});
-			var collection = this;
 			return {
 				data: response.then(function (response) {
-					var results = collection.parse(response);
 					// support items in the results
-					results = results.items || results;
+					var results = response.data.items || response.data;
 					for (var i = 0, l = results.length; i < l; i++) {
 						results[i] = collection._restore(results[i], true);
 					}
 					return results;
 				}),
-				total: response.response.then(function (response) {
+				total: response.then(function (response) {
 					var total = response.data.total;
 					if (total > -1) {
 						// if we have a valid positive number from the data,
@@ -158,7 +162,7 @@ define([
 					var range = response.getHeader('Content-Range');
 					return range && (range = range.match(/\/(.*)/)) && +range[1];
 				}),
-				response: response.response
+				response: response
 			};
 		},
 
