@@ -47,9 +47,16 @@ define([
 			expected = rangeArgs;
 			results = collection.fetch();
 		} else {
+			mockRequest.setResponseHeaders({
+				'Content-Range': rangeArgs.start + '-' + rangeArgs.end + '/' + expectedResults.length
+			});
 			results = collection.fetchRange(rangeArgs);
+			results = results.totalLength.then(function (totalLength) {
+				assert.strictEqual(totalLength, expectedResults.length);
+				return results;
+			});
 		}
-		return when(results).then(function (results) {
+		return results.then(function (results) {
 			expected.headers && mockRequest.assertRequestHeaders(expected.headers);
 			expected.queryParams && mockRequest.assertQueryParams(expected.queryParams);
 

@@ -138,25 +138,31 @@ define([
 				headers: headers
 			});
 			var collection = this;
+			var parsedResponse = response.then(function (response) {
+				return collection.parse(response);
+			});
 			return {
-				data: response.then(function (response) {
-					var results = collection.parse(response);
+				data: parsedResponse.then(function (data) {
 					// support items in the results
-					results = results.items || results;
+					var results = data.items || data;
 					for (var i = 0, l = results.length; i < l; i++) {
 						results[i] = collection._restore(results[i], true);
 					}
 					return results;
 				}),
-				total: response.response.then(function (response) {
-					var total = response.data.total;
+				total: parsedResponse.then(function (data) {
+					// check for a total property
+					var total = data.total;
 					if (total > -1) {
 						// if we have a valid positive number from the data,
 						// we can use that
 						return total;
 					}
-					var range = response.getHeader('Content-Range');
-					return range && (range = range.match(/\/(.*)/)) && +range[1];
+					// else use headers
+					return response.response.then(function (response) {
+						var range = response.getHeader('Content-Range');
+						return range && (range = range.match(/\/(.*)/)) && +range[1];
+					});
 				}),
 				response: response.response
 			};
