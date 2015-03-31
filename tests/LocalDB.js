@@ -233,13 +233,23 @@ define([
 					{sort:[{property: 'id'}], range: {start: 1, end: 3}}, [1, 2, 3, 4]),
 			"in('id', [2, 4, 5])": testQuery(new Filter().in('id', [2, 4, 5]),
 					{sort:[{property: 'id'}], range: {start: 1, end: 3}}, [2, 4, 5]),
-			"in('id', [2, 4, 5]).select('name')": function () {
+			"in('id', [2, 4, 5]).select(['id', 'name'])": function () {
 				var selected = numberStore.filter(new Filter().in('id', [2, 4, 5])).select(['id', 'name']);
 				return selected.fetch().then(function (data) {
 					assert.deepEqual(data.slice(0), [
 						{id: 2, name: 'two'},
 						{id: 4, name: 'four'},
 						{id: 5, name: 'five'}
+					]);
+				});
+			},
+			"in('id', [2, 4, 5]).select('name')": function () {
+				var selected = numberStore.filter(new Filter().in('id', [2, 4, 5])).select('name');
+				return selected.fetch().then(function (data) {
+					assert.deepEqual(data.slice(0), [
+						'two',
+						'four',
+						'five'
 					]);
 				});
 			},

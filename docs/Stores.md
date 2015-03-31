@@ -52,7 +52,11 @@ The `Memory` store provides synchronous equivalents of standard asynchronous sto
 
 ## Request
 
-This is a simple collection for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property. A request for data will be sent to the server when a fetch occurs (due a call to `fetch()`, `fetchRange()`, or `forEach()`).
+This is a simple collection for accessing data by retrieval from a server (typically through XHR). The target URL path to use for requests can be defined with the `target` property. A request for data will be sent to the server when a fetch occurs (due a call to `fetch()`, `fetchRange()`, or `forEach()`). Request supports several properties for defining the generation of query strings:
+* `sortParam` - This will specify the query parameter to use for specifying the sort order. This will default to `sort(<properties>)` in the query string.
+* `selectParam` - This will specify the query parameter to use for specifying the `select` properties. This will default to `select(<properties>)` in the query string.
+* `rangeStartParam` and `rangeCountParam` - This will specify the query parameter to use for specifying the range. This will default to `limit(<count>,<start>)` in the query string.
+* `useRangeHeaders` - This will specify that range information should be specified in the `Range` header.
 
 ## Rest
 

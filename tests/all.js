@@ -18,6 +18,6 @@ define([
 	'./legacy/StoreAdapter-AsyncMemory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-JsonRest',
 	'./legacy/StoreAdapter-DojoData',
-	'./LocalDB'
+	'intern/node_modules/dojo/has!host-browser?./LocalDB'
 ], function () {
 });

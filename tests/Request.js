@@ -213,7 +213,23 @@ define([
 					}
 				});
 			},
-
+			'select': function () {
+				var selectCollection = store.select(['prop1', 'prop2']);
+				return runCollectionTest(selectCollection, {
+					queryParams: {
+						'select(prop1,prop2)': ''
+					}
+				});
+			},
+			'select with selectParam': function () {
+				store.selectParam = 'select-param';
+				var selectCollection = store.select(['prop1', 'prop2']);
+				return runCollectionTest(selectCollection, {
+					queryParams: {
+						'select-param': 'prop1,prop2'
+					}
+				});
+			},
 			'range': function () {
 				return runCollectionTest(store, {start: 15, end: 25}, {
 					queryParams: {

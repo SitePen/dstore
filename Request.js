@@ -229,6 +229,20 @@ define([
 			return params;
 		},
 
+		_renderSelectParams: function (properties) {
+			// summary:
+			//		Constructs range-related params to be inserted in the query string
+			// returns: String
+			//		Range-related params to be inserted in the query string
+			var params = [];
+			if (this.selectParam) {
+				params.push(this.selectParam + '=' + properties);
+			} else {
+				params.push('select(' + properties + ')');
+			}
+			return params;
+		},
+
 		_renderQueryParams: function () {
 			var queryParams = [];
 
