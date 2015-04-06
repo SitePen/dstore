@@ -366,12 +366,12 @@ define([
 				item = bigStore.getSync(76);
 				item.order = 74.9;
 				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, previousIndex: 76, totalLength: 100 });
+				assertObservationIs({ type: 'update', target: item, beforeIndex: 75, previousIndex: 76, totalLength: 100 });
 
 				// An addition at the beginning of a range has an indeterminate index
 				item = bigStore._restore({ id: 74.8, name: 'item 74.8', order: 74.8 });
 				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, totalLength: 100 });
+				assertObservationIs({ type: 'add', target: item, beforeIndex: 76, totalLength: 100 });
 			},
 
 			'paging releaseRange with store._partialResults': function () {

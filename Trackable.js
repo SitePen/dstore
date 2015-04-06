@@ -329,6 +329,9 @@ define([
 										insertionRangeIndex = i;
 									}
 								}
+								if (insertedInto === -1 && begin > 0 && begin < ranges.length) {
+									var betweenRanges = true;
+								}
 							}
 						} else {
 							// we don't have a queryExecutor, so we can't provide any information
@@ -392,6 +395,13 @@ define([
 							for (i = insertionRangeIndex + 1; i < ranges.length; ++i) {
 								ranges[i].start++;
 							}
+						} else if (betweenRanges) {
+							// the begin index will be after the inserted item, and is
+							// where we can begin incrementing start values
+							event.beforeIndex = ranges[begin].start;
+							for (i = begin; i < ranges.length; ++i) {
+								ranges[i].start++;
+							}							
 						}
 					}
 					// update the total
