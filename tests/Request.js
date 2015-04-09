@@ -158,6 +158,15 @@ define([
 				}});
 			},
 
+			'filter relational': function () {
+				var filter = new store.Filter();
+				var innerFilter = new store.Filter().eq('foo', true);
+				var nestedFilter = filter['in']('id', store.filter(innerFilter));
+				return runCollectionTest(store.filter(nestedFilter), { queryParams: {
+					id: 'in=(/mockRequest/?foo=true)'
+				}});
+			},
+
 			'sort': function () {
 				var sortedCollection = store.sort({
 					property: 'prop1',

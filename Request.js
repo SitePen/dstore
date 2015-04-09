@@ -190,7 +190,16 @@ define([
 						'(' + renderedArg + ')' : renderedArg;
 				}, this).join(type === 'and' ? '&' : '|')];
 			}
-			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(args[1])];
+			var target = args[1];
+			if (target) {
+				if(target._renderUrl) {
+					// detected nested query, and render the url inside as an argument
+					target = '(' + target._renderUrl() + ')';
+				} else if (target instanceof Array) {
+					target = '(' + target + ')';
+				}
+			}
+			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(target)];
 		},
 		_renderSortParams: function (sort) {
 			// summary:
