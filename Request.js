@@ -122,16 +122,7 @@ define([
 				lang.mixin(headers, kwArgs.headers);
 			}
 
-			var queryParams = this._renderQueryParams(),
-				requestUrl = this.target;
-
-			if ('queryParams' in kwArgs) {
-				push.apply(queryParams, kwArgs.queryParams);
-			}
-
-			if (queryParams.length > 0) {
-				requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
-			}
+			var requestUrl = this._renderUrl(kwArgs.queryParams);
 
 			var response = request(requestUrl, {
 				method: 'GET',
@@ -269,18 +260,23 @@ define([
 			return queryParams;
 		},
 
-		_renderUrl: function () {
+		_renderUrl: function (requestParams) {
 			// summary:
 			//		Constructs the URL used to fetch the data.
 			// returns: String
 			//		The URL of the data
 
-			var queryParams = this._renderQueryParams();
-			var url = this.target;
-			if (queryParams.length > 0) {
-				url += '?' + queryParams.join('&');
+			var queryParams = this._renderQueryParams(),
+				requestUrl = this.target;
+
+			if (requestParams) {
+				push.apply(queryParams, requestParams);
 			}
-			return url;
+
+			if (queryParams.length > 0) {
+				requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
+			}
+			return requestUrl;
 		},
 
 		_renderRangeHeaders: function (start, end) {
