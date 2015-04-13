@@ -90,10 +90,10 @@ This a store based on the browser's local database/storage capabilities. Data st
 
 The `LocalDB` stores requires a few extra parameters, not needed by other stores. First, it needs a database configuration object. A database configuration object defines all the stores or tables that are used by the stores, and which properties to index. There should be a single database configuration object for the entire application, and it should be passed to all the store instances. The configuration object should include a version (which should be incremented whenever the configuration is changed), and a set of stores in the `stores` object. Within the stores object, each property that will be used should be defined. Each property value should have a property configuration object with the following optional properties:
 
-* preference - This defines the priority of using this property for index-based querying. This should be a larger number for more unique properties. A boolean property would generally have a `preference` of 1, and a completely unique property should be 100.
-* indexed - This is a boolean indicating if a property should be indexed. This defaults to true.
-* multiEntry - This indicates the property will have an array of values, and should be indexed correspondingly.
-* autoIncrement - This indicates if a property should automatically increment.
+* `preference` - This defines the priority of using this property for index-based querying. This should be a larger number for more unique properties. A boolean property would generally have a `preference` of 1, and a completely unique property should be 100.
+* `indexed` - This is a boolean indicating if a property should be indexed. This defaults to true.
+* `multiEntry` - This indicates the property will have an array of values, and should be indexed correspondingly. Internet Explorer's implementation of IndexedDB does not currently support `multiEntry`.
+* `autoIncrement` - This indicates if a property should automatically increment.
 
 Alternately a number can be provided as a property configuration, and will be used as the `preference`.
 
