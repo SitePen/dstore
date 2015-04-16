@@ -161,9 +161,9 @@ define([
 			'filter relational': function () {
 				var filter = new store.Filter();
 				var innerFilter = new store.Filter().eq('foo', true);
-				var nestedFilter = filter['in']('id', store.filter(innerFilter));
+				var nestedFilter = filter['in']('id', store.filter(innerFilter).select('id'));
 				return runCollectionTest(store.filter(nestedFilter), { queryParams: {
-					id: 'in=(/mockRequest/?foo=true)'
+					id: 'in=(/mockRequest/?foo=true&select(id))'
 				}});
 			},
 
