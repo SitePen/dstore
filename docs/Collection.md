@@ -152,6 +152,8 @@ Or we can do a `fetchRange()` to make individual range requests for items in the
 
 Trackable will keep track of each page of data, and send out notifications based on the data it has available, along with index information, indicating the new and old position of the object that was modified. Regardless of whether full or partial data is fetched, tracked events and the indices they report are relative to the entire collection, not relative to individual fetched ranges. Tracked events also include a `totalLength` property indicating the total length of the collection.
 
+If an object is added or updated, and falls outside of all of the fetched ranges, the index will be undefined. However, if the object falls between fetched ranges (but within one), there will also be a `beforeIndex` that indicates the index of the first object that the new or update objects comes before.
+
 ### Custom Querying
 
 Custom query methods can be created using the `dstore/QueryMethod` module. We can define our own query method, by extending a store, and defining a method with the `QueryMethod`. The QueryMethod constructor should be passed an object with the following possible properties:
