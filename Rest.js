@@ -101,7 +101,7 @@ define([
 					event.beforeId = options.beforeId;
 				}
 
-				var result = event.target = store._restore(store.parse(response), true) || object;
+				var result = event.target = response && store._restore(store.parse(response), true) || object;
 
 				when(initialResponse.response, function (httpResponse) {
 					store.emit(httpResponse.status === 201 ? 'add' : 'update', event);
