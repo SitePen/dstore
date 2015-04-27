@@ -261,6 +261,11 @@ define([
 							range = ranges[i];
 							for (j = range.start, l = j + range.count; j < l; ++j) {
 								var object = resultsArray[j];
+
+								// The object is not guaranteed to be there. If it's not, th
+								// there is no point in looking for it
+								if( ! object ) continue;
+
 								// often ids can be converted strings (if they are used as keys in objects),
 								// so we do a coercive equality check
 								/* jshint eqeqeq: false */
