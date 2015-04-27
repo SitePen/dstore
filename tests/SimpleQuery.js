@@ -70,6 +70,20 @@ define([
 				{ id: 3, name: 'three', odd: true },
 				{ id: 2, name: 'two', odd: false }
 			]);
+		},
+
+		'nested queries': function () {
+			var f = new Filter();
+			var isEven = f.eq('odd', false);
+			var isOdd = f.eq('odd', true);
+			var isZero = f.eq('name', 'zero');
+			var isOne = f.eq('name', 'one');
+			var query = f.or(f.and(isEven, isZero), f.and(isOdd, isOne));
+			var filter = simpleQuery._createFilterQuerier(query);
+
+			assert.deepEqual(filter(testData), [
+				{ id: 1, name: 'one', odd: true }
+			]);
 		}
 	});
 });
