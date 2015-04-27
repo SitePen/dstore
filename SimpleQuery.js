@@ -74,6 +74,7 @@ define([
 			var querier = getQuerier(filter);
 
 			function getQuerier(filter) {
+				var querier;
 				var type = filter.type;
 				var args = filter.args;
 				var comparator = collection._getFilterComparator(type);
