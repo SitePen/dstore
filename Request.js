@@ -245,17 +245,26 @@ define([
 
 		_renderQueryParams: function () {
 			var queryParams = [];
+			var filterEntries = [];
 
 			arrayUtil.forEach(this.queryLog, function (entry) {
 				var type = entry.type,
 					renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
 
-				if (this[renderMethod]) {
+				if (type === 'filter') {
+					filterEntries.push(entry.normalizedArguments[0]);
+				} else if (this[renderMethod]) {
 					push.apply(queryParams, this[renderMethod].apply(this, entry.normalizedArguments));
 				} else {
 					console.warn('Unable to render query params for "' + type + '" query', entry);
 				}
 			}, this);
+
+			if (filterEntries.length) {
+				var filter = new this.Filter();
+				var andFilter = filter.and.apply(filter, filterEntries);
+				queryParams.unshift.apply(queryParams, this._renderFilterParams(andFilter));
+			}
 
 			return queryParams;
 		},
