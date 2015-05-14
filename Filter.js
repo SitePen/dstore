@@ -1,15 +1,45 @@
 define(['dojo/_base/declare'], function (declare) {
 	// a Filter builder
 	function filterCreator(type) {
-		// constructs a new filter based on type, used to create each method
+		// constructs a new filter based on type, used to create each comparison method
 		return function newFilter() {
 			var Filter = this.constructor;
 			var filter = new Filter();
 			filter.type = type;
-			filter.args = arguments;
+			// ensure args is array so we can concat, slice, unshift
+			filter.args = Array.prototype.slice.call(arguments);
 			if (this.type) {
 				// we are chaining, so combine with an and operator
 				return filterCreator('and').call(Filter.prototype, this, filter);
+			}
+			return filter;
+		};
+	}
+	function logicalOperatorCreator(type) {
+		// constructs a new logical operator 'filter', used to create each logical operation method
+		return function newLogicalOperator() {
+			var Filter = this.constructor;
+			var argsArray = [];
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				argsArray.push(arg instanceof Filter ? arg : new Filter(arg));
+			}
+			var filter = new Filter();
+			filter.type = type;
+			filter.args = argsArray;
+			if (this.type === type) {
+				// chaining, same type
+				// combine arguments
+				filter.args = this.args.concat(argsArray);
+			} else if (this.type) {
+				// chaining, different type
+				// add this filter to start of arguments
+				argsArray.unshift(this);
+			} else if (argsArray.length === 1) {
+				// not chaining and only one argument
+				// returned filter is the same as the single argument
+				filter.type = argsArray[0].type;
+				filter.args = argsArray[0].args.slice();
 			}
 			return filter;
 		};
@@ -43,8 +73,8 @@ define(['dojo/_base/declare'], function (declare) {
 			}
 		},
 		// define our operators
-		and: filterCreator('and'),
-		or: filterCreator('or'),
+		and: logicalOperatorCreator('and'),
+		or: logicalOperatorCreator('or'),
 		eq: filterCreator('eq'),
 		ne: filterCreator('ne'),
 		lt: filterCreator('lt'),
@@ -56,5 +86,6 @@ define(['dojo/_base/declare'], function (declare) {
 		match: filterCreator('match')
 	});
 	Filter.filterCreator = filterCreator;
+	Filter.logicalOperatorCreator = logicalOperatorCreator;
 	return Filter;
 });
