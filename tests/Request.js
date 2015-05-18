@@ -153,8 +153,7 @@ define([
 				var filter = new store.Filter();
 				var betweenTwoAndFour = filter.ne('id', 2).or(filter.eq('foo', true), filter.eq('foo'));
 				return runCollectionTest(store.filter(betweenTwoAndFour), { queryParams: {
-					id: 'ne=2',
-					'(foo': 'true|foo=undefined)'
+					id: 'ne=2|foo=true|foo=undefined'
 				}});
 			},
 
