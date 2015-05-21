@@ -66,10 +66,7 @@ define([
 				expectedQueryLog1 = [ {
 					type: 'filter', arguments: [ filter1 ], normalizedArguments: [ {
 						type: 'eq',
-						args: { // we have to match Argument type, which is not a real array
-							0: 'prop1',
-							1: 'one'
-						}
+						args: ['prop1', 'one']
 					} ]
 				} ],
 				filter2 = function filterFunc() {},
