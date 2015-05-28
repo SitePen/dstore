@@ -228,8 +228,10 @@ define([
 			//		The identity to use to lookup the object
 			// options: Object?
 			// returns: dojo//Deferred
-
-			return this._callOnStore('get',[id]);
+			var store = this;
+			return this._callOnStore('get',[id]).then(function (object) {
+				return store._restore(object);
+			});
 		},
 
 		getIdentity: function (object) {
@@ -254,7 +256,11 @@ define([
 
 			options = options || {};
 			this.cachedCount = {}; // clear the count cache
-			return this._callOnStore(options.overwrite === false ? 'add' : 'put',[object]);
+			var store = this;
+			return this._callOnStore(options.overwrite === false ? 'add' : 'put',[object])
+				.then(function (object) {
+					return store._restore(object);
+				});
 		},
 
 		add: function (object, options) {
@@ -580,15 +586,16 @@ define([
 		_fetch: function (callback, fetchOptions) {
 			var query = this._normalizeQuery();
 			var filterQuery = query.filter;
+			var store = this;
 			if (filterQuery instanceof Array || filterQuery.then) {
 				return this._union(query, function (object) {
-					callback(object);
+					callback(store._restore(object));
 					// keep going
 					return true;
 				}, fetchOptions);
 			}
 			return this._query(query, function (object) {
-				callback(object);
+				callback(store._restore(object));
 				// keep going
 				return true;
 			}, fetchOptions);
