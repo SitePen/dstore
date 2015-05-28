@@ -117,9 +117,10 @@ define([
 		selectColumns: ['*'],
 		get: function (id) {
 			// basic get() operation, query by id property
+			var store = this;
 			return when(this.executeSql('SELECT ' + this.selectColumns.join(',') + ' FROM ' +
 					this.table + ' WHERE ' + this.idProperty + '=?', [id]), function (result) {
-				return result.rows.length > 0 ? convertExtra(result.rows.item(0)) : undefined;
+				return result.rows.length > 0 ? store._restore(convertExtra(result.rows.item(0))) : undefined;
 			});
 		},
 		getIdentity: function (object) {
@@ -388,11 +389,12 @@ define([
 			if (options.start) {
 				limitedCondition += ' OFFSET ' + options.start;
 			}
+			var store = this;
 			var results = lang.delegate(this.executeSql(limitedCondition, params).then(function(sqlResults) {
 				// get the results back and do any conversions on it
 				var results = [];
 				for (var i = 0; i < sqlResults.rows.length; i++) {
-					results.push(convertExtra(sqlResults.rows.item(i)));
+					results.push(store._restore(convertExtra(sqlResults.rows.item(i))));
 				}
 				if (querier) {
 					results = querier(results);

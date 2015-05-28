@@ -277,12 +277,21 @@ define([
 			'reload db': function () {
 				// reload the DB store and make sure the data is still there
 				dbConfig.openRequest = null;
-				numberStore = new DB({dbConfig: dbConfig, storeName: 'test'});
+				function Model() {}
+				Model.prototype.method = function () {
+					return true;
+				};
+				numberStore = new DB({
+					dbConfig: dbConfig,
+					storeName: 'test',
+					Model: Model
+				});
 				return numberStore.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1);
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
 					assert.strictEqual(one.mappedTo, 'E');
+					assert.isTrue(one.method());
 					return all([
 						testQuery(new Filter().gte('name', 's').lte('name', 'u'), {sort:[{property: 'id'}]}, [3, 6])(),
 						testQuery(new Filter().contains('words', [new Filter().match('words', /^orange/)]), {multi: true}, [3, 6])()

@@ -13,10 +13,11 @@ function(declare, Memory) {
 			// load all the data from the local storage
 			var data = [];
 			var prefix = this.prefix = this.dbPrefix + '-' + this.storeName + '-';
+			var store = this;
 			for (var i = 0, l = localStorage.length; i < l; i++) {
 				var key = localStorage.key(i);
 				if (key.slice(0, prefix.length) === prefix) {
-					data.push(JSON.parse(localStorage.getItem(key)));
+					data.push(store._restore(JSON.parse(localStorage.getItem(key))));
 				}
 			}
 			this.setData(data);
