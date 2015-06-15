@@ -176,6 +176,7 @@ define([
 
 		sort: cachingQuery('sort'),
 		filter: cachingQuery('filter'),
+		select: cachingQuery('select'),
 
 		_getQuerierFactory: function (type) {
 			var cachingStore = this.cachingStore;
