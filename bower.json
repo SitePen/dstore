@@ -3,6 +3,7 @@
   "description": "A data collection infrastructure",
 	"keywords": [
 		"dojo",
+		"dojo2",
 		"store"
 	],
 	"repository": {
@@ -10,12 +11,11 @@
 		"url": "git://github.com/SitePen/dstore"
 	},
 	"dependencies": {
-		"dojo": ">=1.8.1"
 	},
 	"ignore": [
 		".*",
 		"tests"
 	],
-	"license": [ "AFL-2.1", "BSD-3-Clause" ],
+	"license": [ "BSD-3-Clause" ],
 	"moduleType": [ "amd" ]
 }

@@ -1,5 +1,16 @@
-dstore
-======
+**Note:** The master branch of dstore has been reorganized to facilitate conversion of the package to TypeScript
+for Dojo 2, and as such will be in a state of flux for the near future.
+
+If you are looking for the JavaScript code for version 1, see the following branches:
+
+* [1.x](https://github.com/SitePen/dstore/tree/1.x) for any potential future 1.x versions
+  (though none are currently planned)
+* [1.1](https://github.com/SitePen/dstore/tree/1.1) for the 1.1.x line
+* [1.0](https://github.com/SitePen/dstore/tree/1.0) for the 1.0.x line
+
+See [#130](https://github.com/SitePen/dstore/issues/130) for more details.
+
+# dstore
 
 The dstore package is a data infrastructure framework, providing the tools for modelling and interacting with data collections and objects. dstore is designed to work with a variety of data storage mediums, and provide a consistent interface for accessing data across different user interface components. There are several key entities within dstore:
 
@@ -49,19 +60,19 @@ Adapters make it possible work with legacy Dojo object stores and widgets that e
 # [Testing](./docs/Testing.md)
 
 dstore uses [Intern](http://theintern.io/) as its test runner. A full description
-of how to setup testing is [available here](./docs/Testing.md). Tests can
-either be run using the browser, or using [Sauce Labs](https://saucelabs.com/).
-More information on writing your own tests with Intern can be found in the
-[Intern wiki](https://github.com/theintern/intern/wiki).
+of how to setup testing is [available here](./docs/Testing.md).
+
+90% branch coverage MUST be provided for all code submitted to this repository, as reported by istanbul’s combined coverage results for all supported platforms.
 
 # Dependencies
 
 dstore's only required dependency is Dojo version 1.8 or higher. Running the unit tests requires the [intern-geezer](https://github.com/theintern/intern/tree/geezer) package (see the testing docs for [more information](./docs/Testing.md)). The extensions/RqlQuery module can leverage the [rql](https://github.com/persvr/rql) package, but the rql package is only needed if you use this extension.
 
-# Contributing 
+## How do I contribute?
 
-We welcome contributions, but please read the [contributing documentation](./docs/CONTRIBUTING.md) to help us be able to effectively receive your contributions and pull requests.
+We appreciate your interest!  Please see the [Guidelines Repository](https://github.com/dojo/guidelines#readme) for the
+Contributing Guidelines and Style Guide.
 
-# License
+## Licensing information
 
-The dstore project is available under the same dual BSD/AFLv2 license as the Dojo Toolkit.
+© 2004–2015 Dojo Foundation & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
