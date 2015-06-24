@@ -212,7 +212,7 @@ define([
 						{id: 2.3, name: 'two point three', whole: false, even: false}
 					]}
 				],
-				getChildren: new QueryMethod({
+				getChildren: new QueryMethod.default({
 					type: 'children',
 					querierFactory: function (parent) {
 						return function () {

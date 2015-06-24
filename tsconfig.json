@@ -15,6 +15,9 @@
 		"./tests/**/*.ts"
 	],
 	"files": [
+		"./typings/tsd.d.ts",
+		"./src/QueryMethod.ts",
+		"./src/interfaces.d.ts",
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
 		"./tests/typings/chai/chai.d.ts",

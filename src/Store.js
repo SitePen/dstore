@@ -236,7 +236,7 @@ define([
 		//		The query operations represented by this collection
 		queryLog: [],	// NOTE: It's ok to define this on the prototype because the array instance is never modified
 
-		filter: new QueryMethod({
+		filter: new QueryMethod.default({
 			type: 'filter',
 			normalizeArguments: function (filter) {
 				var Filter = this.Filter;
@@ -249,7 +249,7 @@ define([
 
 		Filter: Filter,
 
-		sort: new QueryMethod({
+		sort: new QueryMethod.default({
 			type: 'sort',
 			normalizeArguments: function (property, descending) {
 				var sorted;
@@ -277,7 +277,7 @@ define([
 			}
 		}),
 
-		select: new QueryMethod({
+		select: new QueryMethod.default({
 			type: 'select'
 		}),
 
