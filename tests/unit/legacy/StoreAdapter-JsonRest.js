@@ -92,7 +92,7 @@ define([
 		},
 
 		'filter': function () {
-			return when(adaptedStore.filter('data/treeTestRoot').fetch()).then(function (results) {
+			return adaptedStore.filter('data/treeTestRoot').fetch().then(function (results) {
 				var object = results[0];
 				assert.strictEqual(object.name, 'node1');
 				assert.strictEqual(object.describe(), 'name is node1');
