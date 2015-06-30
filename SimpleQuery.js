@@ -173,6 +173,7 @@ define([
 				data.sort(typeof sorted == 'function' ? sorted : function (a, b) {
 					for (var i = 0; i < sorted.length; i++) {
 						var comparison;
+						var isALessThanB;
 						var sorter = sorted[i];
 						if (typeof sorter == 'function') {
 							comparison = sorter(a, b);
@@ -184,10 +185,15 @@ define([
 
 							aValue != null && (aValue = aValue.valueOf());
 							bValue != null && (bValue = bValue.valueOf());
-
-							comparison = aValue === bValue
-								? 0
-								: (!!descending === (aValue === null || aValue > bValue && bValue !== null) ? -1 : 1);
+							if (aValue === bValue) {
+								comparison = 0;
+							}
+							else {
+								isALessThanB = typeof bValue === 'undefined' ||
+									bValue === null && typeof aValue !== 'undefined' ||
+									aValue != null && aValue < bValue;
+								comparison = !!descending === isALessThanB ? 1 : -1
+							}
 						}
 
 						if (comparison !== 0) {
