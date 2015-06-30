@@ -162,10 +162,8 @@ define([
 						return object[properties];
 					});
 			};
-		}
+		},
 
-		/* jshint ignore:start */
-		,
 		_createSortQuerier: function (sorted) {
 			var queryAccessors = this.queryAccessors;
 			return function (data) {
@@ -184,10 +182,16 @@ define([
 
 							aValue != null && (aValue = aValue.valueOf());
 							bValue != null && (bValue = bValue.valueOf());
-
-							comparison = aValue === bValue
-								? 0
-								: (!!descending === (aValue === null || aValue > bValue && bValue !== null) ? -1 : 1);
+							if (aValue === bValue) {
+								comparison = 0;
+							}
+							else {
+								// Prioritize undefined > null > defined
+								var isALessThanB = typeof bValue === 'undefined' ||
+									bValue === null && typeof aValue !== 'undefined' ||
+									aValue != null && aValue < bValue;
+								comparison = Boolean(descending) === isALessThanB ? 1 : -1;
+							}
 						}
 
 						if (comparison !== 0) {
@@ -199,6 +203,5 @@ define([
 				return data;
 			};
 		}
-		/* jshint ignore:end */
 	});
 });
