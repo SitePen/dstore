@@ -8,6 +8,11 @@ define([
 	'dojo/text!./data/quote.csv',
 	'dojo/text!./data/contributors.csv'
 ], function (registerSuite, assert, declare, Csv, Memory, noquote, quote, contributors) {
+	// First, normalize newlines in all retrieved CSVs, to avoid test failures due to autocrlf
+	noquote = noquote.replace(/\r\n/g, '\n');
+	quote = quote.replace(/\r\n/g, '\n');
+	contributors = contributors.replace(/\r\n/g, '\n');
+
 	var CsvMemory = declare([Memory, Csv]);
 	var xhrBase = require.toUrl('tests/data');
 	var csvs = {}; // holds retrieved raw CSV data
