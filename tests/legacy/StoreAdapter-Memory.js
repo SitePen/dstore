@@ -3,9 +3,10 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'dojo/store/Memory',
+	'dojo/promise/all',
 	'../sorting',
 	'dstore/legacy/StoreAdapter'
-], function (declare, registerSuite, assert, Memory, sorting, StoreAdapter) {
+], function (declare, registerSuite, assert, Memory, all, sorting, StoreAdapter) {
 
 	var Model = function () {};
 
@@ -98,8 +99,14 @@ define([
 		},
 
 		'filter with paging': function () {
-			assert.strictEqual(store.filter({prime: true}).fetchRange({start: 1, end: 2}).length, 1);
-			assert.strictEqual(store.filter({even: true}).fetchRange({start: 1, end: 2})[0].name, 'four');
+			return all([
+				store.filter({ even: true }).fetchRange({ start: 1, end: 2 }).then(function (results) {
+					assert.strictEqual(results[0].name, 'four');
+				}),
+				store.filter({ prime: true }).fetchRange({ start: 1, end: 2 }).then(function (results) {
+					assert.strictEqual(results.length, 1);
+				})
+			]);
 		},
 
 		'put update': function () {
