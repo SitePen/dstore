@@ -5,9 +5,8 @@ define([
 	'intern/chai!assert',
 	'dojo/store/Memory',
 	'dojo/store/util/QueryResults',
-	'../sorting',
 	'dstore/legacy/StoreAdapter'
-], function (declare, Deferred, registerSuite, assert, Memory, QueryResults, sorting, StoreAdapter) {
+], function (declare, Deferred, registerSuite, assert, Memory, QueryResults, StoreAdapter) {
 
 	var Model = function () {};
 
