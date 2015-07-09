@@ -1,6 +1,5 @@
 define([
-	'dojo/_base/declare',
-	'dojo/Deferred',
+	'dojo/promise/all',
 	'dojo/data/ItemFileWriteStore',
 	'dojo/store/DataStore',
 	'intern!object',
@@ -10,16 +9,17 @@ define([
 	'dojo/when',
 	'src/legacy/StoreAdapter',
 	'../data/testData'
-], function (declare, Deferred, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, testData) {
+], function (all, ItemFileWriteStore, DataStore, registerSuite, assert, Memory, lang, when, StoreAdapter, testData) {
 
 	var Model = function () {};
 
 	function getResultsArray(store) {
 		var results = [];
-		store.forEach(function (data) {
+		return store.forEach(function (data) {
 			results.push(data);
+		}).then(function () {
+			return results;
 		});
-		return results;
 	}
 	var store;
 
@@ -51,26 +51,49 @@ define([
 		'Model': function () {
 			assert.strictEqual(store.get(1).describe(), 'one is not a prime');
 			assert.strictEqual(store.get(3).describe(), 'three is a prime');
-			var results = getResultsArray(store.filter({even: true}));
-			assert.strictEqual(results.length, 2, 'The length is 2');
-			assert.strictEqual(results[1].describe(), 'four is not a prime');
+			return getResultsArray(store.filter({even: true})).then(function (results) {
+				assert.strictEqual(results.length, 2, 'The length is 2');
+				assert.strictEqual(results[1].describe(), 'four is not a prime');
+			});
 		},
 
 		'filter': function () {
-			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
-			assert.strictEqual(getResultsArray(store.filter({even: true}))[1].name, 'four');
+			return all([
+				getResultsArray(store.filter({prime: true})).then(function (results) {
+					assert.strictEqual(length, 3);
+				},
+				getResultsArray(store.filter({even: true})).then(function (results) {
+					assert.strictEqual(results[1].name, 'four');
+				}))
+			]);
 		},
 
 		'filter with string': function () {
-			assert.strictEqual(getResultsArray(store.filter({name: 'two'})).length, 1);
-			assert.strictEqual(getResultsArray(store.filter({name: 'two'}))[0].name, 'two');
+			return all([
+				getResultsArray(store.filter({name: 'two'})).then(function (results) {
+					assert.strictEqual(results.length, 1);
+				}),
+				getResultsArray(store.filter({name: 'two'})).then(function (results) {
+					assert.strictEqual(results[0].name, 'two');
+				})
+			]);
 		},
 
 		'filter with regexp': function () {
-			assert.strictEqual(getResultsArray(store.filter({name: /^t/})).length, 2);
-			assert.strictEqual(getResultsArray(store.filter({name: /^t/}))[1].name, 'three');
-			assert.strictEqual(getResultsArray(store.filter({name: /^o/})).length, 1);
-			assert.strictEqual(getResultsArray(store.filter({name: /o/})).length, 3);
+			return all([
+				getResultsArray(store.filter({name: /^t/})).then(function (results) {
+					assert.strictEqual(results.length, 2);
+				}),
+				getResultsArray(store.filter({name: /^t/})).then(function (results) {
+					assert.strictEqual(results[1].name, 'three');
+				}),
+				getResultsArray(store.filter({name: /^o/})).then(function (results) {
+					assert.strictEqual(results.length, 1);
+				}),
+				getResultsArray(store.filter({name: /o/})).then(function (results) {
+					assert.strictEqual(results.length, 3);
+				})
+			]);
 		},
 
 		'filter with paging': function () {
@@ -137,12 +160,26 @@ define([
 
 		'filter after changes': function () {
 			store.add({ id: 7, prime: true });
-			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 4);
-			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 0);
-			store.remove(3);
-			store.put({ id: 6, perfect: true });
-			assert.strictEqual(getResultsArray(store.filter({prime: true})).length, 3);
-			assert.strictEqual(getResultsArray(store.filter({perfect: true})).length, 1);
+			return all([
+				getResultsArray(store.filter({prime: true})).then(function (results) {
+					assert.strictEqual(results.length, 4);
+
+				}),
+				getResultsArray(store.filter({perfect: true})).then(function (results) {
+					assert.strictEqual(results.length, 0);
+				})
+			]).then(function () {
+				store.remove(3);
+				store.put({ id: 6, perfect: true });
+				return all([
+					getResultsArray(store.filter({prime: true})).then(function (results) {
+						assert.strictEqual(results.length, 3);
+					}),
+					getResultsArray(store.filter({perfect: true})).then(function (results) {
+						assert.strictEqual(results.length, 1);
+					})
+				]);
+			});
 		}
 	}));
 });

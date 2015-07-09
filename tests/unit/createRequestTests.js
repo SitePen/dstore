@@ -353,17 +353,5 @@ define([
 			}
 		};
 	}
-	registerSuite(createRequestTests(Request));
-	registerSuite({
-		name: 'dstore Request default',
-		cancel: function () {
-			var store = new Request({
-				target: '/test/'
-			});
-			var results = store.fetch();
-			assert.property(results.response, 'then');
-			results.cancel();
-		}
-	});
 	return createRequestTests;
 });

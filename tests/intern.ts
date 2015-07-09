@@ -50,6 +50,7 @@ export var loader = {
 	// Packages that should be registered with the loader in each testing environment
 	packages: [
 		{ name: 'dojo', location: 'node_modules/dojo' },
+		{ name: 'dojo-core', location: 'node_modules/dojo-core' },
 		{ name: 'rql', location: 'node_modules/rql' },
 		{ name: 'src', location: '_build/src' },
 		{ name: 'tests', location: '_build/tests' }

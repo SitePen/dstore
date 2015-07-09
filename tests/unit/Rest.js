@@ -2,7 +2,7 @@ define([
 	'intern!object',
 	'intern/chai!assert',
 	'src/Rest',
-	'./Request',
+	'./createRequestTests',
 	'dojo/_base/lang',
 	'dojo/aspect',
 	'./mockRequest',

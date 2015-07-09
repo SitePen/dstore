@@ -16,14 +16,20 @@ define([
 		__PutDirectives = declare(Store.PutDirectives, __HeaderOptions),
 	=====*/
 
-	return declare(Request, {
+	return declare(Request.default, {
 
 		// stringify: Function
 		//		This function performs the serialization of the data for requests to the server. This
 		//		defaults to JSON, but other formats can be serialized by providing an alternate
 		//		stringify function. If you do want to use an alternate format, you will probably
 		//		want to use an alternate parse function for the parsing of data as well.
-		stringify: JSON.stringify,
+		stringify: null,
+
+		_initialize: function() {
+			this.stringify = JSON.stringify;
+			this.autoEmitEvents = false;
+			this.inherited(arguments);
+		},
 
 		_getTarget: function(id){
 			// summary:
@@ -104,7 +110,8 @@ define([
 				var result = event.target = response && store._restore(store.parse(response), true) || object;
 
 				when(initialResponse.response, function (httpResponse) {
-					store.emit(httpResponse.status === 201 ? 'add' : 'update', event);
+					event.type = httpResponse.status === 201 ? 'add' : 'update';
+					store.emit(event);
 				});
 
 				return result;
@@ -139,7 +146,11 @@ define([
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
 				var target = response && store.parse(response);
-				store.emit('delete', {id: id, target: target});
+				store.emit({
+					id: id,
+					target: target,
+					type: 'delete'
+				});
 				return response ? target : true;
 			});
 		}

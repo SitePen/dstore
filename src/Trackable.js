@@ -169,7 +169,7 @@ define([
 				tracking: {
 					remove: function () {
 						while (handles.length > 0) {
-							handles.pop().remove();
+							handles.pop().destroy();
 						}
 
 						this.remove = function () {};
@@ -401,7 +401,7 @@ define([
 							event.beforeIndex = ranges[begin].start;
 							for (i = begin; i < ranges.length; ++i) {
 								ranges[i].start++;
-							}							
+							}
 						}
 					}
 					// update the total

@@ -2,12 +2,12 @@ import * as dstore from 'interfaces';
 
 /**
  * Arguments passed to the QueryMethod constructor.
- * * applyQuery: Function receiving the query's new subcollection and log entry and applies it to the subcollection;
- *   useful for collections that need to both declare and implement new query methods
- * * normalizeArguments: Function that normalizes arguments for consumption by a query engine
- * * querierFactory: Factory function that provides a default querier implementation to use if a collection doesn't
- *   define its own querier factory method for this query type
- * * type: The type of query; corresponds to the query log entry's type and the name of the query engine method
+ * applyQuery: Function receiving the query's new subcollection and log entry and applies it to the subcollection;
+ * useful for collections that need to both declare and implement new query methods
+ * normalizeArguments: Function that normalizes arguments for consumption by a query engine
+ * querierFactory: Factory function that provides a default querier implementation to use if a collection doesn't
+ * define its own querier factory method for this query type
+ * type: The type of query; corresponds to the query log entry's type and the name of the query engine method
  */
 export interface QueryMethodArgs<T> {
 	applyQuery?: (newCollection: dstore.Collection<T>, logEntry: dstore.QueryLogEntry<T>) => dstore.Collection<T>;
@@ -18,10 +18,10 @@ export interface QueryMethodArgs<T> {
 
 /**
  * The constructor for a dstore collection query method.  It encapsulates the following:
- * * Creating a new subcollection for the query results
- * * Logging the query in the collection's `queryLog`
- * * Normalizing query arguments
- * * Applying the query engine
+ * Creating a new subcollection for the query results
+ * Logging the query in the collection's `queryLog`
+ * Normalizing query arguments
+ * Applying the query engine
  *
  * @param kwArgs The properties that define the query method
  * @return A function that takes query arguments and returns a new collection with the query associated with it
@@ -59,4 +59,4 @@ export default function QueryMethod<T>(kwArgs: QueryMethodArgs<T>): (...args: an
 
 		return applyQuery ? applyQuery.call(store, newCollection, logEntry) : newCollection;
 	};
-};
+}

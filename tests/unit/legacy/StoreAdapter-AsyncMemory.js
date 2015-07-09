@@ -25,7 +25,7 @@ define([
 					def.reject(e);
 				}
 			}, 2);
-			return query ? new QueryResults(def.promise) : def.promise;
+			return query ? QueryResults(def.promise) : def.promise;
 		};
 	}
 	var AsyncMemory = declare(Memory, {

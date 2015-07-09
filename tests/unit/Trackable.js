@@ -4,11 +4,12 @@ define([
 	'dojo/_base/array',
 	'dojo/_base/declare',
 	'dojo/_base/lang',
+	'dojo/promise/all',
 	'src/Memory',
 	'src/Store',
 	'src/Trackable',
 	'src/SimpleQuery'
-], function (registerSuite, assert, arrayUtil, declare, lang, Memory, Store, Trackable, SimpleQuery) {
+], function (registerSuite, assert, arrayUtil, declare, lang, all, Memory, Store, Trackable, SimpleQuery) {
 
 	function createData(numItems) {
 		var data = [];
@@ -22,7 +23,7 @@ define([
 	function createTestSuite(suiteName, createStore) {
 
 		// A store for testing Trackable with only partial in-memory data
-		var PartialDataStore = declare([ Store, SimpleQuery ], (function () {
+		var PartialDataStore = declare([ Store.default, SimpleQuery ], (function () {
 			var proto = {
 				constructor: function () {
 					this.backingMemoryStore = createStore({ data: this.data }, Memory);
@@ -181,22 +182,21 @@ define([
 			'filter with zero id': function () {
 				var filteredCollection = store.filter({});
 				var results;
-				filteredCollection.fetch().then(function (data) {
+				return filteredCollection.fetch().then(function (data) {
 					results = data;
+					assert.strictEqual(results.length, 7);
+					var tracked = filteredCollection.track();
+					tracked.on('update', function (event) {
+						// we only do puts so previous & new indices must always been the same
+						assert.ok(event.index === event.previousIndex);
+					});
+					store.put({id: 5, name: '-FIVE-', prime: true});
+					store.put({id: 0, name: '-ZERO-', prime: false});
 				});
-				assert.strictEqual(results.length, 7);
-				var tracked = filteredCollection.track();
-				tracked.on('update', function (event) {
-					// we only do puts so previous & new indices must always been the same
-					assert.ok(event.index === event.previousIndex);
-				});
-				store.put({id: 5, name: '-FIVE-', prime: true});
-				store.put({id: 0, name: '-ZERO-', prime: false});
 			},
 
 			'paging with store.data': function () {
-				var results,
-					bigStore = createStore({ data: createData(100) }, Memory),
+				var bigStore = createStore({ data: createData(100) }, Memory),
 					bigFiltered = bigStore.filter({}).sort('order');
 
 				var observations = [];
@@ -216,21 +216,23 @@ define([
 					observations.push(event);
 					console.log(' observed: ', event);
 				});
-				bigObserved.fetchRange({ start: 0, end: 25 });
-				bigObserved.fetchRange({ start: 25, end: 50 });
-				bigObserved.fetchRange({ start: 50, end: 75 });
-				bigObserved.fetchRange({ start: 75, end: 100 });
-
-				var results = bigObserved._partialResults;
-				bigStore.add({id: 101, name: 'one oh one', order: 2.5});
-				assert.strictEqual(results.length, 101);
-				assert.strictEqual(observations.length, 1);
-				bigStore.remove(101);
-				assert.strictEqual(observations.length, 2);
-				assert.strictEqual(results.length, 100);
-				bigStore.add({id: 102, name: 'one oh two', order: 26.5});
-				assert.strictEqual(results.length, 101);
-				assert.strictEqual(observations.length, 3);
+				return all([
+					bigObserved.fetchRange({ start: 0, end: 25 }),
+					bigObserved.fetchRange({ start: 25, end: 50 }),
+					bigObserved.fetchRange({ start: 50, end: 75 }),
+					bigObserved.fetchRange({ start: 75, end: 100 })
+				]).then( function () {
+					var results = bigObserved._partialResults;
+					bigStore.add({ id: 101, name: 'one oh one', order: 2.5 });
+					assert.strictEqual(results.length, 101);
+					assert.strictEqual(observations.length, 1);
+					bigStore.remove(101);
+					assert.strictEqual(observations.length, 2);
+					assert.strictEqual(results.length, 100);
+					bigStore.add({ id: 102, name: 'one oh two', order: 26.5 });
+					assert.strictEqual(results.length, 101);
+					assert.strictEqual(observations.length, 3);
+				});
 			},
 
 			'paging with store._partialResults': function () {
@@ -282,96 +284,97 @@ define([
 				assertObservationIs({ type: 'delete', id: item.id });
 
 				// An update sorted to the beginning of a range and the data has a known index
-				bigObserved.fetchRange({ start: 0, end: 25 });
-				item = bigStore.getSync(0);
-				item.order = 0;
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1, totalLength: 100 });
+				return bigObserved.fetchRange({ start: 0, end: 25 }).then(function () {
+					item = bigStore.getSync(0);
+					item.order = 0;
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, index: 0, previousIndex: 1, totalLength: 100 });
 
-				// An addition sorted to the beginning of a range and the data has a known index
-				item = bigStore._restore({ id: -1, name: 'item -1', order: -1 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, index: 0, totalLength: 101 });
+					// An addition sorted to the beginning of a range and the data has a known index
+					item = bigStore._restore({ id: -1, name: 'item -1', order: -1 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, index: 0, totalLength: 101 });
 
-				// Remove additional item to make subsequent item indices and id's line up
-				bigStore.remove(item.id);
-				assertObservationIs({ type: 'delete', id: item.id, previousIndex: 0, totalLength: 100 });
+					// Remove additional item to make subsequent item indices and id's line up
+					bigStore.remove(item.id);
+					assertObservationIs({ type: 'delete', id: item.id, previousIndex: 0, totalLength: 100 });
 
-				// An update sorted to the end of a range has an indeterminate index
-				item = bigStore.getSync(24);
-				item.name = 'item 24 updated';
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, previousIndex: 24, totalLength: 99 });
+					// An update sorted to the end of a range has an indeterminate index
+					item = bigStore.getSync(24);
+					item.name = 'item 24 updated';
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, previousIndex: 24, totalLength: 99 });
 
-				// An addition sorted to the end of a range has an indeterminate index
-				item = bigStore._restore({ id: 24.1, name: 'item 24.1', order: 24.1 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, totalLength: 99 });
+					// An addition sorted to the end of a range has an indeterminate index
+					item = bigStore._restore({ id: 24.1, name: 'item 24.1', order: 24.1 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, totalLength: 99 });
 
-				// Remove additional item to make subsequent item indices and id's line up
-				bigStore.remove(item.id);
-				assertObservationIs({ type: 'delete', id: item.id, totalLength: 99 });
+					// Remove additional item to make subsequent item indices and id's line up
+					bigStore.remove(item.id);
+					assertObservationIs({ type: 'delete', id: item.id, totalLength: 99 });
 
-				// The previous update with an undetermined index resulted in an item dropping from the first range
-				// and the first range being reduced to 0-23 instead of 0-24.
-				// Requesting 24-50 instead of 25-50 in order to request a contiguous range.
-				// Trackable should treat contiguous requested ranges as a single range.
-				bigObserved.fetchRange({ start: 24, end: 50 });
+					// The previous update with an undetermined index resulted in an item dropping from the first range
+					// and the first range being reduced to 0-23 instead of 0-24.
+					// Requesting 24-50 instead of 25-50 in order to request a contiguous range.
+					// Trackable should treat contiguous requested ranges as a single range.
+					return bigObserved.fetchRange({ start: 24, end: 50 });
+				}).then(function () {
+					// An update sorted to the end of a range but adjacent to another range has a known index
+					item = bigStore.getSync(22);
+					item.order = 23.1;
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22, totalLength: 100 });
 
-				// An update sorted to the end of a range but adjacent to another range has a known index
-				item = bigStore.getSync(22);
-				item.order = 23.1;
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, index: 23, previousIndex: 22, totalLength: 100 });
+					// An addition sorted to the end of a range but adjacent to another range has a known index
+					item = bigStore._restore({ id: 23.2, name: 'item 23.2', order: 23.2 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
 
-				// An addition sorted to the end of a range but adjacent to another range has a known index
-				item = bigStore._restore({ id: 23.2, name: 'item 23.2', order: 23.2 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
+					// Remove additional item to make subsequent item indices and id's line up
+					bigStore.remove(item.id);
+					assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
 
-				// Remove additional item to make subsequent item indices and id's line up
-				bigStore.remove(item.id);
-				assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
+					// An update sorted to the beginning of a range but adjacent to another range has a known index
+					item = bigStore.getSync(25);
+					item.order = 23.9;
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25, totalLength: 100 });
 
-				// An update sorted to the beginning of a range but adjacent to another range has a known index
-				item = bigStore.getSync(25);
-				item.order = 23.9;
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, index: 24, previousIndex: 25, totalLength: 100 });
+					// An addition sorted to the beginning of a range but adjacent to another range has a known index
+					item = bigStore._restore({ id: 23.8, name: 'item 23.8', order: 23.8 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
 
-				// An addition sorted to the beginning of a range but adjacent to another range has a known index
-				item = bigStore._restore({ id: 23.8, name: 'item 23.8', order: 23.8 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, index: 24, totalLength: 101 });
+					// Remove additional item to make subsequent item indices and id's line up
+					bigStore.remove(item.id);
+					assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
 
-				// Remove additional item to make subsequent item indices and id's line up
-				bigStore.remove(item.id);
-				assertObservationIs({ type: 'delete', id: item.id, previousIndex: 24, totalLength: 100 });
+					// Request range at end of data
+					return bigObserved.fetchRange({ start: 75, end: 100 });
+				}).then(function () {
+					// An update at the end of a range and the data has a known index
+					item = bigStore.getSync(98);
+					item.order = 99.1;
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98, totalLength: 100 });
 
-				// Request range at end of data
-				bigObserved.fetchRange({ start: 75, end: 100 });
+					// An addition at the end of a range and the data has a known index
+					item = bigStore._restore({ id: 99.2, name: 'item 99.2', order: 99.2 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, index: 100, totalLength: 101 });
 
-				// An update at the end of a range and the data has a known index
-				item = bigStore.getSync(98);
-				item.order = 99.1;
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, index: 99, previousIndex: 98, totalLength: 100 });
+					// An update at the beginning of a range has an indeterminate index
+					item = bigStore.getSync(76);
+					item.order = 74.9;
+					bigStore.put(item);
+					assertObservationIs({ type: 'update', target: item, beforeIndex: 75, previousIndex: 76, totalLength: 100 });
 
-				// An addition at the end of a range and the data has a known index
-				item = bigStore._restore({ id: 99.2, name: 'item 99.2', order: 99.2 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, index: 100, totalLength: 101 });
-
-				// An update at the beginning of a range has an indeterminate index
-				item = bigStore.getSync(76);
-				item.order = 74.9;
-				bigStore.put(item);
-				assertObservationIs({ type: 'update', target: item, beforeIndex: 75, previousIndex: 76, totalLength: 100 });
-
-				// An addition at the beginning of a range has an indeterminate index
-				item = bigStore._restore({ id: 74.8, name: 'item 74.8', order: 74.8 });
-				bigStore.add(item);
-				assertObservationIs({ type: 'add', target: item, beforeIndex: 76, totalLength: 100 });
+					// An addition at the beginning of a range has an indeterminate index
+					item = bigStore._restore({ id: 74.8, name: 'item 74.8', order: 74.8 });
+					bigStore.add(item);
+					assertObservationIs({ type: 'add', target: item, beforeIndex: 76, totalLength: 100 });
+				});
 			},
 
 			'paging releaseRange with store._partialResults': function () {
@@ -404,32 +407,56 @@ define([
 					};
 
 				// Remove all of a range
-				trackedStore.fetchRange({ start: rangeToBeEclipsed.start, end: rangeToBeEclipsed.end });
-				assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
-				trackedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
-				assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
-
-				// Split a range
-				trackedStore.fetchRange({ start: rangeToBeSplit.start, end: rangeToBeSplit.end });
-				assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
-				trackedStore.releaseRange(splittingRange.start, splittingRange.end);
-				assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
-				assertRangeUndefined(splittingRange.start, splittingRange.end);
-				assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
-
-				// Remove from range head
-				trackedStore.fetchRange({ start: rangeToBeHeadTrimmed.start, end: rangeToBeHeadTrimmed.end });
-				assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
-				trackedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
-				assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
-				assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
-
-				// Remove from range tail
-				trackedStore.fetchRange({ start: rangeToBeTailTrimmed.start, end: rangeToBeTailTrimmed.end });
-				assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
-				trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
-				assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
-				assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
+				trackedStore.fetchRange(
+					{
+						start: rangeToBeEclipsed.start,
+						end: rangeToBeEclipsed.end
+					}
+				).then(function () {
+					assertRangeDefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
+					trackedStore.releaseRange(eclipsingRange.start, eclipsingRange.end);
+					assertRangeUndefined(rangeToBeEclipsed.start, rangeToBeEclipsed.end);
+				}).then(function () {
+					return trackedStore.fetchRange(
+						{
+							start: rangeToBeSplit.start,
+							end: rangeToBeSplit.end
+						}
+					).then(function () {
+						// Split a range
+						assertRangeDefined(rangeToBeSplit.start, rangeToBeSplit.end);
+						trackedStore.releaseRange(splittingRange.start, splittingRange.end);
+						assertRangeDefined(rangeToBeSplit.start, splittingRange.start);
+						assertRangeUndefined(splittingRange.start, splittingRange.end);
+						assertRangeDefined(splittingRange.end, rangeToBeSplit.end);
+					});
+				}).then(function () {
+					return trackedStore.fetchRange(
+						{
+							start: rangeToBeHeadTrimmed.start,
+							end: rangeToBeHeadTrimmed.end
+						}
+					).then(function () {
+						// Remove from range head
+						assertRangeDefined(rangeToBeHeadTrimmed.start, rangeToBeHeadTrimmed.end);
+						trackedStore.releaseRange(headTrimmingRange.start, headTrimmingRange.end);
+						assertRangeUndefined(headTrimmingRange.start, headTrimmingRange.end);
+						assertRangeDefined(headTrimmingRange.end, rangeToBeHeadTrimmed.end);
+					});
+				}).then(function () {
+					return trackedStore.fetchRange(
+						{
+							start: rangeToBeTailTrimmed.start,
+							end: rangeToBeTailTrimmed.end
+						}
+					).then(function () {
+						// Remove from range tail
+						assertRangeDefined(rangeToBeTailTrimmed.start, rangeToBeTailTrimmed.end);
+						trackedStore.releaseRange(tailTrimmingRange.start, tailTrimmingRange.end);
+						assertRangeDefined(rangeToBeTailTrimmed.start, tailTrimmingRange.start);
+						assertRangeUndefined(tailTrimmingRange.start, tailTrimmingRange.end);
+					});
+				});
 			},
 
 			'new item with default index': function () {

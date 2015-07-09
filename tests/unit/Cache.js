@@ -205,7 +205,7 @@ define([
 				});
 			},
 			'defaults to querier factories of the cachingStore': function () {
-				var store = new Store();
+				var store = new Store.default();
 				assert.isUndefined(store._getQuerierFactory('filter'));
 
 				var expectedQuerier = function () {};

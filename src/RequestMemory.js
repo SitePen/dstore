@@ -3,7 +3,7 @@ define([
 	'./Request',
 	'./Cache'
 ], function(declare, Request, Cache) {
-	return declare([ Request, Cache ], {
+	return declare([ Request.default, Cache ], {
 		postscript: function () {
 			this.inherited(arguments);
 			this.fetch();

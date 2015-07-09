@@ -44,7 +44,7 @@ define([
 		// converts the 'extra' data on sql rows that can contain expando properties outside of the defined column
 		return object && object.__extra ? lang.mixin(object, JSON.parse(object.__extra)) : object;
 	}
-	return declare([Store, SimpleQuery], {
+	return declare([ Store.default, SimpleQuery ], {
 		constructor: function (config) {
 			var dbConfig = config.dbConfig;
 			// open the database and get it configured
@@ -402,7 +402,7 @@ define([
 				return results;
 			}));
 			var store = this;
-			return new QueryResults(results, {
+			return QueryResults.default(results, {
 				totalLength: {
 					then: function (callback,errback) {
 						// lazily do a total, using the same query except with a COUNT(*) and without the limits

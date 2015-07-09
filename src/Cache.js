@@ -61,7 +61,7 @@ define([
 			var store = this;
 			var available = this.isAvailableInCache();
 			if (available) {
-				return new QueryResults(when(available, function () {
+				return QueryResults.default(when(available, function () {
 					// need to double check to make sure the flag hasn't been cleared
 					// and we really have all data loaded
 					if (store.isAvailableInCache()) {
@@ -188,6 +188,13 @@ define([
 		// create a delegate of an existing store with caching
 		// functionality mixed in
 		target = declare.safeMixin(lang.delegate(target), CachePrototype);
+		// TODO - Remove the stub of inherited, this is a workaround so that this still works for
+		// existing JS implementations, but also works for Store.ts which doesn't have this.inherited.
+		if (!target.inherited) {
+			target.inherited = function() {
+				return undefined;
+			}
+		}
 		declare.safeMixin(target, properties);
 		// we need to initialize it since the constructor won't have been called
 		init(target);
