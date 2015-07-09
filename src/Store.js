@@ -247,7 +247,7 @@ define([
 			}
 		}),
 
-		Filter: Filter,
+		Filter: Filter.default,
 
 		sort: new QueryMethod.default({
 			type: 'sort',
