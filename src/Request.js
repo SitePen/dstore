@@ -87,7 +87,7 @@ define([
 
 		fetch: function (kwArgs) {
 			var results = this._request(kwArgs);
-			return new QueryResults(results.data, {
+			return new QueryResults.default(results.data, {
 				response: results.response
 			});
 		},
@@ -106,7 +106,7 @@ define([
 			}
 
 			var results = this._request(requestArgs);
-			return new QueryResults(results.data, {
+			return new QueryResults.default(results.data, {
 				totalLength: results.total,
 				response: results.response
 			});

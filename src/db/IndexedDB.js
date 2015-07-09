@@ -331,7 +331,7 @@ define([
 			var results = [];
 			var store = this;
 			// wait for all the union segments to complete
-			return new QueryResults(when(parts).then(
+			return new QueryResults.default(when(parts).then(
 				function(parts){
 					return all(parts.map(function(part, i) {
 						var queue = queues[i] = [];
@@ -807,7 +807,7 @@ define([
 					return select.querier(results);
 				});
 			}
-			return new QueryResults(resultsPromise, {totalLength: totalLength});
+			return new QueryResults.default(resultsPromise, {totalLength: totalLength});
 		}
 	});
 
