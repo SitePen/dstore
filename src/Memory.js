@@ -219,14 +219,14 @@ define([
 				data._version = this.storage.version;
 				this.data = data;
 			}
-			return new QueryResults(data);
+			return new QueryResults.default(data);
 		},
 
 		fetchRangeSync: function (kwArgs) {
 			var data = this.fetchSync(),
 				start = kwArgs.start,
 				end = kwArgs.end;
-			return new QueryResults(data.slice(start, end), {
+			return new QueryResults.default(data.slice(start, end), {
 				totalLength: data.length
 			});
 		},

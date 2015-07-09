@@ -61,7 +61,7 @@ define([
 			var store = this;
 			var available = this.isAvailableInCache();
 			if (available) {
-				return new QueryResults(when(available, function () {
+				return new QueryResults.default(when(available, function () {
 					// need to double check to make sure the flag hasn't been cleared
 					// and we really have all data loaded
 					if (store.isAvailableInCache()) {

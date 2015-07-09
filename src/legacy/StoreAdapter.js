@@ -118,7 +118,7 @@ define([
 			var results = this.objectStore.query(queryObject, queryOptions);
 			if (results) {
 				// apply the object restoration
-				return new QueryResults(when(results.map(this._restore, this)), {
+				return new QueryResults.default(when(results.map(this._restore, this)), {
 					totalLength: when(results.total)
 				});
 			}

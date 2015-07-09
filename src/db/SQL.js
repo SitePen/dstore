@@ -402,7 +402,7 @@ define([
 				return results;
 			}));
 			var store = this;
-			return new QueryResults(results, {
+			return new QueryResults.default(results, {
 				totalLength: {
 					then: function (callback,errback) {
 						// lazily do a total, using the same query except with a COUNT(*) and without the limits
