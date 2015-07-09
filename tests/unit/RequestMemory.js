@@ -19,7 +19,7 @@ define([
 
 		beforeEach: function () {
 			store = new (declare([RequestMemory, Trackable]))({
-				target: require.toUrl('tests/data/treeTestRoot')
+				target: require.toUrl('tests/unit/data/treeTestRoot')
 			});
 		},
 
