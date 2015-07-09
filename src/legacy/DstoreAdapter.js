@@ -61,14 +61,17 @@ define([
 			}
 			var objectStore = this;
 			// we call notify on events to mimic the old dojo/store/Trackable
-			store.on('add,update,delete', function (event) {
+			var notifyDstoreAdapter = function (event) {
 				var type = event.type;
 				var target = event.target;
 				objectStore.notify(
 					(type === 'add' || type === 'update') ? target : undefined,
 					(type === 'delete' || type === 'update') ?
 						('id' in event ? event.id : store.getIdentity(target)) : undefined);
-			});
+			};
+			store.on('add', notifyDstoreAdapter);
+			store.on('update', notifyDstoreAdapter);
+			store.on('delete', notifyDstoreAdapter);
 		},
 
 		query: function (query, options) {

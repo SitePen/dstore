@@ -253,9 +253,10 @@ define([
 					]);
 				});
 			},
-			"in('mappedTo', letterStore.filter({vowel: true}).select('id'))":
+			"in('mappedTo', letterStore.filter({vowel: true}).select('id'))": function() {
 				testQuery(new Filter().in('mappedTo', letterStore.filter({vowel: true}).select('id')),
-					{sort:[{property: 'name'}], range: {start: 1, end: 3}}, [5, 1]),
+					{ sort:[ { property: 'name' } ], range: { start: 1, end: 3 } }, [ 5, 1 ]);
+			},
 			'db interaction': function () {
 				return numberStore.get(1).then(function(one) {
 					assert.strictEqual(one.id, 1);

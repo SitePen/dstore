@@ -16,7 +16,10 @@
 	],
 	"files": [
 		"./typings/tsd.d.ts",
+		"./src/Filter.ts",
 		"./src/QueryMethod.ts",
+		"./src/QueryResults.ts",
+		"./src/Store.ts",
 		"./src/interfaces.d.ts",
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
@@ -26,6 +29,7 @@
 		"./tests/typings/intern/intern.d.ts",
 		"./tests/typings/leadfoot/leadfoot.d.ts",
 		"./tests/typings/node/node.d.ts",
-		"./tests/typings/tsd.d.ts"
+		"./tests/typings/tsd.d.ts",
+		"./tests/unit/Store.ts"
 	]
 }

@@ -23,7 +23,15 @@ define([
 		//		defaults to JSON, but other formats can be serialized by providing an alternate
 		//		stringify function. If you do want to use an alternate format, you will probably
 		//		want to use an alternate parse function for the parsing of data as well.
-		stringify: JSON.stringify,
+		stringify: null,
+
+		constructor: function() {
+			this.autoEmitEvents = false;
+			this.stringify = JSON.stringify;
+			this.autoEmitHandles.forEach(function (handle) {
+				handle.destroy();
+			});
+		},
 
 		_getTarget: function(id){
 			// summary:
@@ -104,7 +112,7 @@ define([
 				var result = event.target = response && store._restore(store.parse(response), true) || object;
 
 				when(initialResponse.response, function (httpResponse) {
-					store.emit(httpResponse.status === 201 ? 'add' : 'update', event);
+					store._emit(httpResponse.status === 201 ? 'add' : 'update', event);
 				});
 
 				return result;
@@ -139,7 +147,7 @@ define([
 				headers: lang.mixin({}, this.headers, options.headers)
 			}).then(function (response) {
 				var target = response && store.parse(response);
-				store.emit('delete', {id: id, target: target});
+				store._emit('delete', { id: id, target: target });
 				return response ? target : true;
 			});
 		}

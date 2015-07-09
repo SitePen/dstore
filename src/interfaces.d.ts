@@ -16,6 +16,7 @@ export interface Collection<T> {
 	idProperty: string;
 	Model?: { new (...args: any[]): T; };
 	tracking?: { remove(): void; };
+	queryLog?: {};
 
 	add(object: T, options?: {}): Promise<T>;
 	emit(eventName: string, event: ChangeEvent<T>): boolean;
@@ -28,7 +29,7 @@ export interface Collection<T> {
 	on(eventName: string, listener: (event: ChangeEvent<T>) => void): Handle;
 	put(object: T, options?: {}): Promise<T>;
 	remove(id: any): Promise<Object>;
-	sort(property: string | { (a: T, b: T): number; }, descending?: boolean): Collection<T>;
+	sort(property: string | { property: string }[] | { (a: T, b: T): number; }, descending?: boolean): Collection<T>;
 	track?(): Collection<T>;
 }
 
@@ -65,4 +66,11 @@ export interface QueryLogEntry<T> {
 	normalizedArguments: any[];
 	querier?: QuerierFunction<T>;
 	type: string;
+}
+
+export interface PutDirectives {
+	id?: String | Number;
+	before?: {};
+	parent?: {};
+	overwrite?: Boolean;
 }
