@@ -16,6 +16,7 @@
 	],
 	"files": [
 		"./typings/tsd.d.ts",
+		"./src/Filter.ts",
 		"./src/QueryMethod.ts",
 		"./src/interfaces.d.ts",
 		"./tests/intern-local.ts",
