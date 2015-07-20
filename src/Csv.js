@@ -157,6 +157,12 @@ define([
 				if (i > -1) { output += newline; }
 				for (j = 0; j < fieldNames.length; j++) {
 					value = i < 0 ? fieldNames[j] : data[i][fieldNames[j]];
+					if (value === null || value === undefined) {
+						value = '';
+					}
+					if (typeof value !== 'string') {
+						value = value.toString();
+					}
 					needsQuotes = alwaysQuote ||
 						value.indexOf('"') >= 0 || value.indexOf(delimiter) >= 0;
 					output += (j > 0 ? delimiter : '') +
