@@ -27,24 +27,25 @@ export interface QueryMethodArgs<T> {
  * @return A function that takes query arguments and returns a new collection with the query associated with it
  */
 export default function QueryMethod<T>(kwArgs: QueryMethodArgs<T>): (...args: any[]) => dstore.Collection<T> {
-	var type = kwArgs.type,
-		normalizeArguments = kwArgs.normalizeArguments,
-		applyQuery = kwArgs.applyQuery,
-		defaultQuerierFactory = kwArgs.querierFactory;
+	const type = kwArgs.type;
+	const normalizeArguments = kwArgs.normalizeArguments;
+	const applyQuery = kwArgs.applyQuery;
+	const defaultQuerierFactory = kwArgs.querierFactory;
 
 	return function () {
-		var originalArguments = Array.prototype.slice.call(arguments);
-		var normalizedArguments = normalizeArguments ? normalizeArguments.apply(this, originalArguments) :
+		const originalArguments = Array.prototype.slice.call(arguments);
+		const normalizedArguments = normalizeArguments ?
+			normalizeArguments.apply(this, originalArguments) :
 			originalArguments;
-		var logEntry = <dstore.QueryLogEntry<T>> {
+		const logEntry = <dstore.QueryLogEntry<T>> {
 			type: type,
 			arguments: originalArguments,
 			normalizedArguments: normalizedArguments
 		};
 		// TODO: coerce to Store<T> once that's converted
 		// (though we'd need to expose _getQuerierFactory for this to work as-is... maybe there's a better way?)
-		var store = <any> this;
-		var querierFactory: dstore.QuerierFactory<T> = store._getQuerierFactory(type) || defaultQuerierFactory;
+		const store = <any> this;
+		const querierFactory: dstore.QuerierFactory<T> = store._getQuerierFactory(type) || defaultQuerierFactory;
 
 		if (querierFactory) {
 			// Call the query factory in store context to support things like
@@ -52,7 +53,7 @@ export default function QueryMethod<T>(kwArgs: QueryMethodArgs<T>): (...args: an
 			logEntry.querier = querierFactory.apply(store, normalizedArguments);
 		}
 
-		var newCollection = store._createSubCollection({
+		const newCollection = store._createSubCollection({
 			queryLog: store.queryLog.concat(logEntry)
 		});
 

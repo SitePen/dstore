@@ -28,11 +28,11 @@
 		"grunt-contrib-watch": "0.6.1",
 		"grunt-text-replace": "0.4.0",
 		"grunt-ts": "3.0.0",
-		"grunt-tslint": "2.0.0",
+		"grunt-tslint": "2.4.0",
 		"rql": "~0.3.3",
-		"tslint": "2.1.1",
+		"tslint": "2.4.0",
 		"intern": "2.2.2",
-		"typescript": "Arnavion/typescript-github#2015-05-23-711886e09994eda5bafa9383d92954242fc342c5"
+		"typescript": "1.5.3"
 	},
 	"directories": {
 		"lib": "."
