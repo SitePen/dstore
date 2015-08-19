@@ -128,7 +128,7 @@ define([
 				// now put result in cache (note we don't do add, because add may have
 				// called put() and already added it)
 				var cachedPutResult =
-					cachingStore.put(object && typeof result === 'object' ? result : object, directives);
+					cachingStore.put(result && typeof result === 'object' ? result : object, directives);
 				// the result from the add should be dictated by the master store and be unaffected by the cachingStore,
 				// unless the master store doesn't implement add
 				return result || cachedPutResult;
@@ -141,7 +141,7 @@ define([
 			return when(this.inherited(arguments), function (result) {
 				// now put result in cache
 				var cachedPutResult =
-					cachingStore.put(object && typeof result === 'object' ? result : object, directives);
+					cachingStore.put(result && typeof result === 'object' ? result : object, directives);
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore,
 				// unless the master store doesn't implement put
 				return result || cachedPutResult;
