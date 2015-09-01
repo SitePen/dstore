@@ -3,16 +3,7 @@
   "author": "Kris Zyp",
   "version": "1.0.3",
   "description": "A data collection infrastructure",
-  "licenses": [
-     {
-         "type": "AFLv2.1",
-         "url": "http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L43"
-     },
-     {
-         "type": "BSD",
-         "url": "http://trac.dojotoolkit.org/browser/dojo/trunk/LICENSE#L13"
-     }
-  ],
+  "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
     "url": "http://github.com/SitePen/dstore"
