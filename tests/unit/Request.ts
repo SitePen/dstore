@@ -6,10 +6,10 @@ import UrlSearchParams from 'dojo-core/UrlSearchParams';
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
 import * as dstore from 'src/interfaces';
-import Request, { RequestStoreArgs } from 'src/Request';
+import Request from 'src/Request';
 import * as mockRequestProvider from './mockRequestProvider';
 
-class Model {
+export class Model {
 	constructor(args?: {}) {
 		lang.mixin(this, {
 			_restore: function (Constructor: { new (arg: any): { restored: boolean } }) {
@@ -54,9 +54,9 @@ class ConcreteRequest<T> extends Request<T> {
 	}
 }
 
-let store: ConcreteRequest<any>;
+let store: Request<any>;
 
-function runCollectionTest<T>(collection: dstore.Collection<T>, expected: RequestOptions, rangeArgs?: dstore.FetchRangeArgs) {
+export function runCollectionTest<T>(collection: dstore.Collection<T>, expected: RequestOptions, rangeArgs?: dstore.FetchRangeArgs) {
 	const expectedResults: Hash<number | string>[] = [
 		{ id: 1, name: 'one' },
 		{ id: 2, name: 'two' }
@@ -97,13 +97,12 @@ function runCollectionTest<T>(collection: dstore.Collection<T>, expected: Reques
 
 let registryHandle: Handle;
 let treeTestRootData: string;
-interface TestItem {
+export interface TestItem {
 	name: string;
 	describe: () => string;
 	someProperty? : string;
 }
-function createRequestTests(Store: new (options?: RequestStoreArgs) => ConcreteRequest<any>) {
-	return {
+registerSuite({
 		name: 'dstore Request',
 
 		before: function () {
@@ -117,14 +116,14 @@ function createRequestTests(Store: new (options?: RequestStoreArgs) => ConcreteR
 			registryHandle.destroy();
 		},
 
-		beforeEach: function () {
+		beforeEach: () => {
 			mockRequestProvider.setResponseText('{}');
 			mockRequestProvider.setResponseHeaders({});
-			store = new Store({
+			store = new ConcreteRequest({
 				target: '/mockRequest/',
 				Model: Model
 			});
-			store.Model.prototype.describe = function() {
+			store.Model.prototype.describe = function () {
 				return 'name is ' + this.name;
 			};
 		},
@@ -181,7 +180,7 @@ function createRequestTests(Store: new (options?: RequestStoreArgs) => ConcreteR
 		'filter relational': function () {
 			const filter = new store.Filter();
 			const innerFilter = new store.Filter().eq('foo', true);
-			const nestedFilter = filter[ 'in' ]('id', store.filter(innerFilter).select('id'));
+			const nestedFilter = filter['in']('id', store.filter(innerFilter).select('id'));
 			return runCollectionTest(store.filter(nestedFilter), {
 				query: {
 					id: 'in=(/mockRequest/?foo=true&select(id))'
@@ -263,20 +262,20 @@ function createRequestTests(Store: new (options?: RequestStoreArgs) => ConcreteR
 		},
 		'range': function () {
 			return runCollectionTest(store, {
-					query: {
-						'limit(10,15)': ''
-					}
-				}, { start: 15, end: 25 });
+				query: {
+					'limit(10,15)': ''
+				}
+			}, { start: 15, end: 25 });
 		},
 		'range with rangeParam': function () {
 			store.rangeStartParam = 'start';
 			store.rangeCountParam = 'count';
 			return runCollectionTest(store, {
-					query: {
-						'start': '15',
-						'count': '10'
-					}
-				}, { start: 15, end: 25 });
+				query: {
+					'start': '15',
+					'count': '10'
+				}
+			}, { start: 15, end: 25 });
 		},
 		'range with headers': function () {
 			store.useRangeHeaders = true;
@@ -375,6 +374,4 @@ function createRequestTests(Store: new (options?: RequestStoreArgs) => ConcreteR
 			// assert.strictEqual(results.length, expectedResults.length);
 			// });
 		}
-	};
-}
-registerSuite(createRequestTests(<any> ConcreteRequest));
+	});

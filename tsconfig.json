@@ -20,6 +20,7 @@
 		"./src/QueryMethod.ts",
 		"./src/QueryResults.ts",
 		"./src/Request.ts",
+		"./src/Rest.ts",
 		"./src/Store.ts",
 		"./src/interfaces.d.ts",
 		"./tests/intern-local.ts",
@@ -32,6 +33,7 @@
 		"./tests/typings/node/node.d.ts",
 		"./tests/typings/tsd.d.ts",
 		"./tests/unit/Request.ts",
+		"./tests/unit/Rest.ts",
 		"./tests/unit/Store.ts",
 		"./tests/unit/mockRequestProvider.ts"
 	]

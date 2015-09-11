@@ -1,4 +1,4 @@
-import { Handle, EventObject } from 'dojo-core/interfaces';
+import { Handle, EventObject, Hash } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
 
 // TODO: tailor these as necessary (many were adapted from dstore.d.ts in 1.x)
@@ -31,7 +31,7 @@ export interface Collection<T> {
 	remove(id: string | number): Promise<T | void>;
 	sort(property: string | { property: string }[] | { (a: T, b: T): number; }, descending?: boolean): Collection<T>;
 	track?(): Collection<T>;
-	select(properties: string| string[]): Collection<T>;
+	select(properties: string | string[]): Collection<T>;
 }
 
 export interface FetchPromise<T> extends Promise<T[]> {
@@ -87,5 +87,8 @@ export interface PutDirectives {
 	id?: string | number;
 	before?: {};
 	parent?: {};
-	overwrite?: Boolean;
+	overwrite?: boolean;
+	beforeId?: string | number;
+	incremental?: boolean;
+	headers?: Hash<string>;
 }

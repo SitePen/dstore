@@ -113,6 +113,154 @@ abstract class Request<T> extends Store<T> implements dstore.Collection<T> {
 		this.descendingPrefix = '-';
 		this.accepts = 'application/json';
 	}
+	/**
+	 * Constructs filter-related params to be inserted into the query string
+	 *
+	 * @param filter The filter to render as part of a query string
+	 * @return Filter-related params to be inserted in the query string
+	 */
+	protected _renderFilterParams(filter: Filter): string[] {
+		const type = filter.type;
+		const args = filter.args;
+		if (!type) {
+			return [ '' ];
+		}
+		if (type === 'string') {
+			return [ args[0] ];
+		}
+		if (type === 'and' || type === 'or') {
+			const joinToken = type === 'and' ? '&' : '|';
+			const renderedArgs = args.map(function (arg) {
+				// render each of the arguments to and or or, then combine by the right operator
+				const renderedArg = this._renderFilterParams(arg);
+				return ((arg.type === 'and' || arg.type === 'or') && arg.type !== type) ?
+					// need to observe precedence in the case of changing combination operators
+					'(' + renderedArg + ')' : renderedArg;
+			}, this);
+			return [ renderedArgs.join(joinToken) ];
+		}
+		let target = args[1];
+		if (target) {
+			if (target._renderUrl) {
+				// detected nested query, and render the url inside as an argument
+				target = '(' + target._renderUrl() + ')';
+			} else if (target instanceof Array) {
+				target = '(' + target + ')';
+			}
+		}
+		const encodedFilterArg = encodeURIComponent(args[0]);
+		const encodedFilterType = (type === 'eq' ? '' : type + '=');
+		const encodedTarget = encodeURIComponent(target);
+		return [ encodedFilterArg + '=' + encodedFilterType + encodedTarget ];
+	}
+
+	protected _renderQueryParams(): string[] {
+		const queryParams: string[] = [];
+
+		this.queryLog.forEach(function (entry: dstore.QueryLogEntry<any>) {
+			const type = entry.type,
+				renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
+
+			if (this[renderMethod]) {
+				push.apply(queryParams, this[renderMethod].apply(this, entry.normalizedArguments));
+			} else {
+				console.warn('Unable to render query params for "' + type + '" query', entry);
+			}
+		}, this);
+
+		return queryParams;
+	}
+
+	/**
+	 * Applies a Range header if this collection incorporates a range query
+	 *
+	 * @param start The start of the range
+	 * @param end The end of the range
+	 * @return The headers to which a Range property is added
+	 */
+	protected _renderRangeHeaders(start: number, end: number): { Range: string; 'X-Range': string } {
+		const value = 'items=' + start + '-' + (end - 1);
+		return {
+			'Range': value,
+			'X-Range': value // set X-Range for Opera since it blocks "Range" header
+		};
+	}
+
+	/**
+	 * Constructs range-related params to be inserted in the query string
+	 *
+	 * @param start The beginning of the range
+	 * @param end The end of the range
+	 * @return Range-related params to be inserted in the query string
+	 */
+	protected _renderRangeParams(start: number, end: number): string[] {
+		const params: string[] = [];
+		if (this.rangeStartParam) {
+			params.push(
+				this.rangeStartParam + '=' + start,
+				this.rangeCountParam + '=' + (end - start)
+			);
+		} else {
+			params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
+		}
+		return params;
+	}
+
+	/**
+	 * Constructs select-related params to be inserted in the query string
+	 *
+	 * @param properties Select-related params to be inserted in the query string
+	 * @return The rendered query string
+	 */
+	protected _renderSelectParams(properties: string): string[] {
+		const params: string[] = [];
+		if (this.selectParam) {
+			params.push(this.selectParam + '=' + properties);
+		} else {
+			params.push('select(' + properties + ')');
+		}
+		return params;
+	}
+
+	/**
+	 * Constructs sort-related params to be inserted in the query string
+	 *
+	 * @param sort An array of sort options indicating to render as a query string
+	 * @return Sort-related params to be inserted in the query string
+	 */
+	protected _renderSortParams(sort: dstore.SortOption[]): string[] {
+		const sortString = sort.map(function (sortOption: dstore.SortOption) {
+			const prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
+			return prefix + encodeURIComponent(sortOption.property);
+		}, this);
+
+		const params: string[] = [];
+		params.push(this.sortParam
+				? encodeURIComponent(this.sortParam) + '=' + sortString
+				: 'sort(' + sortString + ')'
+		);
+		return params;
+	}
+
+	/**
+	 * Constructs the URL used to fetch the data.
+	 *
+	 * @param requestParams A string or array of params to be rendered in the URL
+	 * @return The URL of the data
+	 */
+	protected _renderUrl(requestParams: string | string[]): string {
+		const queryParams = this._renderQueryParams();
+		let requestUrl = this.target;
+
+		if (requestParams) {
+			push.apply(queryParams, requestParams);
+		}
+
+		if (queryParams.length > 0) {
+			requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
+		}
+		return requestUrl;
+	}
 
 	protected _request(kwArgs: dstore.FetchArgs = {}): RequestResponse<T> {
 		// perform the actual query
@@ -157,155 +305,6 @@ abstract class Request<T> extends Store<T> implements dstore.Collection<T> {
 				});
 			}),
 			response: response
-		};
-	}
-
-	/**
-	 * Constructs filter-related params to be inserted into the query string
-	 *
-	 * @param filter The filter to render as part of a query string
-	 * @return Filter-related params to be inserted in the query string
-	 */
-	protected _renderFilterParams(filter: Filter): string[] {
-		const type = filter.type;
-		const args = filter.args;
-		if (!type) {
-			return [ '' ];
-		}
-		if (type === 'string') {
-			return [ args[0] ];
-		}
-		if (type === 'and' || type === 'or') {
-			const joinToken = type === 'and' ? '&' : '|';
-			const renderedArgs = args.map(function (arg) {
-				// render each of the arguments to and or or, then combine by the right operator
-				const renderedArg = this._renderFilterParams(arg);
-				return ((arg.type === 'and' || arg.type === 'or') && arg.type !== type) ?
-					// need to observe precedence in the case of changing combination operators
-					'(' + renderedArg + ')' : renderedArg;
-			}, this);
-			return [ renderedArgs.join(joinToken) ];
-		}
-		let target = args[1];
-		if (target) {
-			if (target._renderUrl) {
-				// detected nested query, and render the url inside as an argument
-				target = '(' + target._renderUrl() + ')';
-			} else if (target instanceof Array) {
-				target = '(' + target + ')';
-			}
-		}
-		const encodedFilterArg = encodeURIComponent(args[0]);
-		const encodedFilterType = (type === 'eq' ? '' : type + '=');
-		const encodedTarget = encodeURIComponent(target);
-		return [ encodedFilterArg + '=' + encodedFilterType + encodedTarget ];
-	}
-
-	/**
-	 * Constructs sort-related params to be inserted in the query string
-	 *
-	 * @param sort An array of sort options indicating to render as a query string
-	 * @return Sort-related params to be inserted in the query string
-	 */
-	protected _renderSortParams(sort: dstore.SortOption[]): string[] {
-		const sortString = sort.map(function (sortOption: dstore.SortOption) {
-			const prefix = sortOption.descending ? this.descendingPrefix : this.ascendingPrefix;
-			return prefix + encodeURIComponent(sortOption.property);
-		}, this);
-
-		const params: string[] = [];
-		params.push(this.sortParam
-				? encodeURIComponent(this.sortParam) + '=' + sortString
-				: 'sort(' + sortString + ')'
-		);
-		return params;
-	}
-
-	/**
-	 * Constructs range-related params to be inserted in the query string
-	 *
-	 * @param start The beginning of the range
-	 * @param end The end of the range
-	 * @return Range-related params to be inserted in the query string
-	 */
-	protected _renderRangeParams(start: number, end: number): string[] {
-		const params: string[] = [];
-		if (this.rangeStartParam) {
-			params.push(
-				this.rangeStartParam + '=' + start,
-				this.rangeCountParam + '=' + (end - start)
-			);
-		} else {
-			params.push('limit(' + (end - start) + (start ? (',' + start) : '') + ')');
-		}
-		return params;
-	}
-
-	/**
-	 * Constructs select-related params to be inserted in the query string
-	 *
-	 * @param properties Select-related params to be inserted in the query string
-	 * @return The rendered query string
-	 */
-	protected _renderSelectParams(properties: string): string[] {
-		const params: string[] = [];
-		if (this.selectParam) {
-			params.push(this.selectParam + '=' + properties);
-		} else {
-			params.push('select(' + properties + ')');
-		}
-		return params;
-	}
-
-	protected _renderQueryParams(): string[] {
-		const queryParams: string[] = [];
-
-		this.queryLog.forEach(function (entry: dstore.QueryLogEntry<any>) {
-			const type = entry.type,
-				renderMethod = '_render' + type[0].toUpperCase() + type.substr(1) + 'Params';
-
-			if (this[ renderMethod ]) {
-				push.apply(queryParams, this[renderMethod].apply(this, entry.normalizedArguments));
-			} else {
-				console.warn('Unable to render query params for "' + type + '" query', entry);
-			}
-		}, this);
-
-		return queryParams;
-	}
-
-	/**
-	 * Constructs the URL used to fetch the data.
-	 *
-	 * @param requestParams A string or array of params to be rendered in the URL
-	 * @return The URL of the data
-	 */
-	protected _renderUrl(requestParams: string | string[]): string {
-		const queryParams = this._renderQueryParams();
-		let requestUrl = this.target;
-
-		if (requestParams) {
-			push.apply(queryParams, requestParams);
-		}
-
-		if (queryParams.length > 0) {
-			requestUrl += (this._targetContainsQueryString ? '&' : '?') + queryParams.join('&');
-		}
-		return requestUrl;
-	}
-
-	/**
-	 * Applies a Range header if this collection incorporates a range query
-	 *
-	 * @param start The start of the range
-	 * @param end The end of the range
-	 * @return The headers to which a Range property is added
-	 */
-	protected _renderRangeHeaders(start: number, end: number): { Range: string; 'X-Range': string } {
-		const value = 'items=' + start + '-' + (end - 1);
-		return {
-			'Range': value,
-			'X-Range': value // set X-Range for Opera since it blocks "Range" header
 		};
 	}
 

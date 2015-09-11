@@ -14,7 +14,7 @@ let	responseText: string;
 
 export function respond(url: string, options: RequestOptions) {
 	latestUrl = url;
-	latestQuery = new UrlSearchParams(url.match(/[^?]*(?:\?([^#]*))?/)[ 1 ] || '');
+	latestQuery = new UrlSearchParams(url.match(/[^?]*(?:\?([^#]*))?/)[1] || '');
 	latestOptions = options;
 	latestRequestHeaders = {};
 
@@ -49,7 +49,7 @@ export function assertHttpMethod(expectedMethod: string) {
 	assert.strictEqual(latestOptions.method || 'GET', expectedMethod);
 }
 
-export function assertRequestHeaders(expectedHeaders: Hash<string>) {
+export function assertRequestHeaders(expectedHeaders: Hash<string | number>) {
 	for (let name in expectedHeaders) {
 		const lowerCaseName = name.toLowerCase(),
 			value = expectedHeaders[name];

@@ -65,12 +65,6 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 
 	storage: Evented;
 
-	/**
-	 * For stores that serialize data (to send to a server, for example) the stringify
-	 * function can be specified to control how objects are serialized to strings
-	 */
-	stringify: () => any;
-
 	constructor(options?: StoreArgs) {
 		super();
 		this._initialize();
@@ -116,7 +110,16 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 		}
 	}
 
-	protected _initialize(): void {
+	protected _createSubCollection(kwArgs: {}) {
+		let newCollection = <Hash<any>> Object.create(this.constructor.prototype);
+
+		for (let i in this) {
+			if (this._includePropertyInSubCollection(i, newCollection)) {
+				newCollection[i] = this[i];
+			}
+		}
+
+		return lang.mixin(newCollection, kwArgs);
 	}
 
 	protected _emitUpdateEvent(type: string) {
@@ -137,21 +140,12 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 		};
 	}
 
-	protected _createSubCollection(kwArgs: {}) {
-		let newCollection = <Hash<any>> Object.create(this.constructor.prototype);
-
-		for (let i in this) {
-			if (this._includePropertyInSubCollection(i, newCollection)) {
-				newCollection[i] = this[i];
-			}
-		}
-
-		return lang.mixin(newCollection, kwArgs);
-	}
-
 	protected _getQuerierFactory(type: string) {
 		const uppercaseType = type[0].toUpperCase() + type.substr(1);
 		return this['_create' + uppercaseType + 'Querier'];
+	}
+
+	protected _initialize(): void {
 	}
 
 	protected _includePropertyInSubCollection(name: string, subCollection: Hash<any>) {
@@ -217,17 +211,6 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 	}
 
 	/**
-	 * This creates a new instance from the store's model.
-	 * @param properties The properties that are passed to the model constructor to
-	 * be copied onto the new instance. Note, that should only be called
-	 * when new objects are being created, not when existing objects
-	 * are being restored from storage.
-	 */
-	create(properties: {}) {
-		return new this.Model(properties);
-	}
-
-	/**
 	 * Creates an object, throws an error if the object already exists
 	 *
 	 * @param object The object to store.
@@ -256,6 +239,39 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 	 * @return The object in the store that matches the given id.
 	 */
 	abstract get(id: string | number): Promise<T> | void;
+
+
+	/**
+	 * Stores an object
+	 *
+	 * @param object The object to store.
+	 * @param directives Additional directives for storing objects.
+	 * @return The object that was stored, with any changes that were made by
+	 * the storage system (like generated id)
+	 */
+	abstract put(object: any, directives?: dstore.PutDirectives): Promise<any>;
+
+	/**
+	 * Deletes an object by its identity
+	 *
+	 * @param id The identity to use to delete the object
+	 */
+	abstract remove(id: string | number): Promise<T | void>;
+
+	/**
+	 * This creates a new instance from the store's model.
+	 * @param properties The properties that are passed to the model constructor to
+	 * be copied onto the new instance. Note, that should only be called
+	 * when new objects are being created, not when existing objects
+	 * are being restored from storage.
+	 */
+	create(properties: {}) {
+		return new this.Model(properties);
+	}
+
+	emit(event: dstore.ChangeEvent<T>) {
+		return this.storage.emit(event);
+	}
 
 	filter<T>(...args: any[]): dstore.Collection<T> {
 		return QueryMethod(<QueryMethodArgs<T>> {
@@ -300,10 +316,6 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 		return object.get ? object.get(this.idProperty) : object[this.idProperty];
 	}
 
-	emit(event: dstore.ChangeEvent<T>) {
-		return this.storage.emit(event);
-	}
-
 	on(type: string, listener: (event: dstore.ChangeEvent<T>) => void) {
 		return this.storage.on(type, listener);
 	}
@@ -316,23 +328,6 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 	parse(args: any): any {
 		return args;
 	}
-
-	/**
-	 * Stores an object
-	 *
-	 * @param object The object to store.
-	 * @param directives Additional directives for storing objects.
-	 * @return The object that was stored, with any changes that were made by
-	 * the storage system (like generated id)
-	 */
-	abstract put(object: any, directives?: dstore.PutDirectives): Promise<any>;
-
-	/**
-	 * Deletes an object by its identity
-	 *
-	 * @param id The identity to use to delete the object
-	 */
-	abstract remove(id: string | number): Promise<T | void>;
 
 	select<T>(args: string | string[]): dstore.Collection<T> {
 		return QueryMethod(<QueryMethodArgs<T>> {
