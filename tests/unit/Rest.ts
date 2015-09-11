@@ -1,5 +1,6 @@
 import { Handle, Hash } from 'dojo-core/interfaces';
 import * as lang from 'dojo-core/lang';
+import Promise from 'dojo-core/Promise'
 import request, { providerRegistry } from 'dojo-core/request';
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
@@ -155,13 +156,11 @@ registerSuite({
 			[ objectWithoutId, optionsWithOverwriteFalse, expectedPositionHeaders ]
 		];
 
-		let promise = testPutPosition.apply(null, tests[0]);
-		let i: number;
-		for (i = 0; i < tests.length; ++i) {
-			promise = promise.then(function () {
-				return testPutPosition.apply(null, tests[i]);
+		return tests.reduce(function(current, nextTest) {
+			return current.then(function() {
+					return testPutPosition.apply(null, nextTest);
 			});
-		}
+		}, Promise.resolve());
 	},
 
 	'put object with options.beforeId': function () {
