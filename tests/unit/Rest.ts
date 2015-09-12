@@ -156,9 +156,9 @@ registerSuite({
 			[ objectWithoutId, optionsWithOverwriteFalse, expectedPositionHeaders ]
 		];
 
-		return tests.reduce(function(current, nextTest) {
-			return current.then(function() {
-					return testPutPosition.apply(null, nextTest);
+		return tests.reduce(function (current, nextTest) {
+			return current.then(function () {
+				return testPutPosition.apply(null, nextTest);
 			});
 		}, Promise.resolve());
 	},
