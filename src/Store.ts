@@ -240,7 +240,6 @@ abstract class Store<T> extends Evented implements dstore.Collection<T>, Hash<an
 	 */
 	abstract get(id: string | number): Promise<T> | void;
 
-
 	/**
 	 * Stores an object
 	 *

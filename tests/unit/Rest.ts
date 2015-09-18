@@ -1,6 +1,6 @@
-import { Handle, Hash } from 'dojo-core/interfaces';
+import { Hash } from 'dojo-core/interfaces';
 import * as lang from 'dojo-core/lang';
-import Promise from 'dojo-core/Promise'
+import Promise from 'dojo-core/Promise';
 import request, { providerRegistry } from 'dojo-core/request';
 import registerSuite = require('intern!object');
 import assert = require('intern/chai!assert');
