@@ -7,7 +7,7 @@ import assert = require('intern/chai!assert');
 // A mock request handler for testing.
 let latestUrl: string;
 let latestQuery: UrlSearchParams;
-let	latestRequestHeaders: { [ name: string]: string };
+let	latestRequestHeaders: { [ name: string ]: string };
 let	responseHeaders: Hash<string>;
 let	latestOptions: RequestOptions;
 let	responseText: string;

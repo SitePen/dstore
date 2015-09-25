@@ -11,7 +11,7 @@ export default class Filter implements Hash<any> {
 	constructor(filterArg?: string | (() => any) | FilterArgs) {
 		if (typeof filterArg === 'string' || typeof filterArg === 'function') {
 			this.type = typeof filterArg;
-			this.args = [filterArg];
+			this.args = [ filterArg ];
 		}
 		else if (filterArg) {
 			let filter = this;
@@ -38,7 +38,7 @@ export default class Filter implements Hash<any> {
 	protected _createFilter(key: any, target: any, type: string) {
 		const filter = new Filter();
 		filter.type = type;
-		filter.args = [key, target];
+		filter.args = [ key, target ];
 		if (this instanceof Filter && this.type) {
 			// we are chaining, so combine with an and operator
 			return this.and(filter);

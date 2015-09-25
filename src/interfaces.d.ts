@@ -42,7 +42,7 @@ export interface FetchPromise<T> extends Promise<T[]> {
 
 export interface FetchResponse<T> {
 	data: T;
-	options: { [key: string]: any; };
+	options: { [ key: string ]: any; };
 	status?: number;
 	text: string;
 	url: string;
