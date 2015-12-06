@@ -259,7 +259,7 @@ define([
 			var store = this;
 			return this._callOnStore(options.overwrite === false ? 'add' : 'put',[object])
 				.then(function (object) {
-					return store._restore(object);
+					return store.get( object );
 				});
 		},
 
@@ -275,7 +275,11 @@ define([
 
 			options = options || {};
 			options.overwrite = false;
-			return this.put(object, options);
+			var store = this;
+			return this._callOnStore(options.overwrite === false ? 'add' : 'put',[object])
+				.then(function (object) {
+					return store.get( object );
+				});
 		},
 
 		remove: function (id) {
