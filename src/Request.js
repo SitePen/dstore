@@ -85,6 +85,10 @@ define([
 		//		If this is not specified, the range will
 		//		included with a RQL style limit() parameter
 
+		// requestOptions: Object
+		//		Additional options to pass to dojo/request
+		requestOptions: {},
+
 		fetch: function (kwArgs) {
 			var results = this._request(kwArgs);
 			return new QueryResults(results.data, {
@@ -124,10 +128,13 @@ define([
 
 			var requestUrl = this._renderUrl(kwArgs.queryParams);
 
-			var response = request(requestUrl, {
+			var options = {
 				method: 'GET',
 				headers: headers
-			});
+			};
+			lang.mixin(options, this._getRequestOptions(kwArgs, headers, requestUrl));
+
+			var response = request(requestUrl, options);
 			var collection = this;
 			var parsedResponse = response.then(function (response) {
 				return collection.parse(response);
@@ -157,6 +164,10 @@ define([
 				}),
 				response: response.response
 			};
+		},
+
+		_getRequestOptions: function(kwArgs, headers, requestUrl) {
+			return this.requestOptions || {}
 		},
 
 		_renderFilterParams: function (filter) {
