@@ -116,7 +116,7 @@ define([
 			});
 		},
 
-		_request: function (kwArgs) {
+		_request: function (kwArgs, requestOptions) {
 			kwArgs = kwArgs || {};
 
 			// perform the actual query
@@ -132,7 +132,7 @@ define([
 				method: 'GET',
 				headers: headers
 			};
-			lang.mixin(options, this._getRequestOptions(kwArgs, headers, requestUrl));
+			lang.mixin(options, this._getRequestOptions(kwArgs, requestOptions, headers, requestUrl));
 
 			var response = request(requestUrl, options);
 			var collection = this;
@@ -166,8 +166,8 @@ define([
 			};
 		},
 
-		_getRequestOptions: function(kwArgs, headers, requestUrl) {
-			return this.requestOptions || {}
+		_getRequestOptions: function(kwArgs, requestOptions, headers, requestUrl) {
+			return lang.mixin(this.requestOptions || {}, requestOptions || {});
 		},
 
 		_renderFilterParams: function (filter) {
