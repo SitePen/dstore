@@ -167,7 +167,7 @@ define([
 		},
 
 		_getRequestOptions: function(kwArgs, requestOptions, headers, requestUrl) {
-			return lang.mixin(this.requestOptions || {}, requestOptions || {});
+			return lang.mixin({}, this.requestOptions || {}, requestOptions || {});
 		},
 
 		_renderFilterParams: function (filter) {
