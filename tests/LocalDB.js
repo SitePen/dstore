@@ -88,9 +88,13 @@ define([
 				options = undefined;
 			}
 			return function () {
-				if (options && options.multi && has('trident')) {
-					// sadly, IE doesn't support multiEntry yet
-					return;
+				if (options && options.multi) {
+					try {
+						IDBKeyRange.only([ 1 ]);
+					} catch (error) {
+						// If we land here, we're in IE or Edge and multiEntry is not supported
+						return;
+					}
 				}
 				var i = 0;
 				var collection = numberStore.filter(filter, options);
