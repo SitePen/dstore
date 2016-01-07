@@ -92,7 +92,7 @@ define([
 					try {
 						IDBKeyRange.only([ 1 ]);
 					} catch (error) {
-						// If we land here, we're in IE or Edge and multi entry is not supported
+						// If we land here, we're in IE or Edge and multiEntry is not supported
 						return;
 					}
 				}
