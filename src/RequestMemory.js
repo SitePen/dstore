@@ -6,7 +6,9 @@ define([
 	return declare([ Request, Cache ], {
 		postscript: function () {
 			this.inherited(arguments);
-			this.fetch();
+			if (this.prefetch != false) {
+				this.fetch();
+			}
 		},
 		isValidFetchCache: true
 	});
