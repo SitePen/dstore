@@ -87,7 +87,7 @@ define([
 
 		// requestOptions: Object
 		//		Additional options to pass to dojo/request
-		requestOptions: {},
+		requestOptions: null,
 
 		fetch: function (kwArgs) {
 			var results = this._request(kwArgs);
@@ -167,7 +167,7 @@ define([
 		},
 
 		_getRequestOptions: function(kwArgs, requestOptions, headers, requestUrl) {
-			return lang.mixin({}, this.requestOptions || {}, requestOptions || {});
+			return lang.mixin({}, this.requestOptions, requestOptions);
 		},
 
 		_renderFilterParams: function (filter) {
