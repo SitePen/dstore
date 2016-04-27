@@ -2,6 +2,9 @@ import { Handle } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
 
 // TODO: tailor these as necessary (many were adapted from dstore.d.ts in 1.x)
+export interface IData<T> extends Array<T>{
+	_version: number;
+}
 
 export interface ChangeEvent<T> {
 	id: any;

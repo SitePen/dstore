@@ -3,10 +3,10 @@
 	"compilerOptions": {
 		"declaration": false,
 		"module": "umd",
-		"noImplicitAny": true,
 		"outDir": "_build/",
+		"noImplicitAny": false,
 		"removeComments": false,
-		"sourceMap": true,
+		"sourceMap": false,
 		"target": "es5"
 	},
 	"filesGlob": [
@@ -18,6 +18,7 @@
 		"./typings/tsd.d.ts",
 		"./src/QueryMethod.ts",
 		"./src/interfaces.d.ts",
+		"./src/memory.ts",
 		"./tests/intern-local.ts",
 		"./tests/intern.ts",
 		"./tests/typings/chai/chai.d.ts",
@@ -25,7 +26,6 @@
 		"./tests/typings/dojo2/dojo.d.ts",
 		"./tests/typings/intern/intern.d.ts",
 		"./tests/typings/leadfoot/leadfoot.d.ts",
-		"./tests/typings/node/node.d.ts",
 		"./tests/typings/tsd.d.ts"
 	]
 }
