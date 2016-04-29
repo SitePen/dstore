@@ -81,7 +81,13 @@ define([
 				arrayUtil.forEach(results, function (object) {
 					// store each object before calling the callback
 					if (!store.isLoaded || store.isLoaded(object)) {
-						cachingStore.put(object);
+						if (cachingStore.putSync) {
+							// if putSync is available (from the memory store),
+							// use that as it is about 40x faster
+							cachingStore.putSync(object);
+						} else {
+							cachingStore.put(object);
+						}
 					} else {
 						// if anything is not loaded, we can't consider them all loaded
 						allLoaded = false;
