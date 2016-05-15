@@ -11,13 +11,7 @@ define([
 	'./Csv',
 	'./Tree',
 	'./extensions/RqlQuery',
-	'./legacy/DstoreAdapter-Memory',
-	'intern/node_modules/dojo/has!host-browser?./legacy/DstoreAdapter-Rest',
 	'./charting/StoreSeries',
-	'./legacy/StoreAdapter-Memory',
-	'./legacy/StoreAdapter-AsyncMemory',
-	'intern/node_modules/dojo/has!host-browser?./legacy/StoreAdapter-JsonRest',
-	'./legacy/StoreAdapter-DojoData',
 	'intern/node_modules/dojo/has!host-browser?./LocalDB'
 ], function () {
 });

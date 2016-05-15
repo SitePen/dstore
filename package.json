@@ -23,7 +23,7 @@
 		"rql": "~0.3.3",
 		"tslint": "2.4.0",
 		"intern": "2.2.2",
-		"typescript": "1.5.3"
+		"typescript": "1.6.0-dev.20150814"
 	},
 	"directories": {
 		"lib": "."

@@ -1,10 +1,13 @@
 define([
 	'dojo/_base/lang',
 	'dojo/_base/declare',
-	'dojo/_base/array'
-], function (lang, declare, array) {
+	'dojo/_base/array',
+	'dojo/Deferred'
+], function (lang, declare, array, Deferred) {
 
 	return declare(null, {
+		_initialRenderingDfd: null,
+		initialRenderingPromise: null,
 		constructor: function (collection, value) {
 			// summary:
 			//		Series adapter for dstore object stores.
@@ -18,6 +21,8 @@ define([
 			//		is a numeric field name to use for plotting. If undefined, null
 			//		or empty string (the default), "value" field is extracted.
 			this.collection = collection.track ? collection.track() : collection;
+			this._initialRenderingDfd = new Deferred();
+			this.initialRenderingPromise = this._initialRenderingDfd.promise;
 
 			if (value) {
 				if (typeof value === 'function') {
@@ -75,7 +80,11 @@ define([
 				if (collection.tracking) {
 					collection.on('add, update, delete', update);
 				}
-			}));
+				this._initialRenderingDfd.resolve();
+			}),
+			function (error) {
+				this._initialRenderingDfd.reject(error);
+			});
 		},
 
 		_update: function () {

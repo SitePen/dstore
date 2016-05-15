@@ -81,7 +81,7 @@ define([
 			var filter = new store.Filter();
 			assert.strictEqual(store.filter(filter.eq('prime', true)).fetchSync().length, 3);
 			var count = 0;
-			store.filter(filter.eq('prime', true)).fetch().forEach(function (object) {
+			store.filter(filter.eq('prime', true)).fetchSync().forEach(function (object) {
 				count++;
 				assert.equal(object.prime, true);
 			});
@@ -166,7 +166,7 @@ define([
 		'filter with paging': function () {
 			assert.strictEqual(store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).length, 1);
 			var count = 0;
-			store.filter({prime: true}).fetchRange({start: 1, end: 2}).forEach(function (object) {
+			store.filter({prime: true}).fetchRangeSync({start: 1, end: 2}).forEach(function (object) {
 				count++;
 				assert.equal(object.prime, true);
 			});
@@ -230,14 +230,15 @@ define([
 			// and test the new query method
 			var ids = [];
 			var filteredChildren = store.getChildren(two).filter({even: false});
-			filteredChildren.forEach(function (child) {
+			return filteredChildren.forEach(function (child) {
 				ids.push(child.id);
+			}).then(function() {
+				assert.equal(filteredChildren.queryLog.length, 2);
+				assert.equal(filteredChildren.queryLog[0].type, 'children');
+				assert.equal(filteredChildren.queryLog[1].type, 'filter');
+				assert.isTrue(filteredChildren.isAChildCollection);
+				assert.deepEqual(ids, [2.1, 2.3]);
 			});
-			assert.equal(filteredChildren.queryLog.length, 2);
-			assert.equal(filteredChildren.queryLog[0].type, 'children');
-			assert.equal(filteredChildren.queryLog[1].type, 'filter');
-			assert.isTrue(filteredChildren.isAChildCollection);
-			assert.deepEqual(ids, [2.1, 2.3]);
 		},
 
 		'put update': function () {

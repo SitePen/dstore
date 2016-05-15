@@ -1,6 +1,7 @@
 .baseDir.ts
 .sublimets
 .tscache
+.idea
 _build
 dist
 html-report

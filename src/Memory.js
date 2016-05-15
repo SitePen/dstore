@@ -10,7 +10,7 @@ define([
 
 	// module:
 	//		dstore/Memory
-	return declare([Store, Promised, SimpleQuery ], {
+	return declare([ Store.default, Promised, SimpleQuery ], {
 		constructor: function () {
 			// summary:
 			//		Creates a memory object store.
@@ -20,6 +20,11 @@ define([
 
 			// Add a version property so subcollections can detect when they're using stale data
 			this.storage.version = 0;
+		},
+
+		_initialize: function () {
+			this.autoEmitEvents = false;
+			this.inherited(arguments);
 		},
 
 		postscript: function () {
@@ -76,7 +81,10 @@ define([
 			storage.version++;
 
 			var eventType = id in index ? 'update' : 'add',
-				event = { target: object },
+				event = {
+					target: object,
+					type: eventType
+				},
 				previousIndex,
 				defaultDestination;
 			if (eventType === 'update') {
@@ -122,7 +130,7 @@ define([
 				index[this.getIdentity(data[i])] = i;
 			}
 
-			this.emit(eventType, event);
+			this.emit(event);
 
 			return object;
 		},
@@ -153,7 +161,11 @@ define([
 				var removed = data.splice(index[id], 1)[0];
 				// now we have to reindex
 				this._reindex();
-				this.emit('delete', {id: id, target: removed});
+				this.emit({
+					id: id,
+					target: removed,
+					type: 'delete'
+				});
 				return true;
 			}
 		},
@@ -219,14 +231,14 @@ define([
 				data._version = this.storage.version;
 				this.data = data;
 			}
-			return new QueryResults(data);
+			return QueryResults.default(data);
 		},
 
 		fetchRangeSync: function (kwArgs) {
 			var data = this.fetchSync(),
 				start = kwArgs.start,
 				end = kwArgs.end;
-			return new QueryResults(data.slice(start, end), {
+			return QueryResults.default(data.slice(start, end), {
 				totalLength: data.length
 			});
 		},

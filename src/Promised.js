@@ -18,7 +18,7 @@ define([
 			if (query) {
 				// need to create a QueryResults and ensure the totalLength is
 				// a promise.
-				var queryResults = new QueryResults(deferred.promise);
+				var queryResults = QueryResults.default(deferred.promise);
 				queryResults.totalLength = when(queryResults.totalLength);
 				return queryResults;
 			}

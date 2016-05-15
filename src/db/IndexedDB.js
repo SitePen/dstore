@@ -65,7 +65,7 @@ define([
 
 
 	var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
-	return declare([Store, SimpleQuery], {
+	return declare([ Store.default, SimpleQuery ], {
 		// summary:
 		//		This is a basic store for IndexedDB. It implements dojo/store/api/Store.
 
@@ -331,7 +331,7 @@ define([
 			var results = [];
 			var store = this;
 			// wait for all the union segments to complete
-			return new QueryResults(when(parts).then(
+			return QueryResults.default(when(parts).then(
 				function(parts){
 					return all(parts.map(function(part, i) {
 						var queue = queues[i] = [];
@@ -807,7 +807,7 @@ define([
 					return select.querier(results);
 				});
 			}
-			return new QueryResults(resultsPromise, {totalLength: totalLength});
+			return QueryResults.default(resultsPromise, { totalLength: totalLength });
 		}
 	});
 

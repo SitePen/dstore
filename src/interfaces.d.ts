@@ -1,50 +1,66 @@
-import { Handle } from 'dojo-core/interfaces';
+import { Handle, EventObject, Hash } from 'dojo-core/interfaces';
 import Promise from 'dojo-core/Promise';
 
 // TODO: tailor these as necessary (many were adapted from dstore.d.ts in 1.x)
 
-export interface ChangeEvent<T> {
+export interface ChangeEvent<T> extends EventObject {
 	id: any;
 	index?: number;
 	previousIndex?: number;
-	target: T;
-	totalLength: number;
-	type: string;
+	target?: T;
+	totalLength?: number;
+	beforeId?: string | number;
 }
 
 export interface Collection<T> {
+	fetch: (args?: FetchArgs) => FetchPromise<T>;
 	idProperty: string;
 	Model?: { new (...args: any[]): T; };
 	tracking?: { remove(): void; };
+	queryLog?: {};
 
 	add(object: T, options?: {}): Promise<T>;
-	emit(eventName: string, event: ChangeEvent<T>): boolean;
-	fetch(): FetchPromise<T>;
-	fetchRange(kwArgs: { start?: number; end?: number; }): FetchPromise<T>;
+	emit(event: EventObject): boolean | void;
+	fetchRange(kwArgs: FetchRangeArgs): FetchPromise<T>;
 	filter(query: string | {} | { (item: T, index: number): boolean; }): Collection<T>;
-	forEach(callback: (item: T, index: number) => void, thisObject?: any): Promise<T[]>;
-	get(id: any): Promise<T>;
-	getIdentity(object: T): any;
-	on(eventName: string, listener: (event: ChangeEvent<T>) => void): Handle;
+	forEach(callback: (item: T, index: number, collection: T[]) => void, thisObject?: any): Promise<T[]>;
+	get(id: string | number): Promise<T> | void;
+	getIdentity(object: { [ name: string ]: any, get?: (name: string) => any }): any;
+	on(type: string, listener: (event: ChangeEvent<T>) => void): Handle;
 	put(object: T, options?: {}): Promise<T>;
-	remove(id: any): Promise<Object>;
-	sort(property: string | { (a: T, b: T): number; }, descending?: boolean): Collection<T>;
+	remove(id: string | number): Promise<T | void>;
+	sort(property: string | { property: string }[] | { (a: T, b: T): number; }, descending?: boolean): Collection<T>;
 	track?(): Collection<T>;
+	select(properties: string | string[]): Collection<T>;
 }
 
 export interface FetchPromise<T> extends Promise<T[]> {
-	forEach(callback: (value: T, index?: number, array?: T[]) => void, thisObject?: any): FetchPromise<T>;
-	response?: FetchResponse<T>;
-	totalLength: Promise<number>;
+	forEach?(callback: (value: T, index?: number, array?: T[]) => void, thisObject?: any): Promise<void>;
+	response?: FetchResponse<T[]>;
+	totalLength?: number | Promise<number>;
 }
 
 export interface FetchResponse<T> {
 	data: T;
-	options: { [key: string]: any; };
+	options: { [ key: string ]: any; };
 	status?: number;
 	text: string;
 	url: string;
 	getHeader(name: string): string;
+}
+
+export interface FetchArgs {
+	queryParams?: string | string[];
+	headers?: {};
+}
+
+export interface FetchRangeArgs extends FetchArgs {
+	start: number;
+	end: number;
+}
+export interface SortOption {
+	descending?: boolean;
+	property: string;
 }
 
 /**
@@ -65,4 +81,14 @@ export interface QueryLogEntry<T> {
 	normalizedArguments: any[];
 	querier?: QuerierFunction<T>;
 	type: string;
+}
+
+export interface PutDirectives {
+	id?: string | number;
+	before?: {};
+	parent?: {};
+	overwrite?: boolean;
+	beforeId?: string | number;
+	incremental?: boolean;
+	headers?: Hash<string>;
 }

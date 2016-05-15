@@ -32,7 +32,7 @@ define([
 		},
 
 		'filter with object': function () {
-			var filterExpression = new Filter();
+			var filterExpression = new Filter.default();
 			var filter = simpleQuery._createFilterQuerier(filterExpression.eq('odd', false));
 
 			assert.deepEqual(filter(testData), [
@@ -132,7 +132,7 @@ define([
 		},
 
 		'nested queries': function () {
-			var f = new Filter();
+			var f = new Filter.default();
 			var isEven = f.eq('odd', false);
 			var isOdd = f.eq('odd', true);
 			var isZero = f.eq('name', 'zero');
