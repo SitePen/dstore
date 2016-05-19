@@ -5,3 +5,4 @@ _build
 dist
 html-report
 node_modules
+dojo-loader
