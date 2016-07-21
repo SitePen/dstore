@@ -51,7 +51,17 @@ define([
 		},
 		contains: function (value, required, object, key) {
 			var collection = this;
-			return arrayUtil.every(required.data || required, function (requiredValue) {
+			var data;
+
+			if (required.data) {
+				data = required.data;
+			} else if(Array.isArray(required)) {
+				data = required;
+			} else {
+				data = [required];
+			}
+
+			return arrayUtil.every(data, function (requiredValue) {
 				if (typeof requiredValue === 'object' && requiredValue.type) {
 					var comparator = collection._getFilterComparator(requiredValue.type);
 					return arrayUtil.some(value, function (item) {
