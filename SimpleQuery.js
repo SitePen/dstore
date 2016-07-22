@@ -24,32 +24,32 @@ define([
 	}
 
 	var comparators = {
-		eq: function (value, required) {
+		eq: function eq(value, required) {
 			return value === required;
 		},
-		'in': function(value, required) {
+		'in': function inComparator(value, required) {
 			// allow for a collection of data
 			return arrayUtil.indexOf(required.data || required, value) > -1;
 		},
-		ne: function (value, required) {
+		ne: function ne(value, required) {
 			return value !== required;
 		},
-		lt: function (value, required) {
+		lt: function lt(value, required) {
 			return value < required;
 		},
-		lte: function (value, required) {
+		lte: function lte(value, required) {
 			return value <= required;
 		},
-		gt: function (value, required) {
+		gt: function gt(value, required) {
 			return value > required;
 		},
-		gte: function (value, required) {
+		gte: function gte(value, required) {
 			return value >= required;
 		},
-		match: function (value, required, object) {
+		match: function match(value, required, object) {
 			return required.test(value, object);
 		},
-		contains: function (value, required, object, key) {
+		contains: function contains(value, required, object, key) {
 			var collection = this;
 			var data;
 
@@ -86,8 +86,9 @@ define([
 			function getQuerier(filter) {
 				var type = filter.type;
 				var args = filter.args;
-				var comparator = collection._getFilterComparator(type);
-				if (comparator) {
+				var comparatorFunction = collection._getFilterComparator(type);
+
+				if (comparatorFunction) {
 					// it is a comparator
 					var firstArg = args[0];
 					var getProperty = makeGetter(firstArg, queryAccessors);
@@ -96,9 +97,10 @@ define([
 						// if it is a collection, fetch the contents (for `in` and `contains` operators)
 						secondArg = secondArg.fetchSync();
 					}
-					return function (object) {
+
+					return function comparator(object) {
 						// get the value for the property and compare to expected value
-						return comparator.call(collection, getProperty(object), secondArg, object, firstArg);
+						return comparatorFunction.call(collection, getProperty(object), secondArg, object, firstArg);
 					};
 				}
 				switch (type) {
@@ -110,10 +112,10 @@ define([
 								// combine the last querier with a new one
 								querier = (function(a, b) {
 									return type === 'and' ?
-										function(object) {
+										function and(object) {
 											return a(object) && b(object);
 										} :
-										function(object) {
+										function or(object) {
 											return a(object) || b(object);
 
 										};
