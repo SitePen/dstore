@@ -84,6 +84,8 @@ define([
 			var querier = getQuerier(filter);
 
 			function getQuerier(filter) {
+				var currentQuerier;
+				var nextQuerier;
 				var type = filter.type;
 				var args = filter.args;
 				var comparatorFunction = collection._getFilterComparator(type);
@@ -93,6 +95,7 @@ define([
 					var firstArg = args[0];
 					var getProperty = makeGetter(firstArg, queryAccessors);
 					var secondArg = args[1];
+
 					if (secondArg && secondArg.fetchSync) {
 						// if it is a collection, fetch the contents (for `in` and `contains` operators)
 						secondArg = secondArg.fetchSync();
@@ -103,14 +106,16 @@ define([
 						return comparatorFunction.call(collection, getProperty(object), secondArg, object, firstArg);
 					};
 				}
+
 				switch (type) {
 					case 'and': case 'or':
 						for (var i = 0, l = args.length; i < l; i++) {
 							// combine filters, using and or or
-							var nextQuerier = getQuerier(args[i]);
-							if (querier) {
+							nextQuerier = getQuerier(args[i]);
+
+							if (currentQuerier) {
 								// combine the last querier with a new one
-								querier = (function(a, b) {
+								currentQuerier = (function(a, b) {
 									return type === 'and' ?
 										function and(object) {
 											return a(object) && b(object);
@@ -119,12 +124,12 @@ define([
 											return a(object) || b(object);
 
 										};
-								})(querier, nextQuerier);
+								})(currentQuerier, nextQuerier);
 							} else {
-								querier = nextQuerier;
+								currentQuerier = nextQuerier;
 							}
 						}
-						return querier;
+						return currentQuerier;
 					case 'function':
 						return args[0];
 					case 'string':
@@ -142,6 +147,7 @@ define([
 						throw new Error('Unknown filter operation "' + type + '"');
 				}
 			}
+
 			return function (data) {
 				return arrayUtil.filter(data, querier);
 			};
