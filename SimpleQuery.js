@@ -24,34 +24,44 @@ define([
 	}
 
 	var comparators = {
-		eq: function (value, required) {
+		eq: function eq(value, required) {
 			return value === required;
 		},
-		'in': function(value, required) {
+		'in': function inComparator(value, required) {
 			// allow for a collection of data
 			return arrayUtil.indexOf(required.data || required, value) > -1;
 		},
-		ne: function (value, required) {
+		ne: function ne(value, required) {
 			return value !== required;
 		},
-		lt: function (value, required) {
+		lt: function lt(value, required) {
 			return value < required;
 		},
-		lte: function (value, required) {
+		lte: function lte(value, required) {
 			return value <= required;
 		},
-		gt: function (value, required) {
+		gt: function gt(value, required) {
 			return value > required;
 		},
-		gte: function (value, required) {
+		gte: function gte(value, required) {
 			return value >= required;
 		},
-		match: function (value, required, object) {
+		match: function match(value, required, object) {
 			return required.test(value, object);
 		},
-		contains: function (value, required, object, key) {
+		contains: function contains(value, required, object, key) {
 			var collection = this;
-			return arrayUtil.every(required.data || required, function (requiredValue) {
+			var data;
+
+			if (required.data) {
+				data = required.data;
+			} else if(Array.isArray(required)) {
+				data = required;
+			} else {
+				data = [required];
+			}
+
+			return arrayUtil.every(data, function (requiredValue) {
 				if (typeof requiredValue === 'object' && requiredValue.type) {
 					var comparator = collection._getFilterComparator(requiredValue.type);
 					return arrayUtil.some(value, function (item) {
@@ -74,46 +84,52 @@ define([
 			var querier = getQuerier(filter);
 
 			function getQuerier(filter) {
-				var querier;
+				var currentQuerier;
+				var nextQuerier;
 				var type = filter.type;
 				var args = filter.args;
-				var comparator = collection._getFilterComparator(type);
-				if (comparator) {
+				var comparatorFunction = collection._getFilterComparator(type);
+
+				if (comparatorFunction) {
 					// it is a comparator
 					var firstArg = args[0];
 					var getProperty = makeGetter(firstArg, queryAccessors);
 					var secondArg = args[1];
+
 					if (secondArg && secondArg.fetchSync) {
 						// if it is a collection, fetch the contents (for `in` and `contains` operators)
 						secondArg = secondArg.fetchSync();
 					}
-					return function (object) {
+
+					return function comparator(object) {
 						// get the value for the property and compare to expected value
-						return comparator.call(collection, getProperty(object), secondArg, object, firstArg);
+						return comparatorFunction.call(collection, getProperty(object), secondArg, object, firstArg);
 					};
 				}
+
 				switch (type) {
 					case 'and': case 'or':
 						for (var i = 0, l = args.length; i < l; i++) {
 							// combine filters, using and or or
-							var nextQuerier = getQuerier(args[i]);
-							if (querier) {
+							nextQuerier = getQuerier(args[i]);
+
+							if (currentQuerier) {
 								// combine the last querier with a new one
-								querier = (function(a, b) {
+								currentQuerier = (function(a, b) {
 									return type === 'and' ?
-										function(object) {
+										function and(object) {
 											return a(object) && b(object);
 										} :
-										function(object) {
+										function or(object) {
 											return a(object) || b(object);
 
 										};
-								})(querier, nextQuerier);
+								})(currentQuerier, nextQuerier);
 							} else {
-								querier = nextQuerier;
+								currentQuerier = nextQuerier;
 							}
 						}
-						return querier;
+						return currentQuerier;
 					case 'function':
 						return args[0];
 					case 'string':
@@ -131,6 +147,7 @@ define([
 						throw new Error('Unknown filter operation "' + type + '"');
 				}
 			}
+
 			return function (data) {
 				return arrayUtil.filter(data, querier);
 			};
