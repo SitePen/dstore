@@ -30,7 +30,8 @@ define([
 			var dataStore = new DataStore({
 				store: new ItemFileWriteStore({
 					data: lang.clone(testData)
-				})
+				}),
+				idProperty: 'id'
 			});
 			store = new StoreAdapter({
 				objectStore: dataStore,
