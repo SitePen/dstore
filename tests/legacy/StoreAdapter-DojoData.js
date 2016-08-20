@@ -103,13 +103,15 @@ define([
 
 
 		'add duplicate': function () {
+			var dfd = this.async();
+
 			store.add({
 				id: 5,
 				perfect: true
 			}).then(function () {
-				assert.fail('add duplicate not rejected');
+				dfd.reject('add duplicate should be rejected');
 			}, function () {
-				console.log('add duplicate failed as expected');
+				dfd.resolve();
 			});
 		},
 
