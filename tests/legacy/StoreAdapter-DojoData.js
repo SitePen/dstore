@@ -110,9 +110,9 @@ define([
 				perfect: true
 			}).then(function () {
 				dfd.reject('add duplicate should be rejected');
-			}, function () {
-				dfd.resolve();
-			});
+			}, dfd.callback(function (error) {
+				assert.strictEqual(error.message, 'Overwriting existing object not allowed');
+			}));
 		},
 
 		'add new': function () {
