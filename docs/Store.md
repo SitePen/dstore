@@ -20,7 +20,7 @@ Method | Description
 `getIdentity(object)` | This returns an object's identity (note: this should always execute synchronously).
 `put(object, [directives])` | This stores an object. It can be used to update or create an object. This returns a promise that may resolve to the object after it has been saved.
 `add(object, [directives])` | This creates an object, and throws an error if the object already exists. This should return a promise for the newly created object.
-`remove(id)` | This deletes an object, using the identity to indicate which object to delete. This returns a promise that resolves to a boolean value indicating whether the object was succcessfully removed.
+`remove(id)` | This deletes an object, using the identity to indicate which object to delete. This returns a promise that resolves to a boolean value indicating whether the object was successfully removed.
 `transaction()` | Starts a transaction and returns a transaction object. The transaction object should include a `commit()` and `abort()` to commit and abort transactions, respectively. Note, that a store user might not call `transaction()` prior to using put, delete, etc. in which case these operations effectively could be thought of as “auto-commit” style actions.
 `create(properties)` | Creates and returns a new instance of the data model. The returned object will not be stored in the object store until it its save() method is called, or the store's add() is called with this object. This should always execute synchronously.
 `getChildren(parent)` | This retrieves the children of the provided parent object. This should return a new collection representing the children.
@@ -39,4 +39,4 @@ Method | Description
 `getSync(id)` | This retrieves an object by its identity. If no object was found, the returned value should be `undefined`.
 `putSync(object, [directives])` | This stores an object. It can be used to update or create an object. This returns the object after it has been saved.
 `addSync(object, [directives])` | This creates an object, and throws an error if the object already exists. This should return the newly created object.
-`removeSync(id)` | This deletes an object, using the identity to indicate which object to delete. This returns a boolean value indicating whether the object was succcessfully removed.
+`removeSync(id)` | This deletes an object, using the identity to indicate which object to delete. This returns a boolean value indicating whether the object was successfully removed.

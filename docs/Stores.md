@@ -48,7 +48,20 @@ For example:
         }]
     });
 
-The `Memory` store provides synchronous equivalents of standard asynchronous store methods, including `getSync(id)`, `addSync(object, options)`, `putSync(object, options)`, and `removeSync(id)`. These methods directly return objects or results, without a promise.
+The array supplied as the `data` property will not be copied, it will be used as-is as the store's data. It can be changed at run-time with the `setData` method.
+
+### Methods
+
+The `Memory` store provides synchronous equivalents of standard asynchronous store methods that directly return objects or results, without a promise.
+
+Name | Description
+-----|------------
+`getSync(id)` | Retrieve an object by its identity. If no object is found, the returned value is `undefined`.
+`addSync(object, options)` | Create an object (throws an error if the object already exists). Returns the newly created object.
+`putSync(object, options)` | Store an object. Can be used to update or create an object. Returns the object after it has been saved.
+`removeSync(id)` | Delete an object, using the identity to indicate which object to delete. Returns a boolean value indicating whether the object was successfully removed.
+`setData(data)` | Set the store's data to the specified array.
+
 
 ## Request
 
