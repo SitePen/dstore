@@ -32,7 +32,7 @@ Method | Description
 
 Stores that can perform synchronous operations may provide analogous methods for `get`, `put`, `add`, and `remove` that end with `Sync` to provide synchronous support. For example `getSync(id)` will directly return an object instead of a promise. The `dstore/Memory` store provides `Sync` methods in addition to the promise-based methods. This behavior has been separated into distinct methods to provide consistent return types.
 
-It is generally advisable to always use the synchronous methods so that client code does not have to be updated in case the store is changed. However, if you have very performance intensive store accesses, the synchronous methods can be used to avoid the minor overhead imposed by promises.
+It is generally advisable to always use the asynchronous methods so that client code does not have to be updated in case the store is changed. However, if you have very performance intensive store accesses, the synchronous methods can be used to avoid the minor overhead imposed by promises.
 
 Method | Description
 ------ | -------------
