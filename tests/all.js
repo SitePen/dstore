@@ -1,6 +1,7 @@
 define([
 	'./Store',
 	'./SimpleQuery',
+	'./Filter',
 	'./Memory',
 	'./Request',
 	'./Rest',
