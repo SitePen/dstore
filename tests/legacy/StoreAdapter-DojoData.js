@@ -30,7 +30,8 @@ define([
 			var dataStore = new DataStore({
 				store: new ItemFileWriteStore({
 					data: lang.clone(testData)
-				})
+				}),
+				idProperty: 'id'
 			});
 			store = new StoreAdapter({
 				objectStore: dataStore,
@@ -102,14 +103,16 @@ define([
 
 
 		'add duplicate': function () {
+			var dfd = this.async();
+
 			store.add({
 				id: 5,
 				perfect: true
 			}).then(function () {
-				assert.fail('add duplicate not rejected');
-			}, function () {
-				console.log('add duplicate failed as expected');
-			});
+				dfd.reject('add duplicate should be rejected');
+			}, dfd.callback(function (error) {
+				assert.strictEqual(error.message, 'Overwriting existing object not allowed');
+			}));
 		},
 
 		'add new': function () {
