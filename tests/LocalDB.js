@@ -305,6 +305,23 @@ define([
 			'find a LocalDB': function () {
 				// make sure we resolved to at least one of them
 				assert.isTrue(LocalDB === IndexedDB || LocalDB === LocalStorage || LocalDB === SQL, 'resolved a store');
+			},
+			'create index with idProperty': function () {
+				if(!IndexedDB || name !== 'dstore/db/IndexedDB') {
+					this.skip();
+				}
+				var dbConfig = {
+					name: 'tmp-db',
+					stores: {
+						foo: {
+							idProperty: 'name',
+							name: 10
+						}
+					},
+					version: 1
+				};
+				var store = new IndexedDB({ dbConfig: dbConfig, storeName: 'foo'});
+				return store.fetch(); // no error means success
 			}
 		};
 	}
