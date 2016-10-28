@@ -200,7 +200,7 @@ define([
 			"gte('id', 1).lte('id', 3)": testQuery(new Filter().gte('id', 1).lte('id', 3), {range: {start: 0, end: 1}}, [1, 2, 3]),
 			"gte('name', 'm').lte('name', 'three')": testQuery(new Filter().gte('name', 'm').lte('name', 'three'),
 				{sort:[{property: 'id'}]}, [1, 3]),
-			"gte('name', 'one').lte('name', 'three')": testQuery(new Filter().gte('name', 'one').lte('name', 'three'), 
+			"gte('name', 'one').lte('name', 'three')": testQuery(new Filter().gte('name', 'one').lte('name', 'three'),
 				{sort:[{property: 'id'}]}, [1, 3]),
 			"gt('name', 'one').lte('name', 'three')":
 					testQuery(new Filter().gt('name', 'one').lte('name', 'three'),
@@ -262,7 +262,7 @@ define([
 					{sort:[{property: 'name'}], range: {start: 1, end: 3}}, [5, 1]),
 			'db interaction': function () {
 				return numberStore.get(1).then(function(one) {
-					assert.strictEqual(one.id, 1); 
+					assert.strictEqual(one.id, 1);
 					assert.strictEqual(one.name, 'one');
 					assert.strictEqual(one.prime, false);
 					assert.strictEqual(one.mappedTo, 'E');
@@ -325,6 +325,23 @@ define([
 				letterStore.put(item).then(dfd.callback(function(itemUpdated) {
 					assert.deepEqual(itemUpdated, item);
 				}));
+			},
+			'create index with idProperty': function () {
+				if(!IndexedDB || name !== 'dstore/db/IndexedDB') {
+					this.skip();
+				}
+				var dbConfig = {
+					name: 'tmp-db',
+					stores: {
+						foo: {
+							idProperty: 'name',
+							name: 10
+						}
+					},
+					version: 1
+				};
+				var store = new IndexedDB({ dbConfig: dbConfig, storeName: 'foo'});
+				return store.fetch(); // no error means success
 			}
 		};
 	}
