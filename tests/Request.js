@@ -4,6 +4,7 @@ define([
 	'dojo/_base/declare',
 	'dojo/_base/lang',
 	'dojo/json',
+	'dojo/request',
 	'dojo/request/registry',
 	'dojo/when',
 	'dojo/promise/all',
@@ -19,6 +20,7 @@ define([
 	lang,
 	JSON,
 	request,
+	requestRegistry,
 	when,
 	whenAll,
 	Request,
@@ -91,7 +93,7 @@ define([
 			name: 'dstore Request',
 
 			before: function () {
-				registryHandle = request.register(/.*mockRequest.*/, mockRequest);
+				registryHandle = requestRegistry.register(/.*mockRequest.*/, mockRequest);
 			},
 
 			after: function () {
@@ -349,6 +351,30 @@ define([
 						'limit(25)': ''
 					});
 					assert.strictEqual(results.length, expectedResults.length);
+				});
+			},
+
+			'overridden request issuer': function () {
+				var CustomRequest = declare(Request, {
+					target: '/mockRequest/',
+					_issueFetchRequest: function (requestUrl, headers) {
+						return request(requestUrl, {
+							method: 'POST',
+							headers: lang.mixin({}, headers, {
+								'Content-Type': 'application/x-www-form-urlencoded'
+							})
+						});
+					}
+				});
+
+				var store = new CustomRequest();
+				mockRequest.setResponseText(JSON.stringify([]));
+
+				when(store.fetch()).then(function () {
+					mockRequest.assertHttpMethod('POST');
+					mockRequest.assertRequestHeaders({
+						'Content-Type': 'application/x-www-form-urlencoded'
+					});
 				});
 			}
 		};

@@ -112,6 +112,13 @@ define([
 			});
 		},
 
+		_issueFetchRequest: function (requestUrl, headers) {
+			return request(requestUrl, {
+				method: 'GET',
+				headers: headers
+			});
+		},
+
 		_request: function (kwArgs) {
 			kwArgs = kwArgs || {};
 
@@ -124,10 +131,7 @@ define([
 
 			var requestUrl = this._renderUrl(kwArgs.queryParams);
 
-			var response = request(requestUrl, {
-				method: 'GET',
-				headers: headers
-			});
+			var response = this._issueFetchRequest(requestUrl, headers);
 			var collection = this;
 			var parsedResponse = response.then(function (response) {
 				return collection.parse(response);
