@@ -141,16 +141,20 @@ define([
 			});
 		},
 		put: function (object, directives) {
-			// first remove from the cache, so it is empty until we get a response from the master store
+			// first update the cache, we are going to assume the update is valid while we wait to
+			// hear from the master store
 			var cachingStore = this.cachingStore;
-			cachingStore.remove((directives && directives.id) || this.getIdentity(object));
-			return when(this.inherited(arguments), function (result) {
+			cachingStore.put(object, directives);
+			return when(this.inherited(arguments)).then(function (result) {
 				// now put result in cache
 				var cachedPutResult =
 					cachingStore.put(object && typeof result === 'object' ? result : object, directives);
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore,
 				// unless the master store doesn't implement put
 				return result || cachedPutResult;
+			}, function () {
+				// Assuming a rejection of a promise invalidates the local cache
+				cachingStore.remove((directives && directives.id) || this.getIdentity(object));
 			});
 		},
 		remove: function (id, directives) {
