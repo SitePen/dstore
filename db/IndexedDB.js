@@ -50,7 +50,7 @@ define([
 				cursorsRunning++;
 			} catch(e) {
 				if ((e.name === 'TransactionInactiveError' || e.name === 0) && cursorObject) { // == 0 is IndexedDBShim
-					// if the cursor has been interrupted we usually need to create a new transaction, 
+					// if the cursor has been interrupted we usually need to create a new transaction,
 					// handing control back to the query/filter function to open the cursor again
 					cursorObject.retry();
 				} else {
@@ -537,10 +537,10 @@ define([
 										(!to || to >= value);
 							};
 							filterValue.keyRange = from ?
-										  to ?
-										  IDBKeyRange.bound(from, to, filterValue.excludeFrom, filterValue.excludeTo) :
-										  IDBKeyRange.lowerBound(from, filterValue.excludeFrom) :
-										  IDBKeyRange.upperBound(to, filterValue.excludeTo);
+											to ?
+											IDBKeyRange.bound(from, to, filterValue.excludeFrom, filterValue.excludeTo) :
+											IDBKeyRange.lowerBound(from, filterValue.excludeFrom) :
+											IDBKeyRange.upperBound(to, filterValue.excludeTo);
 						})(filterValue.from, filterValue.to);
 					} else if (typeof filterValue === 'object' && filterValue.contains) {
 						// contains is for matching any value in a given array to any value in the target indices array
@@ -763,6 +763,7 @@ define([
 										// if the cursor can't be continued due to interruption
 										// if called, open the cursor again, and continue from our current position
 										advance = cachedPosition.preFilterOffset;
+										all.pop();
 										openCursor();
 									});
 								});
