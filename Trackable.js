@@ -225,6 +225,7 @@ define([
 				revision++;
 				var target = event.target;
 				event = lang.delegate(event, defaultEventProps[type]);
+				var beforeId = event.beforeId;
 
 				when(observed._results || observed._partialResults, function (resultsArray) {
 					/* jshint maxcomplexity: 32 */
@@ -245,16 +246,13 @@ define([
 					}
 
 					var i, j, l, ranges = observed._ranges, range;
-					/*if(++queryRevision != revision){
-						throw new Error('Query is out of date, you must observe() the' +
-						' query prior to any data modifications');
-					}*/
 
 					var targetId = 'id' in event ? event.id : store.getIdentity(target);
 					var removedFrom = -1,
 						removalRangeIndex = -1,
 						insertedInto = -1,
-						insertionRangeIndex = -1;
+						insertionRangeIndex = -1,
+						removedBeforeId;
 					if (type === 'delete' || type === 'update') {
 						// remove the old one
 						for (i = 0; removedFrom === -1 && i < ranges.length; ++i) {
@@ -267,6 +265,7 @@ define([
 								if (store.getIdentity(object) == targetId) {
 									removedFrom = event.previousIndex = j;
 									removalRangeIndex = i;
+									removedBeforeId = beforeId == targetId;
 									resultsArray.splice(removedFrom, 1);
 
 									range.count--;
@@ -298,10 +297,10 @@ define([
 
 									sampleArray = resultsArray.slice(range.start, range.start + range.count);
 
-									if ('beforeId' in event) {
-										candidateIndex = event.beforeId === null
+									if (beforeId !== undefined) {
+										candidateIndex = beforeId === null
 											? sampleArray.length
-											: findObject(sampleArray, event.beforeId);
+											: findObject(sampleArray, beforeId);
 									}
 
 									if (candidateIndex === -1) {
@@ -338,10 +337,9 @@ define([
 							// about where it was inserted or moved to. If it is an update, we leave
 							// its position alone. otherwise, we at least indicate a new object
 
-							var range,
-								possibleRangeIndex = -1;
-							if ('beforeId' in event) {
-								if (event.beforeId === null) {
+							var possibleRangeIndex = -1;
+							if (beforeId !== undefined && !removedBeforeId) {
+								if (beforeId === null) {
 									insertedInto = resultsArray.length;
 									possibleRangeIndex = ranges.length - 1;
 								} else {
@@ -350,7 +348,7 @@ define([
 
 										insertedInto = findObject(
 											resultsArray,
-											event.beforeId,
+											beforeId,
 											range.start,
 											range.start + range.count
 										);
@@ -401,7 +399,7 @@ define([
 							event.beforeIndex = ranges[begin].start;
 							for (i = begin; i < ranges.length; ++i) {
 								ranges[i].start++;
-							}							
+							}
 						}
 					}
 					// update the total

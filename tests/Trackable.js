@@ -582,6 +582,18 @@ define([
 				assert.strictEqual(data[data.length - 1].id, 3);
 			},
 
+			'updated item - with options.beforeId and no queryExecutor - update beforeId item': function () {
+				var store = createPrimeNumberStore(),
+					collection = store.track();
+				var data = collection._results;
+				store.put(store.getSync(4), { beforeId: 4 });
+
+				var len = data.length;
+				for (var i = 0; i < len; i++) {
+					assert.strictEqual(data[i].id, i, 'Item ' + i + ' is not correct.d');
+				}
+			},
+
 			'type': function () {
 				assert.isFalse(store === store.track(function () {}));
 			},
