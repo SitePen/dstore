@@ -762,8 +762,7 @@ define([
 										// retry function, that we provide to the queue to use
 										// if the cursor can't be continued due to interruption
 										// if called, open the cursor again, and continue from our current position
-										advance = cachedPosition.preFilterOffset;
-										all.pop();
+										advance = (cachedPosition.preFilterOffset + 1);
 										openCursor();
 									});
 								});
