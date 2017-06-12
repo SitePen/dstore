@@ -111,7 +111,8 @@ define([
 							}
 							for (var index in storeConfig) {
 								if (!idbStore.indexNames.contains(index) && index !== 'autoIncrement' &&
-										storeConfig[index].indexed !== false) {
+									index !== 'idProperty' &&
+									storeConfig[index].indexed !== false) {
 									idbStore.createIndex(index, index, storeConfig[index]);
 								}
 							}
