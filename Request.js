@@ -31,6 +31,12 @@ define([
 		//		by passing additional headers to calls to the store.
 		headers: {},
 
+		// rqlCompat: Boolean
+		//		Render certain operators (>=, <=), dates, numbers, and certain special values
+		//		(true,false,null, and the empty string) in an RQL-compatible way.
+		//		This may be disruptive for existing solutions, so we default to false.
+		rqlCompat:false,
+
 		// parse: Function
 		//		This function performs the parsing of the response text from the server. This
 		//		defaults to JSON, but other formats can be parsed by providing an alternate
@@ -186,6 +192,51 @@ define([
 				}, this).join(type === 'and' ? '&' : '|')];
 			}
 			var target = args[1];
+			var doRqlEscape=true;
+			if(this.rqlCompat) {
+				if(type=='lte') {
+					type='le';
+				}
+				if(type=='gte') {
+					type='ge';
+				}
+				// "match" doesn't belong to RQL, but "like" does.
+				if(type=='match') {
+					type='like';
+				}
+				// These special values have function-like representations. The parentheses
+				// in these cases should use the reserved characters, and not percent-encode them.
+				if(target===null) {
+					target='null()';
+					doRqlEscape=false;
+				} else if (target===true) {
+					target='true()';
+					doRqlEscape=false;
+				} else if (target===false) {
+					target='false()';
+					doRqlEscape=false;
+				} else if (target==='') {
+					target='empty()';
+					doRqlEscape=false;
+				}
+
+				switch(typeof target){
+					case 'number':
+						// Decimals in numbers are not to have extra escaping done.
+						doRqlEscape=false;
+						break;
+					case 'object':
+						// Dates are accurate to the second, but not the microsecond.
+						// Date dashes are not to have extra escaping done.
+						if(target instanceof Date){
+							target=target.toJson().replace(/\.[0-9]{3,3}Z$/,'Z');
+							doRqlEscape=false;
+						}
+						break;
+					default:
+						break;
+				}
+			}
 			if (target) {
 				if(target._renderUrl) {
 					// detected nested query, and render the url inside as an argument
@@ -194,8 +245,20 @@ define([
 					target = '(' + target + ')';
 				}
 			}
-			return [encodeURIComponent(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + encodeURIComponent(target)];
+			return [this.RQLEscape(args[0]) + '=' + (type === 'eq' ? '' : type + '=') + doRqlEscape?this.RQLEscape(target):encodeURIComponent(target)];
 		},
+
+		RQLEscape:function(value) {
+			// summary:
+			//		RQL has a short list of reserved characters that must be percent-encoded
+			//		as per https://doc.apsstandard.org/2.1/spec/rql/
+			//		This is the escape encoding recommended by https://github.com/xiag-ag/rql-parser
+			// returns: String
+			return encodeURIComponent(value).replace(/[\-_\.~!\\'\*\(\)]/g, function (char) {
+				return '%' + char.charCodeAt(0).toString(16).toUpperCase();
+			});
+		},
+
 		_renderSortParams: function (sort) {
 			// summary:
 			//		Constructs sort-related params to be inserted in the query string
