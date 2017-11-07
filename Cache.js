@@ -152,9 +152,12 @@ define([
 				// the result from the put should be dictated by the master store and be unaffected by the cachingStore,
 				// unless the master store doesn't implement put
 				return result || cachedPutResult;
-			}, function () {
+			}, function (exception) {
 				// Assuming a rejection of a promise invalidates the local cache
-				cachingStore.remove((directives && directives.id) || this.getIdentity(object));
+				cachingStore.remove((directives && directives.id) || cachingStore.getIdentity(object));
+				if(exception) {
+					throw exception;	
+				}
 			});
 		},
 		remove: function (id, directives) {
