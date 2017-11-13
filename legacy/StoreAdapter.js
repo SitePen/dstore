@@ -106,7 +106,7 @@ define([
 						applyFilter(args);
 					} else if (type === 'eq' || type === 'match') {
 						queryObject[args[0]] = args[1];
-					} else if (type === 'string') {
+					} else if (type === 'string' || type === 'function') {
 						queryObject = args[0];
 					} else if (type) {
 						throw new Error('"' + type + ' operator can not be converted to a legacy store query');
