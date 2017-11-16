@@ -158,6 +158,7 @@ define([
 				if(exception) {
 					throw exception;	
 				}
+				throw new Error("Failed to put() object to master-store");
 			});
 		},
 		remove: function (id, directives) {
