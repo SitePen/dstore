@@ -98,6 +98,12 @@ define([
 				}
 
 				return results;
+			},function(err) {
+				store.fetchRequest=null; //reset requesting flag
+				if(err) {
+					throw err;
+				}
+				throw new Error("Error fetching data from master-store");
 			});
 			return results;
 		},
