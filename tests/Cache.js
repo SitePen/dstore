@@ -41,6 +41,24 @@ define([
 		remove: makeDeferred()
 	});
 	var AsyncMaster = declare([AsyncMemory, Master], {});
+	
+	function makeRejectingDeferred(){
+		return function () {
+			var deferred = new Deferred();
+			setTimeout(function () {
+				deferred.reject(new Error("an error occured"));
+			});
+			return deferred.promise;
+		};
+	}
+	var RejectingMemory = declare(Memory, {
+		add: makeRejectingDeferred(),
+		get: makeRejectingDeferred(),
+		put: makeRejectingDeferred(),
+		remove: makeRejectingDeferred()
+	});
+	var RejectingMaster = declare([RejectingMemory, Master], {});
+	
 	function createTests(name, Master, cachingStore, createAfter){
 		var store;
 		return {
@@ -229,4 +247,42 @@ define([
 	registerSuite(createTests('dstore create Cache from instance', Master, new Memory(), true));
 	registerSuite(createTests('dstore Cache with async Master', AsyncMaster, new Memory()));
 	registerSuite(createTests('dstore Cache with both async', AsyncMaster, new AsyncMemory()));
+	
+	
+	registerSuite(function() { //rejection-tests
+		var store;
+		
+		return {
+			name:"Rejections",
+			setup:function() {
+				store = new declare([RejectingMaster,Cache])({
+					cachingStore:new Memory({})
+				});
+			},
+			"put": function() {
+				return when(store.put({}),function() {
+					assert.fail(null,null,'Promise should be rejected');
+				},function() {
+					//should always fail
+				});
+			},
+			"add": function() {
+				return when(store.add({}),function() {
+					assert.fail(null,null,'Promise should be rejected');
+				},function() {
+					//should always fail
+				});
+				
+			},
+			"remove": function() {
+				return when(store.remove("id"),function() {
+					assert.fail(null,null,'Promise should be rejected');
+				},function() {
+					//should always fail
+				});
+				
+			}
+		};
+	}());
+	
 });
