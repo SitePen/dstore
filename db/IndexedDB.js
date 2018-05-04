@@ -258,8 +258,8 @@ define([
 			this.cachedCount = {}; // clear the count cache
 			var store = this;
 			return this._callOnStore(options.overwrite === false ? 'add' : 'put',[object])
-				.then(function (object) {
-					return store._restore(object);
+				.then(function (id) {
+					return store.get(id);
 				});
 		},
 

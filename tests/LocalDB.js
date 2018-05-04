@@ -305,6 +305,26 @@ define([
 			'find a LocalDB': function () {
 				// make sure we resolved to at least one of them
 				assert.isTrue(LocalDB === IndexedDB || LocalDB === LocalStorage || LocalDB === SQL, 'resolved a store');
+			},
+			'add should return the added object rather than the id': function() {
+				if(name !== 'dstore/db/IndexedDB') {
+					this.skip();
+				}
+				var dfd = this.async(1000);
+				var item = {id: 'R', lower: 'r', vowel: false};
+				letterStore.add(item).then(dfd.callback(function(itemAdded) {
+					assert.deepEqual(itemAdded, item);
+				}));
+			},
+			'put should return the updated object rather than the id': function() {
+				if(name !== 'dstore/db/IndexedDB') {
+					this.skip();
+				}
+				var dfd = this.async(1000);
+				var item = {id: 'R', lower: 'rr', vowel: false};
+				letterStore.put(item).then(dfd.callback(function(itemUpdated) {
+					assert.deepEqual(itemUpdated, item);
+				}));
 			}
 		};
 	}
