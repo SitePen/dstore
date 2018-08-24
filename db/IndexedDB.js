@@ -11,8 +11,27 @@ define([
 
 	function makePromise(request) {
 		var deferred = new Deferred();
+		var hasTransaction = false;
+		var hasCompleted = false;
+		var hasSuccess = false;
+		var successResult = null;
+		if (request.transaction) {
+			var oncomplete = request.transaction.oncomplete;
+			hasTransaction = true;
+			request.transaction.oncomplete = function () {
+				hasCompleted = true;
+				oncomplete && oncomplete();
+				if (hasSuccess) {
+					deferred.resolve(successResult);
+				}
+			};
+		}
 		request.onsuccess = function (event) {
-			deferred.resolve(event.target.result);
+			successResult = event.target.result;
+			hasSuccess = true;
+			if (!hasTransaction || hasCompleted) {
+				deferred.resolve(successResult);
+			}
 		};
 		request.onerror = function () {
 			request.error.message = request.webkitErrorMessage;
