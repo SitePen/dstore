@@ -127,8 +127,32 @@ define([
 				return data;
 			});
 		},
-		on: function (type, listener) {
-			return this.storage.on(type, listener);
+
+		matchesFilter: function (item) {
+			// Allow the event to continue if the queryLog is empty (no filtering).  Otherwise,
+			// only allow the event to propagate if the item matches the query log.
+			var queryLog = this.queryLog;
+			if (queryLog && item) {
+				var data = [item];
+				// iterate through the query log, applying each querier
+				for (var i = 0, l = queryLog.length; i < l; i++) {
+					data = queryLog[i].querier(data);
+				}
+				return data.length > 0;
+			} else {
+				return true;
+			}
+		},
+
+		on: function (type, listener, filterEvents) {
+			var self = this;
+			return this.storage.on(type, function (event) {
+				if (listener) {
+					if (!filterEvents || self.matchesFilter(event && event.target)) {
+						listener && listener(event);
+					}
+				}
+			});
 		},
 		emit: function (type, event) {
 			event = event || {};
