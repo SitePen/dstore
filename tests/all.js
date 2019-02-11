@@ -11,6 +11,7 @@ define([
 	'./Tree',
 	'./Csv',
 	'./Tree',
+	'./multipleCollectionEvents',
 	'./extensions/RqlQuery',
 	'./legacy/DstoreAdapter-Memory',
 	'intern/node_modules/dojo/has!host-browser?./legacy/DstoreAdapter-Rest',

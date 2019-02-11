@@ -75,6 +75,10 @@ Property | Description
 
 This filters the collection, returning a new subset collection. The query can be an object, or a filter object, with the properties defining the constraints on matching objects. Some stores, like server or RQL stores, may accept string-based queries. Stores with in-memory capabilities (like `dstore/Memory`) may accept a function for filtering as well, but using the filter builder will ensure the greatest cross-store compatibility.
 
+#### `matchesFilter(item)`
+
+This tests the provided item to see if it matches the current filter or not.
+
 #### `sort(property, [descending])`
 
 This sorts the collection, returning a new ordered collection. Note that if sort is called multiple times, previous sort calls may be ignored by the store (it is up to store implementation how to handle that). If a multiple sort order is desired, use the array of sort orders defined by below.
@@ -106,7 +110,7 @@ Normally collections may defer the execution (like making an HTTP request) requi
 This fetches a range of objects from the collection, returning a promise to an array. The returned (and resolved) promise should have a `totalLength`
 property with a promise that resolves to a number indicating the total number of objects available in the collection.
 
-#### `on(type, listener)`
+#### `on(type, listener, filterEvents)`
 
 This allows you to define a listener for events that take place on the collection or parent store. When an event takes place, the listener will be called with an event object as the single argument. The following event types are defined:
 
@@ -115,6 +119,10 @@ Type | Description
 `add` | This indicates that a new object was added to the store. The new object is available on the `target` property.
 `update` | This indicates that an object in the stores was updated. The updated object is available on the `target` property.
 `delete` | This indicates that an object in the stores was removed. The id of the object is available on the `id` property.
+
+Setting `filterEvents` to `true` indicates the listener will be called only when the emitted event references an item (`event.target`) that satisfies the collection's current filter query. Note: if `filterEvents` is set to `true` for type `update`, the listener will be called only when the item passed to `put` matches the collection's query.  The original item will not be evaluted.  For example, a store contains items marked "to-do" and items marked "done" and one collection uses a query looking for "to-do" items and one looks for "done" items.  Both collections are listening for "update" events.  If an item is updated from "to-do" to "done", only the "done" collection will be notified of the update.
+
+If detecting when an item is removed from a collection due to an update is desired, set `filterEvents` to `false` and use the `matchesFilter(item)` method to test if each item updated is currently in the collection. 
 
 There is also a corresponding `emit(type, event)` method (from the [Store interface](Store.md#method-summary)) that can be used to emit events when objects have changed.
 
