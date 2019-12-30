@@ -76,50 +76,67 @@ define([
 			storage.version++;
 
 			var eventType = id in index ? 'update' : 'add',
-				event = { target: object },
-				previousIndex,
-				defaultDestination;
-			if (eventType === 'update') {
-				if (options.overwrite === false) {
-					throw new Error('Object already exists');
+				event = { target: object };
+
+			var prevIndex, destIndex, beforeIndex;
+			// evaluate options first
+			if ('beforeId' in options) {
+				if (!options.beforeId in index) {
+					console.error('options.beforeId was specified but no corresponding index was found');
 				} else {
-					data.splice(previousIndex = index[id], 1);
-					defaultDestination = previousIndex;
+					beforeIndex = index[options.beforeId];
 				}
-			} else {
-				defaultDestination = this.defaultNewToStart ? 0 : data.length;
+			}
+			if ('overwrite' in options) {
+				if (eventType === 'update' && options.overwrite === false) {
+					throw new Error('Object already exists');
+				}
 			}
 
-			var destination;
-			if ('beforeId' in options) {
-				var beforeId = options.beforeId;
-
-				if (beforeId === null) {
-					destination = data.length;
+			if (eventType === 'update') {
+				prevIndex = index[id]
+				if (isNaN(beforeIndex)) {
+					destIndex = prevIndex;
 				} else {
-					destination = index[beforeId];
-
-					// Account for the removed item
-					if (previousIndex < destination) {
-						--destination;
+					if (prevIndex === beforeIndex - 1) {
+						// if the moving element is already located one index before beforeIndex
+						destIndex = prevIndex;
+					} else if (prevIndex < beforeIndex) {
+						// if the moving element is located before beforeIndex
+						destIndex = beforeIndex - 1;
+					} else {
+						destIndex = beforeIndex;
 					}
 				}
-
-				if (destination !== undefined) {
-					event.beforeId = beforeId;
-				} else {
-					console.error('options.beforeId was specified but no corresponding index was found');
-					destination = defaultDestination;
-				}
 			} else {
-				destination = defaultDestination;
+				if (isNaN(beforeIndex)) {
+					if (this.defaultNewToStart) {
+						destIndex = 0;
+					} else {
+						destIndex = data.length;
+					}
+				} else {
+					destIndex = beforeIndex;
+				}
 			}
-			data.splice(destination, 0, object);
-
-			// the fullData has been changed, so the index needs updated
-			var i = isFinite(previousIndex) ? Math.min(previousIndex, destination) : destination;
-			for (var l = data.length; i < l; ++i) {
-				index[this.getIdentity(data[i])] = i;
+			
+			if (prevIndex === destIndex) {
+				data[destIndex] = object;
+			} else {
+				if (!isNaN(prevIndex)) {
+					data.splice(prevIndex, 1)
+				}
+				data.splice(destIndex, 0, object);
+			}
+			
+			// reindex if
+			// it is add operation OR
+			// the element was not updated at the same index
+			if (isNaN(prevIndex) || prevIndex !== destIndex) {
+				var i = isFinite(prevIndex) ? Math.min(prevIndex, destIndex) : destIndex;
+				for (var l = data.length; i < l; ++i) {
+					index[this.getIdentity(data[i])] = i;
+				}
 			}
 
 			this.emit(eventType, event);
