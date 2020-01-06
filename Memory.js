@@ -78,24 +78,29 @@ define([
 			var eventType = id in index ? 'update' : 'add',
 				event = { target: object },
 				previousIndex,
-				defaultDestination;
+				defaultDestination,
+				destination;
+
 			if (eventType === 'update') {
 				if (options.overwrite === false) {
 					throw new Error('Object already exists');
 				} else {
-					data.splice(previousIndex = index[id], 1);
+					previousIndex = index[id];
 					defaultDestination = previousIndex;
 				}
 			} else {
 				defaultDestination = this.defaultNewToStart ? 0 : data.length;
 			}
 
-			var destination;
 			if ('beforeId' in options) {
 				var beforeId = options.beforeId;
 
 				if (beforeId === null) {
 					destination = data.length;
+
+					if (eventType === 'update') {
+						--destination;
+					}
 				} else {
 					destination = index[beforeId];
 
@@ -114,12 +119,22 @@ define([
 			} else {
 				destination = defaultDestination;
 			}
-			data.splice(destination, 0, object);
 
-			// the fullData has been changed, so the index needs updated
-			var i = isFinite(previousIndex) ? Math.min(previousIndex, destination) : destination;
-			for (var l = data.length; i < l; ++i) {
-				index[this.getIdentity(data[i])] = i;
+			if (destination === previousIndex) {
+				data[destination] = object;
+			}
+			else {
+				if (previousIndex !== undefined) {
+					data.splice(previousIndex, 1);
+				}
+
+				data.splice(destination, 0, object);
+
+				// Items have been reordered so the index needs to be updated
+				var i = previousIndex === undefined ? destination : Math.min(previousIndex, destination);
+				for (var l = data.length; i < l; ++i) {
+					index[this.getIdentity(data[i])] = i;
+				}
 			}
 
 			this.emit(eventType, event);

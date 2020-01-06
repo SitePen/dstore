@@ -260,15 +260,31 @@ define([
 			// Make default put index 0 so it is clear beforeId:null is working
 			store.defaultNewToStart = true;
 
-			store.put({ id: 2 }, { beforeId: 4 });
-			store.put({ id: 0 }, { beforeId: null });
-			var results = store.fetchSync();
 			// Move from a lower source index to a higher destination index because Memory previously had an
 			// off-by-one bug where it removing an updated item from a lower index and inserted it one past
 			// the correct destination index
+			store.put({ id: 2 }, { beforeId: 4 });
+
+			// Add a new item and test beforeId:null
+			store.put({ id: 0 }, { beforeId: null });
+
+			var results = store.fetchSync();
 			assert.strictEqual(results[2].id, 2);
 			assert.strictEqual(results[3].id, 4);
 			assert.strictEqual(results[results.length - 1].id, 0);
+
+			// Test beforeId puts at the end of the data
+			var item3 = store.getSync(3);
+			store.put(item3, { beforeId: 0 });
+			var item0 = store.getSync(0);
+			store.put(item0, { beforeId: 3 });
+			var item5 = store.getSync(5);
+			store.put(item5, { beforeId: null });
+			store.put(item5, { beforeId: item5.id });
+			results = store.fetchSync();
+			assert.strictEqual(results[3].id, 0);
+			assert.strictEqual(results[4].id, 3);
+			assert.strictEqual(results[5].id, 5);
 		},
 
 		'add with options.beforeId': function () {
