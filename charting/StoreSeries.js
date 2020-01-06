@@ -56,16 +56,18 @@ define([
 
 		setSeriesObject: function (series) {
 			// summary:
-			//		Sets a dojox.charting.Series object we will be working with.
+			//		Sets a dojox/charting/Series object we will be working with.
 			// series: dojox/charting/Series
 			//		Our interface to the chart.
 			this.series = series;
 		},
 
-		fetch: function () {
+		fetch: function (collection) {
 			// summary:
 			//		Fetches data from the store and updates a chart.
-			var collection = this.collection,
+			// collection: dstore/api/Store.Collection
+			//		Optional update to a dstore object store.
+			var collection = collection || this.collection,
 				update = lang.hitch(this, this._update);
 
 			collection.fetch().then(lang.hitch(this, function (results) {
