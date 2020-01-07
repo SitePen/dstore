@@ -7,12 +7,10 @@ define([
 	'dojo/request',
 	'dojo/request/registry',
 	'dojo/when',
-	'dojo/promise/all',
 	'dstore/Request',
 	'dstore/SimpleQuery',
 	'./mockRequest',
 	'dojo/text!./data/treeTestRoot'
-
 ], function (
 	registerSuite,
 	assert,
@@ -22,7 +20,6 @@ define([
 	request,
 	requestRegistry,
 	when,
-	whenAll,
 	Request,
 	SimpleQuery,
 	mockRequest,
@@ -30,13 +27,6 @@ define([
 ) {
 
 	var Model = declare(null, {});
-
-	function runHeaderTest(method, args) {
-		return store[method].apply(store, args).then(function () {
-			mockRequest.assertRequestHeaders(requestHeaders);
-			mockRequest.assertRequestHeaders(globalHeaders);
-		});
-	}
 
 	function runCollectionTest(collection, rangeArgs, expected) {
 		var expectedResults = [
@@ -76,14 +66,8 @@ define([
 	}
 
 	var globalHeaders = {
-
 		'test-global-header-a': 'true',
 		'test-global-header-b': 'yes'
-	};
-	var requestHeaders = {
-		'test-local-header-a': 'true',
-		'test-local-header-b': 'yes',
-		'test-override': 'overridden'
 	};
 	var store;
 
@@ -157,6 +141,22 @@ define([
 				return runCollectionTest(store.filter(betweenTwoAndFour), { queryParams: {
 					id: 'ne=2|foo=true|foo=undefined'
 				}});
+			},
+
+			'chained filters': function () {
+				var filter = new store.Filter();
+				var filter1 = filter.ne('id', 2).or(filter.eq('foo', true));
+				var filter2 = filter.eq('foo', 'bar');
+				var filteredStore = store.filter(filter1);
+
+				return runCollectionTest(filteredStore.filter(filter2), {
+					// While this format looks odd as an object, when rendered to the URL query string it is:
+					// ?(id=ne=2|foo=true)&foo=bar
+					queryParams: {
+						'(id': 'ne=2|foo=true)',
+						foo: 'bar'
+					}
+				});
 			},
 
 			'filter relational': function () {
