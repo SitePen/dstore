@@ -4,12 +4,11 @@ define([
 	'dojo/aspect',
 	'dojo/has',
 	'dojo/when',
-	'dojo/Deferred',
 	'dojo/_base/declare',
 	'./QueryMethod',
 	'./Filter',
 	'dojo/Evented'
-], function (lang, arrayUtil, aspect, has, when, Deferred, declare, QueryMethod, Filter, Evented) {
+], function (lang, arrayUtil, aspect, has, when, declare, QueryMethod, Filter, Evented) {
 
 	// module:
 	//		dstore/Store
