@@ -19,20 +19,26 @@ All the stores can be instantiated with an options argument to the constructor, 
 
 Stores can also be constructed by combining a base store with mixins. The various store mixins are designed to be combined through dojo `declare` to create a class to instantiate a store. For example, if you wish to add tracking and tree functionality to a Memory store, we could combine these:
 
-    // create the class based on the Memory store with added functionality
-    var TrackedTreeMemoryStore = declare([Memory, Trackable, Tree]);
-    // now create an instance
-    var myStore = new TrackedTreeMemoryStore({data: [...]});
+```javascript
+// create the class based on the Memory store with added functionality
+var TrackedTreeMemoryStore = declare([Memory, Trackable, Tree]);
+// now create an instance
+var myStore = new TrackedTreeMemoryStore({ data: [...] });
+```
 
 The store mixins can only be used as mixins, but stores can be combined with other stores as well. For example, if we wanted to add the Rest functionality to the RequestMemory store (so the entire store data was retrieved from the server on construction, but data changes are sent to the server), we could write:
 
-    var RestMemoryStore = declare([Rest, RequestMemory]);
-    // now create an instance
-    var myStore = new RestMemoryStore({target: '/data-source/'});
+```javascript
+var RestMemoryStore = declare([Rest, RequestMemory]);
+// now create an instance
+var myStore = new RestMemoryStore({ target: '/data-source/' });
+```
 
-Another common case is needing to add tracking to the `dstore/Rest` store, which requires client side querying, which be provided by `dstore/SimpleQuery`:
+Another common case is needing to add tracking to the `dstore/Rest` store, which requires client side querying, which can be provided by `dstore/SimpleQuery`:
 
+```javascript
 var TrackedRestStore = declare([Rest, SimpleQuery, Trackable]);
+```
 
 ## Memory
 
@@ -40,13 +46,15 @@ The Memory store is a basic client-side in-memory store that can be created from
 
 For example:
 
-    myStore = new Memory({
-        data: [{
-            id: 1,
-            aProperty: ...,
-            ...
-        }]
-    });
+```javascript
+myStore = new Memory({
+    data: [{
+        id: 1,
+        aProperty: ...,
+        ...
+    }]
+});
+```
 
 The array supplied as the `data` property will not be copied, it will be used as-is as the store's data. It can be changed at run-time with the `setData` method.
 
@@ -77,9 +85,11 @@ This store extends the Request store, to add functionality for adding, updating,
 
 For example:
 
-    myStore = new Rest({
-        target: '/PathToData/'
-    });
+```javascript
+myStore = new Rest({
+    target: '/PathToData/'
+});
+```
 
 All modification or retrieval methods (except `getIdentity()`) on `Request` and `Rest` execute asynchronously, returning a promise.
 
@@ -113,36 +123,40 @@ Alternately a number can be provided as a property configuration, and will be us
 
 An example database configuration object is:
 
-    var dbConfig = {
-        version: 5,
-        stores: {
-            posts: {
-                name: 10,
-                id: {
-                    autoIncrement: true,
-                    preference: 100
-                },
-                tags: {
-                    multiEntry: true,
-                    preference: 5
-                },
-                content: {
-                    indexed: false
-                }
+```javascript
+var dbConfig = {
+    version: 5,
+    stores: {
+        posts: {
+            name: 10,
+            id: {
+                autoIncrement: true,
+                preference: 100
             },
-            commments: {
-                author: {},
-                content: {
-                    indexed: false
-                }
+            tags: {
+                multiEntry: true,
+                preference: 5
+            },
+            content: {
+                indexed: false
+            }
+        },
+        commments: {
+            author: {},
+            content: {
+                indexed: false
             }
         }
-    };
+    }
+};
+```
 
 In addition, each store should define a `storeName` property to identify which database store corresponds to the store instance. For example:
 
-    var postsStore = new LocalDB({dbConfig: dbConfig, storeName: 'posts'});
-    var commentsStore = new LocalDB({dbConfig: dbConfig, storeName: 'comments'});
+```javascript
+var postsStore = new LocalDB({ dbConfig: dbConfig, storeName: 'posts' });
+var commentsStore = new LocalDB({ dbConfig: dbConfig, storeName: 'comments' });
+```
 
 Once created, these stores can be used like any other store.
 
@@ -150,9 +164,11 @@ Once created, these stores can be used like any other store.
 
 This is a mixin that can be used to add caching functionality to a store. This can also be used to wrap an existing store, by using the static `create` function:
 
-    var cachedStore = Cache.create(existingStore, {
-        cachingStore: new Memory()
-    });
+```javascript
+var cachedStore = Cache.create(existingStore, {
+    cachingStore: new Memory()
+});
+```
 
 This store has the following properties and methods:
 
@@ -161,7 +177,7 @@ Name | Description
 `cachingStore` | This can be used to define the store to be used for caching the data. By default a Memory store will be used.
 `isValidFetchCache` | This is a flag that indicates if the data fetched for a collection/store can be cached to fulfill subsequent fetches. This is false by default, and the value will be inherited by downstream collections. It is important to note that only full `fetch()` requests will fill the cache for subsequent `fetch()` requests. `fetchRange()` requests will not fulfill a collection, and subsequent `fetchRange()` requests will not go to the cache unless the collection has been fully loaded through a `fetch()` request.
 `allLoaded` | This is a flag indicating that the given collection/store has its data loaded. This can be useful if you want to provide a caching store prepopulated with data for a given collection. If you are setting this to true, make sure you set `isValidFetchCache` to true as well to indicate that the data is available for fetching.
-`canCacheQuery(method, args)' | This can be a boolean or a method that will indicate if a collection can be cached (if it should have `isValidFetchCache` set to true), based on the query method and arguments used to derive the collection.
+`canCacheQuery(method, args)` | This can be a boolean or a method that will indicate if a collection can be cached (if it should have `isValidFetchCache` set to true), based on the query method and arguments used to derive the collection.
 `isLoaded(object)` | This can be defined to indicate if a given object in a query can be cached (by default, objects are cached).
 
 
@@ -184,21 +200,23 @@ The Trackable mixin adds functionality for tracking the index positions of objec
 
 [Resource Query Language (RQL)](https://github.com/persvr/rql) is a query language specifically designed to be easily embedded in URLs (it is a compatible superset of standard encoded query parameters), as well as easily interpreted within JavaScript for client-side querying. Therefore RQL is a query language suitable for consistent client and server-delegated queries. The dstore packages serializes complex filter/queries into RQL (RQL supersets standard query parameters, and so simple queries are simply serialized as standard query parameters).
 
-dstore also includes support for using RQL as the query language for filtering. This can be enabled by mixin `dstore/extensions/RqlQuery` into your collection type:
+dstore also includes support for using RQL as the query language for filtering. This can be enabled by mixing `dstore/extensions/RqlQuery` into your collection type:
 
-    require([
-        'dojo/_base/declare',
-        'dstore/Memory',
-        'dstore/extensions/RqlQuery'
-    ], function (declare, Memory, RqlQuery) {
-        var RqlStore = declare([ Memory, RqlQuery ]);
-        var rqlStore = new RqlStore({
-            ...
-        });
+```javascript
+require([
+    'dojo/_base/declare',
+    'dstore/Memory',
+    'dstore/extensions/RqlQuery'
+], function (declare, Memory, RqlQuery) {
+    var RqlStore = declare([ Memory, RqlQuery ]);
+    var rqlStore = new RqlStore({
+        ...
+    });
 
-        rqlStore.filter('price<10|rating>3').forEach(function (product) {
-            // return each product that has a price less than 10 or a rating greater than 3
-        });
-    }};
+    rqlStore.filter('price<10|rating>3').forEach(function (product) {
+        // return each product that has a price less than 10 or a rating greater than 3
+    });
+}};
+```
 
 Make sure you have installed/included the [rql](https://github.com/persvr/rql) package if you are using the RQL query engine.
