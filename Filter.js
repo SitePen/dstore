@@ -38,8 +38,10 @@ define(['dojo/_base/declare'], function (declare) {
 			} else if (argsArray.length === 1) {
 				// not chaining and only one argument
 				// returned filter is the same as the single argument
-				filter.type = argsArray[0].type;
-				filter.args = argsArray[0].args.slice();
+				if (argsArray[0].type) {
+					filter.type = argsArray[0].type;
+					filter.args = argsArray[0].args.slice();
+				}
 			}
 			return filter;
 		};
