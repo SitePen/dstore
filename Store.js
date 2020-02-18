@@ -158,7 +158,11 @@ define([
 			event.type = type;
 			try {
 				return this.storage.emit(type, event);
-			} finally {
+			}
+			catch (error) {
+				console.error(error);
+			}
+			finally {
 				// Return the initial value of event.cancelable because a listener error makes it impossible
 				// to know whether the event was actually canceled
 				return event.cancelable;
