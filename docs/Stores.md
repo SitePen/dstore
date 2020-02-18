@@ -71,6 +71,22 @@ This is a simple collection for accessing data by retrieval from a server (typic
 * `rangeStartParam` and `rangeCountParam` - This will specify the query parameter to use for specifying the range. This will default to `limit(<count>,<start>)` in the query string.
 * `useRangeHeaders` - This will specify that range information should be specified in the `Range` header.
 
+### Server considerations for a `Request/Rest` store
+
+The response should be in JSON format. It should include the data and a number indicating the total number of items:
+
+* **data**: the response can either be a JSON array containing the items or a JSON object with an `items` property that is an array containing the items
+* **total**: if the response is an array then the total should be specified in the `Content-Range` header, e.g.:
+  * `Content-Range: items 0-24/500`
+  * If the response is an object then the total should be specified on the `total` property of the object, e.g.:
+
+```
+{
+    "total": 500,
+    "items": [ /* ...items */ ]
+}
+```
+
 ## Rest
 
 This store extends the Request store, to add functionality for adding, updating, and removing objects. All modifications trigger HTTP requests to the server using the corresponding RESTful HTTP methods. A `get()` triggers a `GET`, `remove()` triggers a `DELETE`, and `add()` and `put()` will trigger a `PUT` if an id is available or provided, and a `POST` will be used to create new objects with server provided ids.
