@@ -96,13 +96,15 @@ define([
 			var queryResults;
 			var tracked;
 			var total;
+			var sortOptionIndex;
 
 			// Apply sorting
 			var sort = options.sort;
 			if (sort) {
 				if (Object.prototype.toString.call(sort) === '[object Array]') {
 					var sortOptions;
-					while ((sortOptions = sort.pop())) {
+					for (sortOptionIndex = sort.length - 1; sortOptionIndex >= 0; sortOptionIndex--) {
+						sortOptions = sort[sortOptionIndex];
 						results = results.sort(sortOptions.attribute, sortOptions.descending);
 					}
 				} else {
