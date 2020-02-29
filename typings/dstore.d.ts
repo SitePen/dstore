@@ -1,4 +1,4 @@
-/// <reference path="../dojo/dojo.d.ts" />
+/// <reference types="dojo" />
 
 declare module dstore {
 	export interface FetchArray<T> extends Array<T> {
@@ -298,6 +298,7 @@ declare module 'dstore/RequestMemory' {
 		filter(query: string | {} | { (item: T, index: number): boolean; }): RequestMemory<T>;
 		invalidate(): void;
 		isAvailableInCache(): void;
+		refresh(target?: string): dstore.FetchPromise<T>;
 		sort(property: string | { (a: T, b: T): number; }, descending?: boolean): RequestMemory<T>;
 		track(): RequestMemory<T>;
 	}
