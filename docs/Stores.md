@@ -93,6 +93,8 @@ myStore = new Rest({
 
 All modification or retrieval methods (except `getIdentity()`) on `Request` and `Rest` execute asynchronously, returning a promise.
 
+The server must respond to GET requests for an item by ID with an object representing the item (not an array).
+
 ## Store
 
 This is the base class used for all stores, providing basic functionality for tracking collection states and converting objects to be model instances. This (or any of the other classes above) can be extended for creating custom stores.
