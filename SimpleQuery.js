@@ -181,42 +181,51 @@ define([
 			};
 		},
 
-		_createSortQuerier: function (sorted) {
+		_createSortQuerier: function (sortOptions) {
 			var queryAccessors = this.queryAccessors;
+
 			return function (data) {
 				data = data.slice();
-				data.sort(typeof sorted == 'function' ? sorted : function (a, b) {
-					for (var i = 0; i < sorted.length; i++) {
-						var comparison;
-						var sorter = sorted[i];
-						if (typeof sorter == 'function') {
-							comparison = sorter(a, b);
-						} else {
-							var getProperty = sorter.get || (sorter.get = makeGetter(sorter.property, queryAccessors));
-							var descending = sorter.descending;
-							var aValue = getProperty(a);
-							var bValue = getProperty(b);
 
-							aValue != null && (aValue = aValue.valueOf());
-							bValue != null && (bValue = bValue.valueOf());
-							if (aValue === bValue) {
-								comparison = 0;
+				if (typeof sortOptions === 'function') {
+					data.sort(sortOptions);
+				}
+				else if (sortOptions && sortOptions.length) {
+					data.sort(function (a, b) {
+						for (var i = 0; i < sortOptions.length; i++) {
+							var comparison;
+							var sorter = sortOptions[i];
+							if (typeof sorter == 'function') {
+								comparison = sorter(a, b);
+							} else {
+								var getProperty = sorter.get || (sorter.get = makeGetter(sorter.property, queryAccessors));
+								var descending = sorter.descending;
+								var aValue = getProperty(a);
+								var bValue = getProperty(b);
+
+								aValue != null && (aValue = aValue.valueOf());
+								bValue != null && (bValue = bValue.valueOf());
+								if (aValue === bValue) {
+									comparison = 0;
+								}
+								else {
+									// Prioritize undefined > null > defined
+									var isALessThanB = typeof bValue === 'undefined' ||
+										bValue === null && typeof aValue !== 'undefined' ||
+										aValue != null && aValue < bValue;
+									comparison = Boolean(descending) === isALessThanB ? 1 : -1;
+								}
 							}
-							else {
-								// Prioritize undefined > null > defined
-								var isALessThanB = typeof bValue === 'undefined' ||
-									bValue === null && typeof aValue !== 'undefined' ||
-									aValue != null && aValue < bValue;
-								comparison = Boolean(descending) === isALessThanB ? 1 : -1;
+
+							if (comparison !== 0) {
+								return comparison;
 							}
 						}
 
-						if (comparison !== 0) {
-							return comparison;
-						}
-					}
-					return 0;
-				});
+						return 0;
+					});
+				}
+
 				return data;
 			};
 		}
