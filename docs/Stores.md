@@ -77,7 +77,9 @@ This is a simple collection for accessing data by retrieval from a server (typic
 * `sortParam` - This will specify the query parameter to use for specifying the sort order. This will default to `sort(<properties>)` in the query string.
 * `selectParam` - This will specify the query parameter to use for specifying the `select` properties. This will default to `select(<properties>)` in the query string.
 * `rangeStartParam` and `rangeCountParam` - This will specify the query parameter to use for specifying the range. This will default to `limit(<count>,<start>)` in the query string.
-* `useRangeHeaders` - This will specify that range information should be specified in the `Range` header.
+  * e.g. `limit(50,200)` will request items 200-249
+* `useRangeHeaders` - This will specify that range information should be specified in the `Range` (or `X-Range`) header.
+  * e.g. `Range: items 200-249` will request items 200-249
 
 ### Server considerations for a `Request/Rest` store
 
