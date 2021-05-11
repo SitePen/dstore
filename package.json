@@ -9,8 +9,8 @@
     "url": "https://github.com/SitePen/dstore"
   },
   "dependencies": {
-    "@types/dojo": "^1.9.0",
-    "dojo": "^1.9.0"
+    "dojo": "^1.9.0",
+    "dojo-typings": "^1.11.11"
   },
   "devDependencies": {
     "intern-geezer": "^2",
