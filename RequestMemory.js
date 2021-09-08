@@ -14,7 +14,7 @@ define([
 
 		postscript: function () {
 			this.inherited(arguments);
-			this.fetch();
+			this.fetch(arguments[0]);
 		},
 
 		refresh: function (target) {

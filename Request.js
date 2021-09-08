@@ -123,7 +123,7 @@ define([
 			kwArgs = kwArgs || {};
 
 			// perform the actual query
-			var headers = lang.delegate(this.headers, { Accept: this.accepts });
+			var headers = lang.mixin(this.headers, { Accept: this.accepts });
 
 			if ('headers' in kwArgs) {
 				lang.mixin(headers, kwArgs.headers);
